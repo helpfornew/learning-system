@@ -1,0 +1,95 @@
+{
+  "name": "gaokao-learning-system",
+  "version": "1.0.0",
+  "description": "高考学习系统 - 统一桌面应用",
+  "author": {
+    "name": "高考学习系统团队",
+    "email": "support@gaokao-learning-system.com"
+  },
+  "homepage": "https://your-domain.com",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "electron --no-sandbox .",
+    "build": "npm run build-electron",
+    "build-electron": "electron-builder",
+    "build:win": "electron-builder --win --x64",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "start": "electron --no-sandbox ."
+  },
+  "keywords": [
+    "高考",
+    "学习",
+    "错题",
+    "教育",
+    "electron",
+    "desktop"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "electron-is-dev": "^2.0.0"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "icon-gen": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.gaokao.learning-system",
+    "productName": "高考学习系统",
+    "copyright": "Copyright © 2026 高考学习系统团队",
+    "directories": {
+      "output": "release"
+    },
+    "electronDownload": {
+      "cache": ".electron-cache"
+    },
+    "forceCodeSigning": false,
+    "files": [
+      "config/**/*",
+      "electron/**/*",
+      "resources/**/*",
+      "web_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      "config/**/*",
+      "resources/**/*",
+      "web_modules/**/*"
+    ],
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "zip"
+      ],
+      "icon": "resources/icons/icon.icns"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icons/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "icon": "resources/icons/icon.png",
+      "category": "Education"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "高考学习系统"
+    }
+  }
+}

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>词汇地图 - 单词记忆系统</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="translations.js"></script>
+    <!-- 统一导航栏样式 -->
+    <link rel="stylesheet" href="/shared/navbar.css">
+    <style>
+        .map-page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(90deg, #f5f5dc 0%, #e8e4d9 100%);
+            color: #5c5c5c;
+            border-radius: 12px;
+        }
+        
+        .map-header h1 {
+            font-size: 2.2rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 0;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 12px 25px;
+            background: rgba(139, 115, 85, 0.1);
+            color: #5c5c5c;
+            border: 1px solid rgba(139, 115, 85, 0.3);
+            border-radius: 8px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(139, 115, 85, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .map-full-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        
+        .map-controls-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-section label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .filter-section select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            font-size: 1rem;
+            min-width: 150px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .full-map-container {
+            height: 700px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e3e3e3;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e3e3e3;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4b6cb7;
+        }
+        
+        .word-details-full {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid #e3e3e3;
+            min-height: 200px;
+        }
+        
+        .zoom-instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .zoom-instructions h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .instruction-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #555;
+        }
+        
+        @media (max-width: 768px) {
+            .map-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .navigation-buttons {
+                justify-content: center;
+            }
+            
+            .map-controls-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .full-map-container {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 统一导航栏容器 -->
+    <div id="unified-navbar"></div>
+    <div class="map-page-container" style="padding-top: 64px;">
+        <header class="map-header">
+            <h1>
+                <i class="fas fa-map-marked-alt"></i>
+                词汇地图
+            </h1>
+            <div class="navigation-buttons">
+                <a href="/" class="nav-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    <i class="fas fa-arrow-left"></i>
+                    学习系统主页
+                </a>
+                <a href="index.html" class="nav-btn">
+                    <i class="fas fa-home"></i>
+                    单词系统主页
+                </a>
+                <a href="study.html" class="nav-btn">
+                    <i class="fas fa-graduation-cap"></i>
+                    记单词
+                </a>
+            </div>
+        </header>
+        
+        <main>
+            <div class="map-full-container">
+                <div class="map-controls-panel">
+                    <div class="filter-section">
+                        <label for="mapCategoryFilter">筛选单词:</label>
+                        <select id="mapCategoryFilter">
+                            <option value="all">全部单词</option>
+                            <option value="known">已掌握</option>
+                            <option value="review">需复习</option>
+                            <option value="new">新单词</option>
+                        </select>
+                        <button id="applyFilterBtn" class="action-btn">
+                            <i class="fas fa-filter"></i>
+                            应用筛选
+                        </button>
+                        <div id="filterStatus" style="padding: 8px 15px; background: #e3f2fd; border-radius: 6px; font-size: 0.9rem;">
+                            当前显示: <span id="currentFilterText">全部单词</span> (<span id="filteredCount">0</span>个)
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="refreshMapBtn" class="secondary-btn">
+                            <i class="fas fa-sync-alt"></i>
+                            刷新地图
+                        </button>
+                        <button id="resetZoomBtn" class="secondary-btn">
+                            <i class="fas fa-expand-arrows-alt"></i>
+                            重置视图
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="full-map-container" id="vocabularyMap">
+                    <!-- 词汇地图将通过D3.js动态生成 -->
+                </div>
+                
+                <div class="zoom-instructions">
+                    <h4><i class="fas fa-info-circle"></i> 使用说明</h4>
+                    <div class="instruction-list">
+                        <div class="instruction-item">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <span>鼠标滚轮：缩放地图</span>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-arrows-alt"></i>
+                            <span>鼠标拖拽：平移地图</span>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-search-plus"></i>
+                            <span>点击右上角按钮：放大/缩小</span>
+                        </div>
+                        <div class="instruction-item">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <span>点击单词：查看详细信息</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <h3>总词汇量</h3>
+                    <div class="stat-value" id="totalWordsCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>已掌握</h3>
+                    <div class="stat-value" id="knownWordsCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>需复习</h3>
+                    <div class="stat-value" id="reviewWordsCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>新单词</h3>
+                    <div class="stat-value" id="newWordsCount">0</div>
+                </div>
+            </div>
+            
+            <div class="word-details-full">
+                <h2><i class="fas fa-info-circle"></i> 单词详情</h2>
+                <div id="selectedWordDetails">
+                    <p style="text-align: center; color: #666; padding: 40px;">
+                        <i class="fas fa-mouse-pointer fa-2x" style="margin-bottom: 15px; display: block;"></i>
+                        点击地图中的单词查看详细信息
+                    </p>
+                </div>
+            </div>
+        </main>
+        
+        <footer style="margin-top: 30px; text-align: center; color: #666; padding: 20px;">
+            <p>单词记忆系统 &copy; 2023 | 词汇地图页面</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                <i class="fas fa-lightbulb"></i>
+                提示：词汇地图使用力导向布局，单词会自动排列以避免重叠。
+            </p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 词汇地图页面专用脚本
+        class VocabularyMapPage {
+            constructor() {
+                this.wordMemorySystem = null;
+                this.init();
+            }
+            
+            async init() {
+                // 等待WordMemorySystem加载
+                if (window.wordMemorySystem) {
+                    this.wordMemorySystem = window.wordMemorySystem;
+                } else {
+                    // 如果没有全局实例，创建一个新的
+                    this.wordMemorySystem = new WordMemorySystem();
+                    await this.wordMemorySystem.loadVocabulary();
+                }
+                
+                this.setupEventListeners();
+                this.updateStats();
+                this.renderFullMap();
+            }
+            
+            setupEventListeners() {
+                // 应用筛选
+                document.getElementById('applyFilterBtn').addEventListener('click', () => {
+                    this.applyFilter();
+                });
+                
+                // 刷新地图
+                document.getElementById('refreshMapBtn').addEventListener('click', () => {
+                    this.renderFullMap();
+                });
+                
+                // 重置缩放
+                document.getElementById('resetZoomBtn').addEventListener('click', () => {
+                    this.resetZoom();
+                });
+                
+                // 筛选器变化
+                document.getElementById('mapCategoryFilter').addEventListener('change', () => {
+                    this.applyFilter();
+                });
+            }
+            
+            applyFilter() {
+                const filterValue = document.getElementById('mapCategoryFilter').value;
+                this.currentFilter = filterValue;
+                this.renderFullMap();
+            }
+            
+            getFilterText(filterValue) {
+                switch(filterValue) {
+                    case 'all': return '全部单词';
+                    case 'known': return '已掌握';
+                    case 'review': return '需复习';
+                    case 'new': return '新单词';
+                    default: return '全部单词';
+                }
+            }
+            
+            updateStats() {
+                const totalWords = this.wordMemorySystem.vocabulary.length;
+                let knownWords = 0;
+                let reviewWords = 0;
+                let newWords = 0;
+                
+                for (const word of this.wordMemorySystem.vocabulary) {
+                    const status = this.wordMemorySystem.getWordStatus(word);
+                    if (status === 'known') knownWords++;
+                    if (status === 'review') reviewWords++;
+                    if (status === 'new') newWords++;
+                }
+                
+                document.getElementById('totalWordsCount').textContent = totalWords;
+                document.getElementById('knownWordsCount').textContent = knownWords;
+                document.getElementById('reviewWordsCount').textContent = reviewWords;
+                document.getElementById('newWordsCount').textContent = newWords;
+            }
+            
+            renderFullMap() {
+                // 使用WordMemorySystem的渲染方法，传递筛选参数
+                const filterValue = this.currentFilter || 'all';
+                this.wordMemorySystem.renderVocabularyMap(filterValue);
+                
+                // 覆盖点击事件以使用本页面的详情显示
+                setTimeout(() => {
+                    const circles = d3.selectAll('#vocabularyMap circle');
+                    circles.on('click', (event, d) => {
+                        this.showWordDetails(d.word);
+                    });
+                }, 100);
+            }
+            
+            resetZoom() {
+                const svg = d3.select('#vocabularyMap svg');
+                if (svg.empty()) return;
+                
+                svg.transition()
+                    .duration(750)
+                    .call(d3.zoom().transform, d3.zoomIdentity);
+            }
+            
+            showWordDetails(word) {
+                this.wordMemorySystem.showWordDetails(word);
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            window.vocabularyMapPage = new VocabularyMapPage();
+        });
+    </script>
+    <!-- 统一认证和导航栏 -->
+    <script src="/shared/auth.js"></script>
+    <script src="/shared/navbar.js"></script>
+    <script>
+        // 初始化统一导航栏
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Navbar !== 'undefined') {
+                Navbar.init('wordcard');
+            }
+        });
+    </script>
+</body>
+</html>

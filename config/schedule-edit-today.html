@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑今日时间表 - 高考学习系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #8b7355, #a08060);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9966, #ff5e62);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .editor-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .schedule-item {
+            display: grid;
+            grid-template-columns: 100px 100px 1fr 1fr 100px 80px;
+            gap: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f5f0;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            align-items: center;
+        }
+
+        .schedule-item:hover {
+            border-color: #d4c4a8;
+            box-shadow: 0 4px 12px rgba(139, 115, 85, 0.15);
+        }
+
+        .schedule-item input[type="time"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            width: 100%;
+        }
+
+        .schedule-item input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .schedule-item select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .schedule-item .delete-btn {
+            background: #ff4d4f;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .schedule-item .delete-btn:hover {
+            background: #ff7875;
+            transform: scale(1.05);
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 15px;
+            background: #f8f5f0;
+            border: 2px dashed #d4c4a8;
+            border-radius: 12px;
+            color: #8b7355;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .add-btn:hover {
+            background: #d4c4a8;
+            color: white;
+            border-style: solid;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f3ff;
+        }
+
+        .status-message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #096dd9;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #fff1f0;
+            border: 1px solid #ffa39e;
+            color: #cf1322;
+            display: block;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d4c4a8;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .schedule-item {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .schedule-item input[type="time"],
+            .schedule-item input[type="text"],
+            .schedule-item select {
+                grid-column: span 2;
+            }
+
+            .schedule-item .delete-btn {
+                grid-column: span 2;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .action-bar {
+                flex-direction: column;
+            }
+
+            .action-bar .btn {
+                width: 100%;
+            }
+        }
+
+        /* 高亮动画 */
+        @keyframes highlight {
+            0% { background: #fff7e6; border-color: #ffc53d; }
+            100% { background: #f8f9ff; border-color: transparent; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div>
+                <h1>✏️ 编辑今日时间表</h1>
+                <div class="header-info" id="dateInfo">加载中...</div>
+            </div>
+            <div>
+                <a href="index.html" class="btn btn-secondary">← 返回首页</a>
+            </div>
+        </div>
+
+        <!-- 状态消息 -->
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- 编辑器 -->
+        <div class="editor-card">
+            <div class="section-title">
+                📋 时间段列表
+                <span style="font-size: 0.85rem; color: #666; font-weight: normal;">
+                    (点击右侧删除按钮移除，点击下方按钮添加)
+                </span>
+            </div>
+
+            <div id="scheduleList">
+                <div class="loading">加载时间表中...</div>
+            </div>
+
+            <button class="add-btn" onclick="addScheduleItem()">+ 添加新时间段</button>
+
+            <div class="action-bar">
+                <button class="btn btn-secondary" onclick="manualSort()">🔄 按时间排序</button>
+                <button class="btn btn-warning" onclick="resetToDefault()">↺ 恢复默认</button>
+                <button class="btn btn-secondary" onclick="previewSchedule()">👁️ 预览</button>
+                <button class="btn btn-success" onclick="saveSchedule()">💾 保存更改</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API 基础地址
+        const isElectron = typeof window !== 'undefined' && window.process && window.process.type;
+        const API_BASE = isElectron ? 'http://localhost:8080' : '';
+
+        // 当前编辑的时间表
+        let currentSchedule = [];
+        let isLoading = false;
+
+        // 获取今天的日期信息
+        function getTodayInfo() {
+            const now = new Date();
+            const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const dayIndex = now.getDay();
+
+            // 计算第几周
+            const startOfTerm = new Date(2025, 2, 1);
+            const diffDays = Math.floor((now - startOfTerm) / (1000 * 60 * 60 * 24));
+            let weekOfTerm = Math.floor(diffDays / 7) + 1;
+            if (weekOfTerm < 1) weekOfTerm = 1;
+            if (weekOfTerm > 6) weekOfTerm = ((weekOfTerm - 1) % 6) + 1;
+
+            const weekType = (weekOfTerm % 2 === 1) ? '单周·政治' : '双周·语文';
+
+            return {
+                dateStr: `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`,
+                dayName: dayNames[dayIndex],
+                dayIndex: dayIndex,
+                weekOfTerm: weekOfTerm,
+                weekType: weekType
+            };
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const info = getTodayInfo();
+            document.getElementById('dateInfo').textContent =
+                `${info.dateStr} ${info.dayName} · ${info.weekType} · 第${info.weekOfTerm}周`;
+
+            loadTodaySchedule();
+        });
+
+        // 加载今日时间表
+        async function loadTodaySchedule() {
+            isLoading = true;
+            showLoading();
+
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`${API_BASE}/api/schedule/today`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        currentSchedule = result.data;
+                        renderScheduleList();
+                        showStatus('时间表加载成功', 'success');
+                    } else {
+                        // 使用默认时间表
+                        currentSchedule = getDefaultSchedule();
+                        renderScheduleList();
+                    }
+                } else {
+                    // 使用默认时间表
+                    currentSchedule = getDefaultSchedule();
+                    renderScheduleList();
+                }
+            } catch (e) {
+                console.error('加载失败:', e);
+                currentSchedule = getDefaultSchedule();
+                renderScheduleList();
+                showStatus('使用默认时间表', 'success');
+            }
+
+            isLoading = false;
+        }
+
+        // 获取默认时间表
+        function getDefaultSchedule() {
+            const info = getTodayInfo();
+            const isSunday = (info.dayIndex === 0);
+
+            let mathOrPhysics = '周测';
+            if (info.dayIndex === 1 || info.dayIndex === 3 || info.dayIndex === 5) {
+                mathOrPhysics = '数学';
+            } else if (info.dayIndex === 2 || info.dayIndex === 4 || info.dayIndex === 6) {
+                mathOrPhysics = '物理';
+            }
+
+            const afternoonTitle = info.weekType === '单周·政治'
+                ? '🟢 政治·术语 + 选择题'
+                : '🟣 语文·文言文/古诗/素材';
+            const afternoonSubject = info.weekType === '单周·政治' ? '政治' : '语文';
+
+            if (isSunday) {
+                return [
+                    { start: '07:00', end: '07:20', title: '起床洗漱', desc: '清醒 + 喝水', subject: '⏰ 起床', tag: 'daily' },
+                    { start: '07:20', end: '07:40', title: '🧘 晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
+                    { start: '07:40', end: '08:00', title: '🔵 英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
+                    { start: '08:00', end: '09:00', title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '🍽️ 早餐', tag: 'daily' },
+                    { start: '09:00', end: '10:30', title: '📊 周测·科目①', desc: '周测 70 分钟', subject: '周测', tag: '学习' },
+                    { start: '10:30', end: '10:50', title: '☕ 休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
+                    { start: '10:50', end: '12:00', title: '📊 周测·科目②', desc: '周测 70 分钟', subject: '周测', tag: '学习' },
+                    { start: '12:00', end: '13:00', title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '🍲 午餐', tag: 'daily' },
+                    { start: '13:00', end: '14:00', title: '午休', desc: '休息', subject: '😴 午休', tag: '休息' },
+                    { start: '14:00', end: '15:00', title: '💻 AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
+                    { start: '15:00', end: '15:10', title: '📝 项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
+                    { start: '15:10', end: '16:30', title: '📊 周测复盘', desc: '总结错题', subject: '复盘', tag: '学习' },
+                    { start: '16:30', end: '17:00', title: '🧘 微运动 + 深呼吸', desc: '靠墙拉伸', subject: '锻炼', tag: 'exercise' },
+                    { start: '17:00', end: '18:30', title: '🟡 错题整理', desc: '整理周测错题', subject: '数理', tag: '学习' },
+                    { start: '18:30', end: '19:30', title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '🍲 晚餐', tag: 'daily' },
+                    { start: '19:30', end: '20:00', title: '彻底放空', desc: '无手机', subject: '🧘 放空', tag: '休息' },
+                    { start: '20:00', end: '21:00', title: '🟣 化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
+                    { start: '21:00', end: '21:15', title: '休息', desc: '小憩', subject: '✨ 休息', tag: '休息' },
+                    { start: '21:15', end: '22:00', title: '🔵 英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
+                    { start: '22:00', end: '22:20', title: '🚿 洗漱', desc: '', subject: '洗漱', tag: 'daily' },
+                    { start: '22:20', end: '22:30', title: '🧘 冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
+                    { start: '22:30', end: '23:00', title: '睡觉', desc: '22:30 休息', subject: '💤 睡觉', tag: '休息' },
+                ];
+            }
+
+            return [
+                { start: '07:00', end: '07:20', title: '起床洗漱', desc: '清醒 + 喝水', subject: '⏰ 起床', tag: 'daily' },
+                { start: '07:20', end: '07:40', title: '🧘 晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
+                { start: '07:40', end: '08:00', title: '🔵 英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
+                { start: '08:00', end: '09:00', title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '🍽️ 早餐', tag: 'daily' },
+                { start: '09:00', end: '10:30', title: '🔴 化学分块输入', desc: '1 概念 +3 例题 +4 练习', subject: '化学', tag: '学习' },
+                { start: '10:30', end: '10:50', title: '☕ 休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
+                { start: '10:50', end: '12:00', title: `🟡 ${mathOrPhysics}刻意练习`, desc: '模型思维：画示意图 + 边界条件', subject: mathOrPhysics, tag: '学习' },
+                { start: '12:00', end: '13:00', title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '🍲 午餐', tag: 'daily' },
+                { start: '13:00', end: '14:00', title: '午休', desc: '休息', subject: '😴 午休', tag: '休息' },
+                { start: '14:00', end: '15:00', title: '💻 AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
+                { start: '15:00', end: '15:10', title: '📝 项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
+                { start: '15:10', end: '16:30', title: `🟡 ${mathOrPhysics}错题复盘`, desc: '盲做→对比→费曼', subject: mathOrPhysics, tag: '学习' },
+                { start: '16:30', end: '17:00', title: '🧘 微运动 + 深呼吸', desc: '靠墙拉伸 + 机动时间', subject: '锻炼', tag: 'exercise' },
+                { start: '17:00', end: '18:30', title: afternoonTitle, desc: info.weekType === '单周·政治' ? '背 5 术语 +10 选择题' : '文言文精读/古诗鉴赏/作文素材', subject: afternoonSubject, tag: '学习' },
+                { start: '18:30', end: '19:30', title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '🍲 晚餐', tag: 'daily' },
+                { start: '19:30', end: '20:00', title: '彻底放空', desc: '无手机', subject: '🧘 放空', tag: '休息' },
+                { start: '20:00', end: '21:00', title: '🟣 化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
+                { start: '21:00', end: '21:15', title: '休息', desc: '小憩', subject: '✨ 休息', tag: '休息' },
+                { start: '21:15', end: '22:00', title: '🔵 英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
+                { start: '22:00', end: '22:20', title: '🚿 洗漱', desc: '', subject: '洗漱', tag: 'daily' },
+                { start: '22:20', end: '22:30', title: '🧘 冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
+                { start: '22:30', end: '23:00', title: '睡觉', desc: '22:30 休息', subject: '💤 睡觉', tag: '休息' },
+            ];
+        }
+
+        // 渲染时间表列表
+        function renderScheduleList() {
+            const container = document.getElementById('scheduleList');
+
+            if (currentSchedule.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div>暂无时间段</div>
+                        <div style="font-size: 0.9rem; margin-top: 10px;">点击下方按钮添加第一个时间段</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按开始时间排序
+            sortSchedule();
+
+            let html = '';
+            currentSchedule.forEach((item, index) => {
+                const isLast = index === currentSchedule.length - 1;
+                // 结束时间显示为下一个的开始时间，最后一个显示自己的end
+                const displayEnd = isLast ? item.end : currentSchedule[index + 1].start;
+
+                html += `
+                    <div class="schedule-item" data-index="${index}" style="grid-template-columns: 100px 80px 1fr 1fr 100px 80px;">
+                        <input type="time" value="${item.start}"
+                            onchange="updateItem(${index}, 'start', this.value)"
+                            title="开始时间" style="width: 100%;">
+                        <div style="text-align: center; color: #666; font-size: 0.85rem; padding: 10px 0;">
+                            至 ${displayEnd}
+                        </div>
+                        <input type="text" value="${item.title}"
+                            onchange="updateItem(${index}, 'title', this.value)"
+                            placeholder="标题"
+                            title="标题">
+                        <input type="text" value="${item.desc || ''}"
+                            onchange="updateItem(${index}, 'desc', this.value)"
+                            placeholder="描述"
+                            title="描述">
+                        <select onchange="updateItem(${index}, 'tag', this.value)" title="类型">
+                            <option value="学习" ${item.tag === '学习' ? 'selected' : ''}>学习</option>
+                            <option value="exercise" ${item.tag === 'exercise' ? 'selected' : ''}>锻炼</option>
+                            <option value="休息" ${item.tag === '休息' ? 'selected' : ''}>休息</option>
+                            <option value="daily" ${item.tag === 'daily' ? 'selected' : ''}>日常</option>
+                        </select>
+                        <button class="delete-btn" onclick="deleteItem(${index})" title="删除">删除</button>
+                    </div>
+                `;
+            });
+
+            // 添加最后一个任务的结束时间编辑
+            const lastItem = currentSchedule[currentSchedule.length - 1];
+            html += `
+                <div style="display: flex; align-items: center; gap: 15px; padding: 12px 15px; margin-top: 5px; background: #fff7e6; border-radius: 8px; border: 1px dashed #ffc53d;">
+                    <span style="color: #666; font-size: 0.9rem; white-space: nowrap;">最后一个任务结束时间:</span>
+                    <input type="time" value="${lastItem.end}"
+                        onchange="updateItem(${currentSchedule.length - 1}, 'end', this.value)"
+                        style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+                    <span style="color: #999; font-size: 0.8rem; flex: 1;">(前面任务的结束时间自动等于下一个任务的开始时间)</span>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('scheduleList').innerHTML =
+                '<div class="loading">加载时间表中...</div>';
+        }
+
+        // 按开始时间排序时间表
+        function sortSchedule() {
+            currentSchedule.sort((a, b) => {
+                const timeA = a.start.replace(':', '');
+                const timeB = b.start.replace(':', '');
+                return timeA.localeCompare(timeB);
+            });
+        }
+
+        // 更新时间段 - 只更新数据，不自动排序刷新
+        function updateItem(index, field, value) {
+            currentSchedule[index][field] = value;
+        }
+
+        // 删除时间段
+        function deleteItem(index) {
+            if (confirm('确定要删除这个时间段吗？')) {
+                currentSchedule.splice(index, 1);
+                renderScheduleList();
+            }
+        }
+
+        // 添加新时间段
+        function addScheduleItem() {
+            // 计算默认开始时间
+            let newStart = '09:00';
+            let defaultDuration = 60; // 默认60分钟
+
+            if (currentSchedule.length > 0) {
+                // 排序后找最晚的时间
+                sortSchedule();
+                const lastItem = currentSchedule[currentSchedule.length - 1];
+                const [h, m] = lastItem.start.split(':').map(Number);
+                // 在上一个开始时间基础上加默认时长
+                const nextStart = new Date(2000, 0, 1, h, m + defaultDuration);
+                newStart = `${String(nextStart.getHours()).padStart(2, '0')}:${String(nextStart.getMinutes()).padStart(2, '0')}`;
+            }
+
+            // 计算结束时间（开始+60分钟）
+            const [h, m] = newStart.split(':').map(Number);
+            const endTime = new Date(2000, 0, 1, h, m + defaultDuration);
+            const newEnd = `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+
+            currentSchedule.push({
+                start: newStart,
+                end: newEnd,
+                title: '新任务',
+                desc: '',
+                subject: '学习',
+                tag: '学习'
+            });
+
+            renderScheduleList();
+
+            // 滚动到新添加的元素
+            setTimeout(() => {
+                const items = document.querySelectorAll('.schedule-item');
+                if (items.length > 0) {
+                    items[items.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+
+        // 手动触发排序
+        function manualSort() {
+            sortSchedule();
+            renderScheduleList();
+            showStatus('✅ 已按开始时间排序', 'success');
+        }
+
+        // 保存时间表
+        async function saveSchedule() {
+            if (isLoading) return;
+
+            // 先排序
+            sortSchedule();
+
+            // 自动计算每个任务的结束时间（等于下一个任务的开始时间）
+            for (let i = 0; i < currentSchedule.length; i++) {
+                const item = currentSchedule[i];
+                if (!item.start || !item.title) {
+                    showStatus(`第 ${i + 1} 项缺少必填信息（开始时间或标题）`, 'error');
+                    return;
+                }
+                // 结束时间 = 下一个任务的开始时间，最后一个保持原样
+                if (i < currentSchedule.length - 1) {
+                    item.end = currentSchedule[i + 1].start;
+                }
+                // 验证时间顺序
+                if (item.start >= item.end) {
+                    showStatus(`第 ${i + 1} 项开始时间必须早于结束时间`, 'error');
+                    return;
+                }
+            }
+
+            isLoading = true;
+            showStatus('保存中...', 'success');
+
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`${API_BASE}/api/schedule/today`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: JSON.stringify({ schedule: currentSchedule })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showStatus('✅ 时间表保存成功！', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    } else {
+                        showStatus('保存失败: ' + (result.message || '未知错误'), 'error');
+                    }
+                } else {
+                    const error = await response.json();
+                    showStatus('保存失败: ' + (error.message || '服务器错误'), 'error');
+                }
+            } catch (e) {
+                showStatus('保存失败: ' + e.message, 'error');
+            }
+
+            isLoading = false;
+        }
+
+        // 恢复默认
+        async function resetToDefault() {
+            if (!confirm('确定要恢复默认时间表吗？这将清除您的自定义设置。')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('auth_token');
+                const info = getTodayInfo();
+                const dayOfWeek = info.dayIndex; // 0=周日, 1=周一...
+
+                const response = await fetch(`${API_BASE}/api/schedule/${dayOfWeek}`, {
+                    method: 'DELETE',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+
+                // 无论服务器是否成功，都恢复到默认时间表
+                currentSchedule = getDefaultSchedule();
+                renderScheduleList();
+                showStatus('已恢复默认时间表', 'success');
+            } catch (e) {
+                console.error('重置失败:', e);
+                // 本地重置
+                currentSchedule = getDefaultSchedule();
+                renderScheduleList();
+                showStatus('已恢复默认时间表', 'success');
+            }
+        }
+
+        // 预览时间表
+        function previewSchedule() {
+            // 先排序并计算结束时间
+            sortSchedule();
+            const previewData = currentSchedule.map((item, index) => ({
+                ...item,
+                displayEnd: index < currentSchedule.length - 1 ? currentSchedule[index + 1].start : item.end
+            }));
+
+            const previewWindow = window.open('', '_blank', 'width=800,height=600');
+            const info = getTodayInfo();
+
+            let html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>时间表预览</title>
+                    <style>
+                        body { font-family: 'Segoe UI', system-ui, sans-serif; padding: 20px; background: #f5f5f5; }
+                        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 15px; padding: 30px; }
+                        h2 { color: #333; margin-bottom: 20px; }
+                        .item { display: flex; justify-content: space-between; padding: 12px; margin-bottom: 8px; background: #f8f5f0; border-radius: 8px; border-left: 3px solid #d4c4a8; }
+                        .time { font-weight: bold; color: #8b7355; font-family: monospace; }
+                        .title { flex: 1; margin-left: 15px; }
+                        .tag { background: #e2e9ff; padding: 2px 10px; border-radius: 10px; font-size: 0.8rem; }
+                        .note { color: #999; font-size: 0.85rem; margin-top: 20px; text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h2>📋 ${info.dateStr} ${info.dayName} 时间表预览</h2>
+            `;
+
+            previewData.forEach(item => {
+                html += `
+                    <div class="item">
+                        <span class="time">${item.start} - ${item.displayEnd}</span>
+                        <span class="title">${item.title}</span>
+                        <span class="tag">${item.tag}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                        <div class="note">时间段连续: 前一个任务的结束时间 = 后一个任务的开始时间</div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            previewWindow.document.write(html);
+            previewWindow.document.close();
+        }
+
+        // 显示状态消息
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = 'status-message ' + type;
+
+            // 5 秒后自动隐藏错误消息
+            if (type === 'error') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>

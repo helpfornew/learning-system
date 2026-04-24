@@ -1,0 +1,3131 @@
+#!/usr/bin/env python3
+"""
+高考学习系统 - 统一服务器
+整合所有服务到 8080 端口：
+- 学习系统主页：http://localhost:8080/
+- 错题系统：http://localhost:8080/mistake/
+- 统一 API: http://localhost:8080/api/
+- 账号 API: http://localhost:8080/account/
+
+每个系统独立认证
+
+支持生产环境部署：
+- 使用环境变量配置路径和端口
+- 支持 systemd 服务管理
+- 支持日志文件输出
+"""
+
+import json
+import sqlite3
+import os
+import re
+import requests
+import time
+from pathlib import Path
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import parse_qs, urlparse
+import datetime
+import urllib.request
+import urllib.error
+import mimetypes
+import hashlib
+import secrets
+import sys
+import logging
+from logging.handlers import RotatingFileHandler
+
+# ============ 加载 .env 环境变量 ============
+# 尝试从项目根目录加载 .env 文件
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(env_path):
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(env_path)
+        print(f"[INFO] 已加载环境变量从 {env_path}")
+    except ImportError:
+        # python-dotenv 未安装,尝试手动解析
+        print(f"[INFO] python-dotenv 未安装,手动加载 .env 文件")
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key.strip()] = value.strip()
+        print(f"[INFO] 已手动加载环境变量从 {env_path}")
+
+# ============ 环境变量配置 ============
+BASE_DIR = os.environ.get('LEARNING_SYSTEM_DIR', os.path.join(os.path.expanduser('~'), 'learning_system'))
+DATA_DIR = os.environ.get('LEARNING_SYSTEM_DATA', os.path.join(BASE_DIR, 'data'))
+HOST = os.environ.get('LEARNING_SYSTEM_HOST', '0.0.0.0')
+PORT = int(os.environ.get('LEARNING_SYSTEM_PORT', 8080))
+ALLOWED_ORIGIN = os.environ.get('ALLOWED_ORIGIN', '*')
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+LOG_FILE_PATH = os.environ.get('LOG_FILE_PATH', '/var/log/learning-system/server.log')
+
+# 开发模式配置：设置为 1 或 true 启用开发模式（自动代理到 Vite）
+DEV_MODE = os.environ.get('DEV_MODE', '0') in ('1', 'true', 'yes', 'on')
+VITE_DEV_SERVER = os.environ.get('VITE_DEV_SERVER', 'http://localhost:5173')
+
+# 上传文件大小限制（字节）- 默认 20MB,支持图片上传
+MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 20 * 1024 * 1024))
+
+# 目录配置
+CONFIG_DIR = os.path.join(BASE_DIR, 'config')
+MISTAKE_FRONTEND_DIR = os.path.join(BASE_DIR, 'mistake_system', 'mistake-system-desktop', 'dist')
+ACCOUNT_SERVER_DIR = os.path.join(BASE_DIR, 'account_server')
+DB_DIR = os.path.join(DATA_DIR, 'database')
+BACKUP_DIR = os.path.join(DATA_DIR, 'backup')
+TOOLS_DIR = os.path.join(BASE_DIR, 'tools')
+
+# 统一数据库路径
+UNIFIED_DB = os.path.join(DB_DIR, 'unified_learning.db')
+
+# 有道智云 API 配置
+# 根据官方文档：应用 ID 用于 appKey 参数,应用密钥用于签名计算
+YOUDAO_APP_ID = os.environ.get('YOUDAO_APP_ID', '70312765fec01f95')  # 应用 ID（用于 appKey 参数）
+YOUDAO_APP_SECRET = os.environ.get('YOUDAO_APP_SECRET', 'njBnhjj1wh5rAeLQrO2D0uOZnSFhzkp7')  # 应用密钥（用于签名）
+
+# 打印有道 API 配置状态（用于调试）
+if YOUDAO_APP_SECRET:
+    print(f"[INFO] 有道智云 API 已配置：AppID={YOUDAO_APP_ID[:8]}..., AppSecret={YOUDAO_APP_SECRET[:8]}...")
+else:
+    print("[WARNING] 有道智云 API 未配置,题目识别功能将不可用")
+
+# 确保目录存在
+for directory in [DB_DIR, DATA_DIR, BACKUP_DIR, CONFIG_DIR]:
+    os.makedirs(directory, exist_ok=True)
+
+# ============ 日志配置 ============
+def setup_logging():
+    """配置日志系统"""
+    level = getattr(logging, LOG_LEVEL.upper(), logging.INFO)
+    log_dir = os.path.dirname(LOG_FILE_PATH)
+
+    # 检查日志目录是否可写,如果不可写则使用备用路径
+    log_file = LOG_FILE_PATH
+    if log_dir and not os.path.exists(log_dir):
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+        except (PermissionError, OSError):
+            # 降级到用户主目录
+            home_log = os.path.join(os.path.expanduser('~'), '.learning-system', 'server.log')
+            log_file = home_log
+            log_dir = os.path.dirname(home_log)
+            os.makedirs(log_dir, exist_ok=True)
+
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    logger = logging.getLogger('LearningSystem')
+    logger.setLevel(level)
+    logger.handlers = []
+
+    # 尝试添加文件处理器
+    try:
+        if log_dir and os.access(os.path.dirname(log_file), os.W_OK):
+            file_handler = RotatingFileHandler(
+                log_file,
+                maxBytes=10*1024*1024,
+                backupCount=5,
+                encoding='utf-8'
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+            logger.info(f"日志文件：{log_file}")
+    except (PermissionError, OSError) as e:
+        logger.warning(f"无法写入日志文件 {log_file}: {e},将只输出到控制台")
+
+    # 添加控制台处理器
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    return logger
+
+logger = setup_logging()
+
+# 导入工具 API 模块
+sys.path.insert(0, TOOLS_DIR)
+from tools_api import get_time_tracker, get_reminder, get_backup_service
+
+# 静态文件缓存
+STATIC_CACHE = {}
+
+
+# ============ 账号系统函数 ============
+
+def get_unified_db():
+    """获取统一数据库连接"""
+    conn = sqlite3.connect(UNIFIED_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def hash_password(password: str, salt: str) -> str:
+    """使用 salt 哈希密码"""
+    return hashlib.sha256(f'{password}{salt}'.encode()).hexdigest()
+
+def generate_token(user_id: int) -> str:
+    """生成 session token"""
+    timestamp = int(time.time())
+    random_part = secrets.token_hex(16)
+    token_data = f"{user_id}:{timestamp}:{random_part}"
+    return hashlib.sha256(token_data.encode()).hexdigest()
+
+def verify_token(token: str) -> dict:
+    """验证 token 并返回用户信息"""
+    if not token:
+        return {'valid': False, 'user_id': None}
+
+    conn = get_unified_db()
+    cursor = conn.cursor()
+
+    # 在 sessions 表中查找有效 token
+    cursor.execute('''
+        SELECT s.user_id, u.status, u.expires_at
+        FROM sessions s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.token = ? AND s.expires_at > ?
+    ''', (token, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        # 检查用户状态
+        if row['status'] != 'active':
+            return {'valid': False, 'user_id': None, 'message': '账号已被禁用'}
+
+        # 检查账号是否过期
+        expires_at = datetime.datetime.strptime(row['expires_at'], '%Y-%m-%d %H:%M:%S')
+        if datetime.datetime.now() > expires_at:
+            return {'valid': False, 'user_id': None, 'message': '账号已过期'}
+
+        return {'valid': True, 'user_id': row['user_id']}
+
+    return {'valid': False, 'user_id': None}
+
+def create_session(user_id: int) -> str:
+    """创建新的 session"""
+    token = generate_token(user_id)
+    expires_at = datetime.datetime.now() + datetime.timedelta(days=7)  # 7 天有效期
+
+    conn = get_unified_db()
+    cursor = conn.cursor()
+
+    # 删除用户的旧 session
+    cursor.execute('DELETE FROM sessions WHERE user_id = ?', (user_id,))
+
+    # 创建新 session
+    cursor.execute('''
+        INSERT INTO sessions (user_id, token, expires_at, created_at)
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, token, expires_at.strftime('%Y-%m-%d %H:%M:%S'),
+          datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+    conn.commit()
+    conn.close()
+
+    return token
+
+def invalidate_session(token: str) -> bool:
+    """使 session 失效（退出登录）"""
+    conn = get_unified_db()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM sessions WHERE token = ?', (token,))
+    conn.commit()
+    conn.close()
+    return True
+
+
+def verify_user_credentials(username, password):
+    """验证用户凭据"""
+    conn = get_unified_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        # 验证密码哈希
+        salt = row['salt']
+        expected_hash = row['password_hash']
+        actual_hash = hash_password(password, salt)
+
+        if actual_hash == expected_hash:
+            # 检查账号状态
+            if row['status'] != 'active':
+                return {'valid': False, 'message': '账号已被禁用', 'user': None}
+
+            # 检查账号是否过期
+            expires_at = datetime.datetime.strptime(row['expires_at'], '%Y-%m-%d %H:%M:%S')
+            if datetime.datetime.now() > expires_at:
+                return {'valid': False, 'message': '账号已过期', 'user': None}
+
+            # 更新最后登录时间
+            conn = get_unified_db()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE users SET last_login = ? WHERE id = ?',
+                          (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), row['id']))
+            conn.commit()
+            conn.close()
+
+            # 返回用户信息（不含敏感信息）
+            user_info = {
+                'id': row['id'],
+                'username': row['username'],
+                'email': row['email'],
+                'vip_level': row['vip_level'],
+                'created_at': row['created_at'],
+                'last_login': row['last_login']
+            }
+
+            return {'valid': True, 'message': '验证成功', 'user': user_info}
+
+    return {'valid': False, 'message': '用户名或密码错误', 'user': None}
+
+# ============ 错题系统函数 ============
+
+def get_mistake_db():
+    """获取错题数据库连接（使用统一数据库）"""
+    conn = sqlite3.connect(UNIFIED_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_mistake_db():
+    """初始化错题数据库表结构（在统一数据库中）"""
+    conn = get_mistake_db()
+    cursor = conn.cursor()
+    # 创建 mistakes 表（根据统一数据库设计）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS mistakes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject_id INTEGER NOT NULL,
+            content TEXT,
+            wrong_answer TEXT,
+            correct_answer TEXT,
+            error_reason TEXT,
+            difficulty INTEGER DEFAULT 2,
+            images_path TEXT,
+            knowledge_points TEXT,
+            tags TEXT,
+            analysis TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_deleted BOOLEAN DEFAULT 0,
+            review_count INTEGER DEFAULT 0,
+            last_review_date TEXT,
+            next_review_date TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# ============ 学习时间函数 ============
+
+def get_study_db():
+    """获取学习时间数据库连接（使用统一数据库）"""
+    conn = sqlite3.connect(UNIFIED_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_study_db():
+    """初始化学习时间数据库表结构（在统一数据库中）"""
+    conn = get_study_db()
+    cursor = conn.cursor()
+    # 创建 study_time 表（根据统一数据库设计）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS study_time (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            duration REAL NOT NULL,
+            date TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# ============ 单词本函数 ============
+
+def get_vocabulary_db():
+    """获取单词本数据库连接（使用统一数据库）"""
+    conn = sqlite3.connect(UNIFIED_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_vocabulary_db():
+    """初始化单词本数据库表结构（在统一数据库中）"""
+    conn = get_vocabulary_db()
+    cursor = conn.cursor()
+    # 创建 vocabulary 单词本表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS vocabulary (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            word TEXT NOT NULL,
+            phonetic TEXT,
+            definition TEXT NOT NULL,
+            example_sentence TEXT,
+            example_translation TEXT,
+            part_of_speech TEXT,
+            tags TEXT,
+            difficulty_level INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'new',
+            熟练度 INTEGER DEFAULT 0,
+            next_review DATETIME,
+            review_count INTEGER DEFAULT 0,
+            last_reviewed DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            UNIQUE(user_id, word)
+        )
+    ''')
+    # 创建单词学习记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS vocabulary_learning_record (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            vocabulary_id INTEGER NOT NULL,
+            action TEXT NOT NULL,
+            result TEXT,
+            response_time_ms INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (vocabulary_id) REFERENCES vocabulary(id) ON DELETE CASCADE
+        )
+    ''')
+    # 创建索引
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_vocabulary_user_id ON vocabulary(user_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_vocabulary_status ON vocabulary(status)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_vocabulary_next_review ON vocabulary(next_review)')
+    conn.commit()
+    conn.close()
+
+# ============================================================================
+# 有道智云 API 处理函数（题目智能切割）
+# ============================================================================
+
+def get_youdao_error_message(error_code):
+    """获取有道 API 错误码对应的中文说明"""
+    error_messages = {
+        '0': '成功',
+        '101': '参数错误（可能是图片格式/尺寸问题,或需要使用 input 参数）',
+        '102': '词典不支持查询该词',
+        '103': '语言不支持翻译',
+        '104': '不支持的领域',
+        '105': '不支持的语种',
+        '106': '不支持的 API',
+        '107': '图片大小超限（最大 10MB）',
+        '108': '参数为空或非法',
+        '109': '文件缺少语音',
+        '110': '文件缺少视频',
+        '111': '图片格式错误',
+        '112': '语音时长超限',
+        '113': '语音时长过短',
+        '114': '视频时长超限',
+        '115': '视频时长过短',
+        '116': '图片像素过小或过大（要求 50-4096 像素）',
+        '117': '请求超时',
+        '118': '请求频率超限',
+        '119': '并发超限',
+        '201': '签名验证失败',
+        '202': '解密失败',
+        '203': '应用 ID 不存在',
+        '204': '应用密钥不存在',
+        '205': '账户不存在',
+        '206': '时间戳无效（系统时间未同步）',
+        '207': '超过套餐额度',
+        '208': '服务已关闭',
+        '209': '账户余额不足',
+        '301': '服务器超时',
+        '302': '服务器错误',
+        '303': '网络错误',
+        '304': '接口无权限',
+        '305': '参数缺失',
+        '306': '系统错误',
+        '401': '欠费',
+        '402': '余额不足',
+        '403': '套餐包余量不足',
+        '501': '文件下载失败',
+        '502': '文件解码失败',
+        '503': '文件识别失败',
+        '15002': '图片过大（限制 1MB）',
+        '17002': '图片过大（限制 1MB）',
+        '12001': '图片尺寸过大',
+        '12002': '图片 base64 解密失败',
+        '12004': '图片为空',
+        '12005': '不支持的识别图片类型',
+    }
+    return error_messages.get(error_code, f'未知错误码：{error_code}')
+
+
+def compress_image_for_youdao(image_base64, max_size=800 * 1024):
+    """压缩图片到指定大小以内（用于有道 API）
+
+    有道 API 限制图片大小不超过 1MB,此函数将图片压缩到 800KB 以内。
+    """
+    try:
+        from PIL import Image
+        import io
+        import base64
+
+        # 解码 Base64 图片
+        image_bytes = base64.b64decode(image_base64)
+        img = Image.open(io.BytesIO(image_bytes))
+
+        # 转为 RGB 模式（处理 RGBA 图片）
+        if img.mode in ('RGBA', 'LA', 'P'):
+            img = img.convert('RGB')
+
+        original_size = len(image_bytes)
+
+        # 方法 1：降低质量压缩
+        quality = 85
+        while quality >= 10:
+            buffer = io.BytesIO()
+            img.save(buffer, format='JPEG', quality=quality, optimize=True)
+            size = buffer.tell()
+            if size <= max_size:
+                print(f"[图片压缩] 质量={quality}, 大小={size/1024:.1f}KB (原始={original_size/1024:.1f}KB, 压缩比={size/original_size*100:.1f}%)")
+                return base64.b64encode(buffer.getvalue()).decode('utf-8')
+            quality -= 5
+
+        # 方法 2：缩小尺寸 + 降低质量
+        print("[图片压缩] 降低质量不够，开始缩小尺寸...")
+        original_width, original_height = img.size  # 保存原始尺寸
+        img = Image.open(io.BytesIO(image_bytes))  # 重新加载
+        if img.mode in ('RGBA', 'LA', 'P'):
+            img = img.convert('RGB')
+        
+        # 尝试不同缩放比例
+        for scale in [0.5, 0.4, 0.3, 0.25, 0.2, 0.15]:
+            new_w = int(original_width * scale)
+            new_h = int(original_height * scale)
+            img_small = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+            
+            quality = 80
+            while quality >= 30:
+                buffer = io.BytesIO()
+                img_small.save(buffer, format='JPEG', quality=quality, optimize=True)
+                size = buffer.tell()
+                if size <= max_size:
+                    print(f"[图片压缩] 成功！尺寸={new_w}x{new_h}, 质量={quality}, 大小={size/1024:.1f}KB")
+                    return base64.b64encode(buffer.getvalue()).decode('utf-8')
+                quality -= 10
+
+        # 无法压缩，返回最小尺寸图片（不是原始图片）
+        print(f"[图片压缩] 警告：无法压缩到{max_size / 1024:.0f}KB 以内，返回最低质量图片")
+        # 使用最低质量重新压缩
+        quality = 5
+        buffer = io.BytesIO()
+        img.save(buffer, format='JPEG', quality=quality, optimize=True)
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    except ImportError:
+        print("[图片压缩] 警告：Pillow 未安装,跳过压缩")
+        return image_base64
+    except Exception as e:
+        print(f"[图片压缩] 警告：压缩失败 - {e}")
+        return image_base64
+
+
+def handle_youdao_segment_handler(handler, data):
+    """有道智云题目智能切割 API 处理函数
+
+    根据官方文档 (请求要点.txt):
+    - q: Base64 编码的图片（必填）
+    - imageType: 图片类型,1-单题,2-多题,3-整页（必填）
+    - appKey: 应用 ID（必填）
+    - salt: 随机 UUID（必填）
+    - curtime: 当前时间戳（秒）（必填）
+    - signType: 签名版本,固定为 'v3'（必填）
+    - sign: SHA256(appKey + getInput(q) + salt + curtime + appSecret)（必填）
+    - docType: 响应类型,固定为 'json'（必填）
+    """
+    try:
+        import base64
+        import hashlib
+        import time
+        import uuid
+
+        image_data = data.get('image', '')
+
+        print(f"[YoudaoAPI] 有道 API 收到请求,图片数据长度：{len(image_data) if image_data else 0}")
+
+        if not image_data:
+            handler.send_json({'success': False, 'message': '缺少图片数据'})
+            return
+
+        # 移除 base64 前缀
+        if 'base64,' in image_data:
+            image_data = image_data.split('base64,')[1]
+            print(f"[YoudaoAPI] 移除 base64 前缀后数据长度：{len(image_data)}")
+
+        # 确保 image_data 是 UTF-8 编码的字符串
+        if isinstance(image_data, bytes):
+            image_data = image_data.decode('utf-8')
+
+        # 确保是标准 base64（移除可能的换行符）
+        image_data = image_data.replace('\n', '').replace('\r', '').replace(' ', '')
+
+        # 压缩图片（有道 API 限制图片大小不超过 1MB）
+        print(f"[YoudaoAPI] 原始图片 Base64 长度：{len(image_data)} (约{len(image_data)*3/4/1024:.1f}KB)")
+        image_data = compress_image_for_youdao(image_data, max_size=800 * 1024)
+        print(f"[YoudaoAPI] 压缩后图片 Base64 长度：{len(image_data)} (约{len(image_data)*3/4/1024:.1f}KB)")
+
+        # 如果有道 API 密钥未配置,返回空结果（前端将使用手动模式）
+        if not YOUDAO_APP_SECRET:
+            print("[YoudaoAPI] 有道 API 未配置,返回空切割结果")
+            handler.send_json({
+                'success': True,
+                'segments': [],
+                'message': '有道 API 未配置,请手动框选',
+                'needManualCrop': True
+            })
+            return
+
+        # 生成鉴权参数
+        salt = str(uuid.uuid1())  # 随机 UUID
+        cur_time = str(int(time.time()))  # 当前时间戳（秒）
+
+        # 计算签名：sign = sha256(appKey + getInput(q) + salt + curtime + appSecret)
+        # getInput 规则：长度<=20 返回原值,>20 返回 前 10 位 + 长度 + 后 10 位
+        def get_input(s):
+            if len(s) <= 20:
+                return s
+            return s[:10] + str(len(s)) + s[-10:]
+
+        sign_str = YOUDAO_APP_ID + get_input(image_data) + salt + cur_time + YOUDAO_APP_SECRET
+        sign = hashlib.sha256(sign_str.encode('utf-8')).hexdigest()
+
+        # 构建请求参数
+        params = {
+            'q': image_data,         # Base64 编码的图片（必填）
+            'imageType': '1',        # 固定为 1（切题服务仅支持此值）
+            'docType': 'json',       # 返回格式（必填）
+            'appKey': YOUDAO_APP_ID, # 应用 ID（必填）
+            'salt': salt,            # 随机 UUID（必填）
+            'curtime': cur_time,     # 当前时间戳,秒级（必填）
+            'signType': 'v3',        # 签名版本,固定为 v3（必填）
+            'sign': sign,            # SHA256 签名（必填）
+        }
+
+        print(f"[YoudaoAPI] 签名字符串构成：appKey={YOUDAO_APP_ID[:8]}... + getInput(q) + salt={salt[:8]}... + curtime={cur_time} + appSecret")
+        print(f"[YoudaoAPI] getInput 输入长度={len(image_data)}, 输出长度={len(get_input(image_data))}")
+        print(f"[YoudaoAPI] 计算得到的签名：{sign}")
+
+        # 构建请求
+        url = 'https://openapi.youdao.com/cut_question'
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+
+        print(f"[YoudaoAPI] 发送请求到有道 API: {url}")
+        response = requests.post(url, data=params, headers=headers, timeout=30)
+
+        if response.status_code == 200:
+            result = response.json()
+            print(f"[YoudaoAPI] 有道 API 返回：errorCode={result.get('errorCode', '')}")
+            error_code = result.get('errorCode', '')
+
+            if error_code == '0':
+                # 解析切割结果 - 有道 API 返回的是 Result (大写 R)
+                result_data = result.get('Result') or result.get('result') or {}
+                regions = result_data.get('regions', [])
+                print(f"[YoudaoAPI] 识别到 {len(regions)} 个题目区域")
+                segments = []
+
+                for region in regions:
+                    # boundingBox 格式：x1,y1,x2,y2,x3,y3,x4,y4（左上、右上、右下、左下）
+                    bounding_box = region.get('boundingBox', '')
+                    if bounding_box:
+                        coords = list(map(int, bounding_box.split(',')))
+                        if len(coords) >= 8:
+                            # 计算边界框
+                            x1, y1 = coords[0], coords[1]  # 左上
+                            x2, y2 = coords[2], coords[3]  # 右上
+                            x3, y3 = coords[4], coords[5]  # 右下
+                            x4, y4 = coords[6], coords[7]  # 左下
+                            # 计算宽度和高度（使用左上和右下坐标）
+                            width = abs(x2 - x1)
+                            height = abs(y3 - y1)
+                            segments.append({
+                                'x': min(x1, x4),
+                                'y': min(y1, y2),
+                                'width': width,
+                                'height': height,
+                                'questionText': ''
+                            })
+
+                handler.send_json({
+                    'success': True,
+                    'segments': segments,
+                    'message': f'识别到 {len(segments)} 道题目'
+                })
+            else:
+                error_msg = get_youdao_error_message(error_code)
+                print(f"[ERROR] 有道 API 错误码 {error_code}: {error_msg}")
+
+                # 图片过大,自动重试压缩
+                if error_code == '15002':
+                    print("[YoudaoAPI] 图片过大,尝试重新压缩...")
+                    # 已经在上面压缩过了,这里直接返回手动模式
+                    handler.send_json({
+                        'success': True,
+                        'segments': [],
+                        'message': f'图片过大,请尝试裁剪后重新上传或使用手动框选功能',
+                        'needManualCrop': True
+                    })
+                # 时间戳无效,可能是系统时间未同步
+                elif error_code == '206':
+                    print("[YoudaoAPI] 时间戳无效,请检查系统时间是否同步")
+                    handler.send_json({
+                        'success': False,
+                        'message': '时间戳验证失败,请联系管理员同步服务器时间',
+                        'segments': []
+                    })
+                # 签名验证失败
+                elif error_code == '202':
+                    print("[YoudaoAPI] 签名验证失败,检查 API 密钥配置")
+                    handler.send_json({
+                        'success': False,
+                        'message': '签名验证失败,请检查有道 API 密钥配置',
+                        'segments': []
+                    })
+                # 其他参数错误,返回手动模式
+                elif error_code in ['101', '201', '203', '204', '205', '12001', '12002', '12004', '12005']:
+                    handler.send_json({
+                        'success': True,
+                        'segments': [],
+                        'message': f'智能识别失败：{error_msg},请使用手动框选功能',
+                        'needManualCrop': True
+                    })
+                # 其他错误
+                else:
+                    handler.send_json({
+                        'success': False,
+                        'message': f'有道 API 错误：{error_msg}',
+                        'segments': []
+                    })
+        else:
+            print(f"[ERROR] 有道 API 请求失败：{response.status_code}")
+            print(f"[ERROR] 响应内容：{response.text[:500] if response.text else '无'}")
+            handler.send_json({
+                'success': False,
+                'message': f'有道 API 请求失败：{response.status_code}',
+                'segments': []
+            })
+
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] 有道 API 网络请求错误：{str(e)}")
+        handler.send_json({
+            'success': False,
+            'message': '有道 API 网络请求错误：' + str(e),
+            'segments': []
+        })
+    except Exception as e:
+        print(f"[ERROR] 有道 API 处理错误：{str(e)}")
+        import traceback
+        traceback.print_exc()
+        handler.send_json({
+            'success': False,
+            'message': '有道 API 处理错误：' + str(e),
+            'segments': []
+        })
+
+
+# ============ HTTP 请求处理 ============
+
+class UnifiedHandler(BaseHTTPRequestHandler):
+    """统一 HTTP 请求处理器"""
+
+    def send_json(self, data, status=200):
+        """发送 JSON 响应"""
+        body = json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', len(body))
+        # CORS 配置：生产环境应该限制具体域名
+        # 更严格的CORS设置,支持指定域名
+        allowed_origin = os.environ.get('ALLOWED_ORIGIN', '*')
+        self.send_header('Access-Control-Allow-Origin', allowed_origin)
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        self.end_headers()
+        self.wfile.write(body)
+
+    def send_html(self, content, status=200):
+        """发送 HTML 响应"""
+        body = content.encode('utf-8') if isinstance(content, str) else content
+        self.send_response(status)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', len(body))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def send_static(self, file_path, content_type=None):
+        """发送静态文件"""
+        try:
+            if file_path in STATIC_CACHE:
+                content, cached_content_type = STATIC_CACHE[file_path]
+                # 如果缓存中存在,使用缓存的content_type,除非调用者明确指定了一个新的
+                if content_type is None:
+                    content_type = cached_content_type
+            else:
+                with open(file_path, 'rb') as f:
+                    content = f.read()
+
+                # 如果没有指定content_type,根据文件扩展名确定
+                if content_type is None:
+                    _, ext = os.path.splitext(file_path.lower())
+
+                    # 常见文件类型的MIME映射
+                    mime_types = {
+                        '.js': 'application/javascript',
+                        '.css': 'text/css',
+                        '.json': 'application/json',
+                        '.html': 'text/html',
+                        '.htm': 'text/html',
+                        '.txt': 'text/plain',
+                        '.xml': 'application/xml',
+                        '.png': 'image/png',
+                        '.jpg': 'image/jpeg',
+                        '.jpeg': 'image/jpeg',
+                        '.gif': 'image/gif',
+                        '.svg': 'image/svg+xml',
+                        '.ico': 'image/x-icon',
+                        '.webp': 'image/webp',
+                        '.bmp': 'image/bmp',
+                        '.tiff': 'image/tiff',
+                        '.tif': 'image/tiff',
+                        '.pdf': 'application/pdf',
+                        '.zip': 'application/zip',
+                        '.tar': 'application/x-tar',
+                        '.gz': 'application/gzip',
+                        '.woff': 'font/woff',
+                        '.woff2': 'font/woff2',
+                        '.ttf': 'font/ttf',
+                        '.eot': 'application/vnd.ms-fontobject'
+                    }
+
+                    content_type = mime_types.get(ext, 'application/octet-stream')
+
+                STATIC_CACHE[file_path] = (content, content_type)
+
+            self.send_response(200)
+            self.send_header('Content-Type', content_type)
+            self.send_header('Content-Length', len(content))
+            self.send_header('Cache-Control', 'no-cache')
+            self.end_headers()
+            self.wfile.write(content)
+        except FileNotFoundError:
+            self.send_json({'error': 'File not found'}, 404)
+
+    def require_auth(self):
+        """需要认证的端点,返回 user_id 或 None
+        从 Authorization 头中获取 token 进行验证
+        如果没有 token,默认返回 admin 账户 (user_id=1)
+        """
+        auth_header = self.headers.get('Authorization', '')
+
+        if not auth_header:
+            # 尝试从 URL 参数获取 token（兼容旧版本）
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            token = params.get('token', [None])[0]
+        else:
+            # 从 Authorization: Bearer <token> 中获取
+            parts = auth_header.split()
+            if len(parts) == 2 and parts[0].lower() == 'bearer':
+                token = parts[1]
+            else:
+                token = None
+
+        if not token:
+            # 没有 token 时,默认返回 admin 账户 (user_id=1)
+            return 1
+
+        result = verify_token(token)
+        return result['user_id'] if result['valid'] else 1
+
+    def do_OPTIONS(self):
+        """处理 CORS 预检请求"""
+        self.send_response(200)
+        # 使用与send_json相同的CORS配置
+        allowed_origin = os.environ.get('ALLOWED_ORIGIN', '*')
+        self.send_header('Access-Control-Allow-Origin', allowed_origin)
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        self.send_header('Access-Control-Max-Age', '86400')
+        self.end_headers()
+
+    def do_GET(self):
+        """处理 GET 请求"""
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # ============ 路由匹配 ============
+
+        # 1. 学习系统主页
+        if path == '/' or path == '/index.html':
+            self.serve_learning_home()
+            return
+
+        # 2. 工具中心页面
+        if path == '/tools' or path == '/tools/' or path == '/tools.html':
+            self.serve_tools_page()
+            return
+
+        # 3. 日程查看页面
+        if path == '/schedule-view.html' or path == '/schedule-view/':
+            self.serve_schedule_view_page()
+            return
+
+        # 3.5. 移动端主页
+        if path == '/mobile.html' or path == '/mobile/':
+            self.serve_mobile_page()
+            return
+
+        # 4. 错题系统前端
+        if path.startswith('/mistake/') or path.startswith('/mistake-system/'):
+            self.serve_mistake_frontend(path)
+            return
+
+        # 4. 静态资源（CSS, JS, images 等）
+        if path.startswith('/static/'):
+            self.serve_static_resource(path)
+            return
+
+        # 5. API 路由 - 需要认证
+        if path.startswith('/api/'):
+            self.handle_api_get(path)
+            return
+
+        # 6. 账号 API
+        if path.startswith('/account/'):
+            self.handle_account_get(path)
+            return
+
+        # 404
+        self.send_json({'error': 'Not Found'}, 404)
+
+    def do_POST(self):
+        """处理 POST 请求"""
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # 检查请求体大小
+        content_length = int(self.headers.get('Content-Length', 0))
+        if content_length > MAX_CONTENT_LENGTH:
+            self.send_json({
+                'success': False,
+                'message': f'请求体过大,最大支持 {MAX_CONTENT_LENGTH // 1024 // 1024}MB'
+            }, 413)
+            return
+
+        # API 路由
+        if path.startswith('/api/'):
+            self.handle_api_post(path)
+            return
+
+        # 账号 API
+        if path.startswith('/account/'):
+            self.handle_account_post(path)
+            return
+
+        self.send_json({'error': 'Not Found'}, 404)
+
+    def do_PUT(self):
+        """处理 PUT 请求"""
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # API 路由
+        if path.startswith('/api/'):
+            self.handle_api_put(path)
+            return
+
+        self.send_json({'error': 'Not Found'}, 404)
+
+    def do_DELETE(self):
+        """处理 DELETE 请求"""
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # API 路由
+        if path.startswith('/api/'):
+            self.handle_api_delete(path)
+            return
+
+        self.send_json({'error': 'Not Found'}, 404)
+
+    # ============ 学习系统主页 ============
+
+    def serve_learning_home(self):
+        """提供学习系统主页"""
+        index_path = os.path.join(CONFIG_DIR, 'index.html')
+        if os.path.exists(index_path):
+            with open(index_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # 修改 API 地址为统一端口
+            content = content.replace(':8081', ':8080').replace(':3001', ':8080')
+            self.send_html(content)
+        else:
+            self.send_html('<h1>学习系统主页未找到</h1>', 404)
+
+    # ============ 工具中心页面 ============
+
+    def serve_tools_page(self):
+        """提供工具中心页面"""
+        tools_path = os.path.join(CONFIG_DIR, 'tools.html')
+        if os.path.exists(tools_path):
+            with open(tools_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            self.send_html(content)
+        else:
+            self.send_html('<h1>工具中心页面未找到</h1>', 404)
+
+    # ============ 日程查看页面 ============
+
+    def serve_schedule_view_page(self):
+        """提供日程查看页面"""
+        schedule_path = os.path.join(CONFIG_DIR, 'schedule-view.html')
+        if os.path.exists(schedule_path):
+            with open(schedule_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            self.send_html(content)
+        else:
+            self.send_html('<h1>日程查看页面未找到</h1>', 404)
+
+    # ============ 移动端主页 ============
+
+    def serve_mobile_page(self):
+        """提供移动端主页"""
+        mobile_path = os.path.join(CONFIG_DIR, 'mobile.html')
+        if os.path.exists(mobile_path):
+            with open(mobile_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # 修改 API 地址为统一端口
+            content = content.replace(':8081', ':8080').replace(':3001', ':8080')
+            self.send_html(content)
+        else:
+            self.send_html('<h1>移动端主页未找到</h1>', 404)
+
+    # ============ 错题系统前端 ============
+
+    def serve_mistake_frontend(self, path):
+        """提供错题系统前端"""
+        # 开发模式：代理到 Vite 开发服务器
+        if DEV_MODE:
+            self.proxy_to_vite(path)
+            return
+
+        # 生产模式：从 dist 目录提供静态文件
+        # 解析路径,去掉查询参数和片段
+        parsed = urlparse(path)
+        path_without_query = parsed.path
+
+        # 移除前缀
+        if path_without_query.startswith('/mistake/'):
+            sub_path = path_without_query[len('/mistake/'):]
+        elif path_without_query.startswith('/mistake-system/'):
+            sub_path = path_without_query[len('/mistake-system/'):]
+        else:
+            sub_path = path_without_query[1:]
+
+        if sub_path == '' or sub_path == '/':
+            sub_path = 'index.html'
+
+        file_path = os.path.join(MISTAKE_FRONTEND_DIR, sub_path)
+
+        # 安全检查：防止目录遍历攻击
+        real_path = os.path.realpath(file_path)
+        if not real_path.startswith(os.path.realpath(MISTAKE_FRONTEND_DIR)):
+            self.send_json({'error': 'Forbidden'}, 403)
+            return
+
+        if os.path.exists(file_path):
+            # 对于HTML文件,确保使用正确的MIME类型
+            if file_path.lower().endswith('.html'):
+                self.send_static(file_path, 'text/html')
+            else:
+                self.send_static(file_path)
+        else:
+            # SPA 回退到 index.html - 仅针对 HTML 页面请求
+            # 对于静态资源（.js, .css, .png 等）返回 404
+            _, ext = os.path.splitext(sub_path.lower())
+            if ext in ['.js', '.css', '.json', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp', '.woff', '.woff2', '.ttf', '.eot']:
+                # 静态资源文件不存在，返回 404
+                self.send_json({'error': 'Not Found'}, 404)
+            else:
+                # HTML 页面请求，回退到 index.html（支持前端路由）
+                index_path = os.path.join(MISTAKE_FRONTEND_DIR, 'index.html')
+                if os.path.exists(index_path):
+                    self.send_static(index_path, 'text/html')
+                else:
+                    self.send_json({'error': 'Not Found'}, 404)
+
+    def proxy_to_vite(self, path):
+        """代理请求到 Vite 开发服务器"""
+        from urllib.parse import urlparse, parse_qs
+        
+        # 移除 /mistake/ 或 /mistake-system/ 前缀
+        parsed = urlparse(path)
+        path_without_query = parsed.path
+        if path_without_query.startswith('/mistake/'):
+            vite_path = path_without_query[len('/mistake/'):]
+        elif path_without_query.startswith('/mistake-system/'):
+            vite_path = path_without_query[len('/mistake-system/'):]
+        else:
+            vite_path = path_without_query[1:] if path_without_query.startswith('/') else path_without_query
+
+        # 构建 Vite 服务器的 URL
+        vite_url = f"{VITE_DEV_SERVER}/{vite_path}"
+        if parsed.query:
+            vite_url += f"?{parsed.query}"
+
+        try:
+            # 创建请求
+            req = urllib.request.Request(vite_url)
+            req.add_header('User-Agent', 'LearningSystem/1.0')
+
+            # 发送请求到 Vite 服务器
+            with urllib.request.urlopen(req, timeout=30) as response:
+                content = response.read()
+                status = response.status
+                headers = response.headers
+
+                # 获取 Content-Type
+                content_type = headers.get('Content-Type', 'text/html')
+
+                # 发送响应
+                self.send_response(status)
+                self.send_header('Content-Type', content_type)
+                self.send_header('Content-Length', len(content))
+                # 添加 CORS 头,允许热更新
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(content)
+
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                # 404 时返回 index.html（SPA 回退）
+                index_url = f"{VITE_DEV_SERVER}/"
+                try:
+                    with urllib.request.urlopen(index_url, timeout=30) as response:
+                        content = response.read()
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'text/html')
+                        self.send_header('Content-Length', len(content))
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(content)
+                except Exception:
+                    self.send_html('<h1>Vite 开发服务器不可用</h1><p>请确保运行 <code>npm run dev</code></p>', 503)
+            else:
+                self.send_json({'error': str(e)}, e.code)
+        except Exception as e:
+            logger.error(f'代理到 Vite 失败：{e}')
+            self.send_html(f"""
+                <h1>开发模式错误</h1>
+                <p>无法连接到 Vite 开发服务器：</p>
+                <pre>{VITE_DEV_SERVER}</pre>
+                <p>请确保：</p>
+                <ol>
+                    <li>在新终端运行：<code>cd mistake_system/mistake-system-desktop && npm run dev</code></li>
+                    <li>检查 Vite 服务器是否在端口 5173 运行</li>
+                </ol>
+            """, 503)
+
+
+
+    # ============ 静态资源 ============
+
+    def serve_static_resource(self, path):
+        """提供静态资源"""
+        # 从 /static/xxx 提取文件路径
+        sub_path = path[len('/static/'):]
+        file_path = os.path.join(BASE_DIR, 'static', sub_path)
+
+        if os.path.exists(file_path):
+            self.send_static(file_path)
+        else:
+            self.send_json({'error': 'Not Found'}, 404)
+
+    # ============ API 处理 ============
+
+    def handle_api_get(self, path):
+        """处理 API GET 请求"""
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+
+        # 健康检查 - 不需要认证
+        if path == '/api/health':
+            self.send_json({'status': 'ok', 'time': datetime.datetime.now().isoformat()})
+            return
+
+        # 获取当前用户
+        user_id = self.require_auth()
+
+        if path == '/api/user':
+            if user_id:
+                conn = get_unified_db()
+                cursor = conn.cursor()
+                cursor.execute('SELECT id, username, email, vip_level, created_at FROM users WHERE id = ?', (user_id,))
+                row = cursor.fetchone()
+                conn.close()
+                if row:
+                    self.send_json({'success': True, 'user': dict(row)})
+                else:
+                    self.send_json({'success': False, 'message': '用户不存在'}, 404)
+            else:
+                self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        # 错题 API - 需要认证
+        if path.startswith('/api/mistakes'):
+            self.handle_mistakes_get(user_id, params)
+            return
+
+        # 学习时间 API
+        if path.startswith('/api/study-time'):
+            self.handle_study_time_get(user_id, params)
+            return
+
+        # 单词本 API - 每日单词
+        if path.startswith('/api/vocabulary-daily'):
+            self.handle_vocabulary_daily_get(user_id, params)
+            return
+        # 单词本 API
+        if path.startswith('/api/vocabulary'):
+            self.handle_vocabulary_get(user_id, params)
+            return
+
+        # 配置 API
+        if path.startswith('/api/config'):
+            self.handle_config_get(user_id)
+            return
+
+        # AI配置 API
+        if path.startswith('/api/ai-config'):
+            self.handle_ai_config_get(path, user_id)
+            return
+
+        # 计划 API
+        if path.startswith('/api/schedule'):
+            self.handle_schedule_get()
+            return
+
+        # 工具 API - 时间跟踪
+        if path.startswith('/api/tools/time-tracker'):
+            self.handle_tools_time_tracker_get(user_id, params)
+            return
+
+        # 工具 API - 智能提醒
+        if path.startswith('/api/tools/reminder'):
+            self.handle_tools_reminder_get(user_id, params)
+            return
+
+        # 工具 API - 数据备份
+        if path.startswith('/api/tools/backup'):
+            self.handle_tools_backup_get(user_id, params)
+            return
+
+        self.send_json({'error': 'Not Found'}, 404)
+
+    def handle_api_post(self, path):
+        """处理 API POST 请求"""
+        # 获取请求体
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else '{}'
+
+        try:
+            data = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            data = {}
+
+        # 添加请求日志
+        print(f"[API] POST {path} - 请求体：{body[:200] if body else '空'}...")
+
+        # 获取当前用户
+        user_id = self.require_auth()
+        print(f"[API] 用户 ID: {user_id}")
+
+        # 对于需要认证的API端点,如果用户未登录,则拒绝访问
+        # 注意：配置API（如获取配置）可能对未登录用户开放,但设置配置需要登录
+        if path.startswith('/api/config'):
+            # 配置API的处理单独在这里,可能需要特殊处理
+            self.handle_config_post(user_id, data)
+            return
+
+        # AI配置API
+        if path.startswith('/api/ai-config'):
+            # AI配置API需要登录验证
+            if not user_id:
+                self.send_json({'success': False, 'message': '未登录'}, 401)
+                return
+            self.handle_ai_config_post(path, user_id, data)
+            return
+
+        # AI分析API - 代理外部AI请求
+        if path.startswith('/api/ai-analysis'):
+            if not user_id:
+                self.send_json({'success': False, 'message': '未登录'}, 401)
+                return
+            self.handle_ai_analysis_proxy(user_id, data)
+            return
+
+
+        # 错题 API
+        if path.startswith('/api/mistakes'):
+            self.handle_mistakes_post(user_id, data)
+            return
+
+        # 学习时间 API
+        if path.startswith('/api/study-time'):
+            self.handle_study_time_post(user_id, data)
+            return
+
+        # 单词本 API - 添加单词
+        if path.startswith('/api/vocabulary'):
+            self.handle_vocabulary_post(user_id, data)
+            return
+
+        # 单词复习 API
+        if path.startswith('/api/vocabulary-review'):
+            self.handle_vocabulary_review_post(user_id, data)
+            return
+
+        # 单词批量导入 API
+        if path.startswith('/api/vocabulary-batch'):
+            self.handle_vocabulary_batch_import_post(user_id, data)
+            return
+
+        # 工具 API - 时间跟踪
+        if path.startswith('/api/tools/time-tracker'):
+            self.handle_tools_time_tracker_post(user_id, data)
+            return
+
+        # 工具 API - 智能提醒
+        if path.startswith('/api/tools/reminder'):
+            self.handle_tools_reminder_post(user_id, data)
+            return
+
+        # 工具 API - 数据备份
+        if path.startswith('/api/tools/backup'):
+            self.handle_tools_backup_post(user_id, data)
+            return
+
+        # 有道智云 API - 题目智能切割（不需要登录验证）
+        if path.startswith('/api/youdao/segment'):
+            handle_youdao_segment_handler(self, data)
+            return
+
+        self.send_json({'error': 'Not Found'}, 404)
+
+    def handle_api_put(self, path):
+        """处理 API PUT 请求"""
+        # 获取请求体
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else '{}'
+
+        try:
+            data = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            data = {}
+
+        # 获取当前用户
+        user_id = self.require_auth()
+
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        # 解析路径并路由到相应处理函数
+        path_parts = path.strip('/').split('/')
+
+        if len(path_parts) >= 2 and path_parts[0] == 'api' and path_parts[1] == 'mistakes':
+            # 处理更新错题请求: /api/mistakes/{id}
+            if len(path_parts) == 3:  # /api/mistakes/{id}
+                try:
+                    mistake_id = int(path_parts[2])
+                    self.handle_mistakes_put(user_id, mistake_id, data)
+                except ValueError:
+                    self.send_json({'success': False, 'error': 'Invalid mistake ID'}, 400)
+            else:
+                self.send_json({'success': False, 'error': 'Invalid path'}, 400)
+            return
+
+        # 其他PUT API端点
+        self.send_json({'success': False, 'error': 'Not Found'}, 404)
+
+    def handle_api_delete(self, path):
+        """处理 API DELETE 请求"""
+        # 获取当前用户
+        user_id = self.require_auth()
+
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        # 解析路径并路由到相应处理函数
+        path_parts = path.strip('/').split('/')
+
+        if len(path_parts) >= 2 and path_parts[1] == 'mistakes':
+            # 处理删除错题请求: /api/mistakes/{id}
+            self.handle_mistakes_delete(user_id, path)
+            return
+        elif len(path_parts) >= 2 and path_parts[1] == 'study-time':
+            # 处理删除学习时间记录请求: /api/study-time/{id}
+            self.handle_study_time_delete(user_id, path)
+            return
+        elif len(path_parts) >= 2 and path_parts[1] == 'vocabulary':
+            # 处理删除单词请求：/api/vocabulary/{id}
+            self.handle_vocabulary_delete(user_id, path)
+            return
+        else:
+            self.send_json({'error': 'Not Found'}, 404)
+
+    # ============ 错题 API ============
+
+    def handle_mistakes_get(self, user_id, params):
+        """获取错题列表"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        conn = get_mistake_db()
+        cursor = conn.cursor()
+
+        # 按用户过滤（统一数据库中的mistakes表）
+        cursor.execute('SELECT * FROM mistakes WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        mistakes = [dict(row) for row in rows]
+        self.send_json({'success': True, 'data': mistakes})
+
+    def handle_mistakes_post(self, user_id, data):
+        """创建或更新错题"""
+        conn = get_mistake_db()
+        cursor = conn.cursor()
+
+        # 确保所有字段值都是适当类型
+        def safe_str(val):
+            if val is None:
+                return ''
+            elif isinstance(val, (list, dict)):
+                return json.dumps(val, ensure_ascii=False)
+            else:
+                return str(val)
+
+        # 创建新错题（使用统一数据库结构）
+        cursor.execute('''
+            INSERT INTO mistakes (user_id, subject_id, content, wrong_answer, correct_answer, error_reason, analysis,
+                                  knowledge_points, tags, difficulty, images_path)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id,
+              int(data.get('subject_id', 1)),
+              safe_str(data.get('content', '')),
+              safe_str(data.get('wrong_answer', '')),
+              safe_str(data.get('correct_answer', '')),
+              safe_str(data.get('error_reason', '')),
+              safe_str(data.get('analysis', '')),
+              safe_str(data.get('knowledge_points', '')),
+              safe_str(data.get('tags', '')),
+              int(data.get('difficulty', 2)),
+              safe_str(data.get('images_path', ''))))  # 添加 images_path 参数
+
+        mistake_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        self.send_json({'success': True, 'id': mistake_id})
+
+    def handle_mistakes_delete(self, user_id, path):
+        """删除错题"""
+
+        # 从路径中提取错题ID
+        path_parts = path.strip('/').split('/')
+        if len(path_parts) < 3:
+            self.send_json({'success': False, 'message': '缺少错题ID'}, 400)
+            return
+
+        try:
+            mistake_id = int(path_parts[2])  # /api/mistakes/{id}
+        except ValueError:
+            self.send_json({'success': False, 'message': '无效的错题ID'}, 400)
+            return
+
+        conn = get_mistake_db()
+        cursor = conn.cursor()
+
+        try:
+            # 检查错题是否存在且属于当前用户
+            cursor.execute('SELECT id FROM mistakes WHERE id = ? AND user_id = ?', (mistake_id, user_id))
+            row = cursor.fetchone()
+
+            if not row:
+                self.send_json({'success': False, 'message': '错题不存在或无权限删除'}, 404)
+                return
+
+            # 删除错题
+            cursor.execute('DELETE FROM mistakes WHERE id = ? AND user_id = ?', (mistake_id, user_id))
+            conn.commit()
+
+            self.send_json({'success': True, 'message': '错题删除成功'})
+        except Exception as e:
+            self.send_json({'success': False, 'message': str(e)})
+        finally:
+            conn.close()
+
+    def handle_mistakes_put(self, user_id, mistake_id, data):
+        """更新错题"""
+        conn = get_mistake_db()
+        cursor = conn.cursor()
+
+        try:
+            # 检查错题是否存在且属于当前用户
+            cursor.execute('SELECT id FROM mistakes WHERE id = ? AND user_id = ?', (mistake_id, user_id))
+            row = cursor.fetchone()
+
+            if not row:
+                self.send_json({'success': False, 'message': '错题不存在或无权限更新'}, 404)
+                return
+
+            # 确保值是安全的类型
+            def safe_str(val):
+                if val is None:
+                    return ''
+                elif isinstance(val, (list, dict)):
+                    return json.dumps(val, ensure_ascii=False)
+                else:
+                    return str(val)
+
+            # 构建更新语句和参数
+            update_fields = []
+            update_values = []
+
+            # 检查data中的字段,并将其添加到更新语句中
+            for field in ['content', 'wrong_answer', 'correct_answer', 'error_reason', 'analysis',
+                         'knowledge_points', 'tags', 'difficulty', 'images_path']:
+                if field in data:
+                    update_fields.append(f"{field} = ?")
+                    update_values.append(safe_str(data[field]))
+
+            if not update_fields:
+                self.send_json({'success': False, 'message': '没有提供要更新的字段'}, 400)
+                return
+
+            # 添加用户ID和ID到参数末尾
+            update_values.extend([user_id, mistake_id])
+
+            # 执行更新
+            sql = f"UPDATE mistakes SET {', '.join(update_fields)} WHERE user_id = ? AND id = ?"
+            cursor.execute(sql, update_values)
+            conn.commit()
+
+            # 返回更新后的错题
+            cursor.execute('SELECT * FROM mistakes WHERE id = ? AND user_id = ?', (mistake_id, user_id))
+            updated_mistake = cursor.fetchone()
+
+            if updated_mistake:
+                self.send_json({'success': True, 'data': dict(updated_mistake)})
+            else:
+                self.send_json({'success': True, 'message': '错题更新成功'})
+
+        except Exception as e:
+            self.send_json({'success': False, 'message': str(e)})
+        finally:
+            conn.close()
+
+    # ============ 学习时间 API ============
+
+    def handle_study_time_get(self, user_id, params):
+        """获取学习时间统计"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        conn = get_study_db()
+        cursor = conn.cursor()
+
+        # 获取今日学习时间（统一数据库中的study_time表）
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
+        cursor.execute('SELECT subject, SUM(duration) as total FROM study_time WHERE user_id = ? AND date = ? GROUP BY subject',
+                       (user_id, today))
+        rows = cursor.fetchall()
+        conn.close()
+
+        today_total = sum(row['total'] for row in rows)
+        self.send_json({
+            'success': True,
+            'today': dict((r['subject'], r['total']) for r in rows),
+            'today_total': today_total
+        })
+
+    def handle_study_time_post(self, user_id, data):
+        """记录学习时间"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        subject = data.get('subject', '其他')
+        duration = data.get('duration', 0)
+
+        conn = get_study_db()
+        cursor = conn.cursor()
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
+
+        cursor.execute('''
+            INSERT INTO study_time (user_id, subject, duration, date)
+            VALUES (?, ?, ?, ?)
+        ''', (user_id, subject, duration, today))
+
+        conn.commit()
+        conn.close()
+
+        self.send_json({'success': True})
+
+    def handle_study_time_delete(self, user_id, path):
+        """删除学习时间记录"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        # 从路径中提取记录ID
+        path_parts = path.strip('/').split('/')
+        if len(path_parts) < 3:
+            self.send_json({'success': False, 'message': '缺少学习时间记录ID'}, 400)
+            return
+
+        try:
+            record_id = int(path_parts[2])  # /api/study-time/{id}
+        except ValueError:
+            self.send_json({'success': False, 'message': '无效的学习时间记录ID'}, 400)
+            return
+
+        conn = get_study_db()
+        cursor = conn.cursor()
+
+        try:
+            # 检查记录是否存在且属于当前用户
+            cursor.execute('SELECT id FROM study_time WHERE id = ? AND user_id = ?', (record_id, user_id))
+            row = cursor.fetchone()
+
+            if not row:
+                self.send_json({'success': False, 'message': '学习时间记录不存在或无权限删除'}, 404)
+                return
+
+            # 删除记录
+            cursor.execute('DELETE FROM study_time WHERE id = ? AND user_id = ?', (record_id, user_id))
+            conn.commit()
+
+            self.send_json({'success': True, 'message': '学习时间记录删除成功'})
+        except Exception as e:
+            self.send_json({'success': False, 'message': str(e)})
+        finally:
+            conn.close()
+
+    # ============ 单词本 API ============
+
+    def handle_vocabulary_get(self, user_id, params):
+        """获取单词本列表"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        conn = get_vocabulary_db()
+        cursor = conn.cursor()
+
+        # 获取所有单词（按用户过滤）
+        cursor.execute('SELECT * FROM vocabulary WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'data': [dict(row) for row in rows]
+        })
+
+    def handle_vocabulary_daily_get(self, user_id, params):
+        import random
+        if not user_id:
+            self.send_json({"success": False, "message": "未登录"}, 401)
+            return
+        daily_goal = int(params.get("goal", 10))
+        conn = get_vocabulary_db()
+        cursor = conn.cursor()
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        # Get review words
+        cursor.execute("SELECT * FROM vocabulary WHERE user_id = ? AND status IN ('learning', 'reviewing') AND date(next_review) <= date(?)", (user_id, today))
+        review_words = [dict(row) for row in cursor.fetchall()]
+        # Get new words
+        cursor.execute("SELECT * FROM vocabulary WHERE user_id = ? AND status = 'new' ORDER BY created_at ASC LIMIT ?", (user_id, daily_goal // 2))
+        new_words = [dict(row) for row in cursor.fetchall()]
+        # Fill with random words if needed
+        total_needed = daily_goal - len(review_words) - len(new_words)
+        if total_needed > 0:
+            cursor.execute("SELECT * FROM vocabulary WHERE user_id = ? AND status != 'mastered' ORDER BY RANDOM() LIMIT ?", (user_id, total_needed))
+            random_words = [dict(row) for row in cursor.fetchall()]
+            new_words.extend(random_words)
+        conn.close()
+        today_words = review_words + new_words
+        random.shuffle(today_words)
+        self.send_json({"success": True, "data": {"words": today_words, "goal": daily_goal, "review_count": len(review_words), "new_count": len(new_words)}})
+
+    def handle_vocabulary_post(self, user_id, data):
+        """添加单词到单词本"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        word = data.get('word', '').strip()
+        if not word:
+            self.send_json({'success': False, 'message': '单词不能为空'}, 400)
+            return
+
+        conn = get_vocabulary_db()
+        cursor = conn.cursor()
+
+        try:
+            # 检查单词是否已存在
+            cursor.execute('SELECT id FROM vocabulary WHERE user_id = ? AND word = ?', (user_id, word))
+            if cursor.fetchone():
+                self.send_json({'success': False, 'message': '单词已存在'}, 409)
+                return
+
+            # 插入新单词
+            cursor.execute('''
+                INSERT INTO vocabulary (user_id, word, phonetic, definition, example_sentence,
+                                       example_translation, part_of_speech, tags, difficulty_level, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                user_id,
+                word,
+                data.get('phonetic', ''),
+                data.get('definition', ''),
+                data.get('example_sentence', ''),
+                data.get('example_translation', ''),
+                data.get('part_of_speech', ''),
+                json.dumps(data.get('tags', []), ensure_ascii=False),
+                data.get('difficulty_level', 1),
+                data.get('status', 'new')
+            ))
+
+            conn.commit()
+            self.send_json({'success': True, 'message': '单词添加成功'})
+        except Exception as e:
+            self.send_json({'success': False, 'message': str(e)})
+        finally:
+            conn.close()
+
+    def handle_vocabulary_put(self, user_id, vocabulary_id, data):
+        """更新单词信息"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        conn = get_vocabulary_db()
+        cursor = conn.cursor()
+
+        try:
+            # 检查单词是否存在且属于当前用户
+            cursor.execute('SELECT id FROM vocabulary WHERE id = ? AND user_id = ?', (vocabulary_id, user_id))
+            if not cursor.fetchone():
+                self.send_json({'success': False, 'message': '单词不存在或无权限'}, 404)
+                return
+
+            # 更新单词信息
+            cursor.execute('''
+                UPDATE vocabulary
+                SET phonetic = ?, definition = ?, example_sentence = ?,
+                    example_translation = ?, part_of_speech = ?, tags = ?,
+                    difficulty_level = ?, status = ?, 熟练度 = ?,
+                    next_review = ?, review_count = ?, last_reviewed = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND user_id = ?
+            ''', (
+                data.get('phonetic', ''),
+                data.get('definition', ''),
+                data.get('example_sentence', ''),
+                data.get('example_translation', ''),
+                data.get('part_of_speech', ''),
+                json.dumps(data.get('tags', []), ensure_ascii=False),
+                data.get('difficulty_level', 1),
+                data.get('status', 'new'),
+                data.get('熟练度', 0),
+                data.get('next_review'),
+                data.get('review_count', 0),
+                data.get('last_reviewed'),
+                vocabulary_id,
+                user_id
+            ))
+
+            conn.commit()
+            self.send_json({'success': True, 'message': '单词更新成功'})
+        except Exception as e:
+            self.send_json({'success': False, 'message': str(e)})
+        finally:
+            conn.close()
+
+    def handle_vocabulary_delete(self, user_id, path):
+        """删除单词"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        path_parts = path.strip('/').split('/')
+        if len(path_parts) < 3:
+            self.send_json({'success': False, 'message': '缺少单词 ID'}, 400)
+            return
+
+        try:
+            vocabulary_id = int(path_parts[2])
+        except ValueError:
+            self.send_json({'success': False, 'message': '无效的单词 ID'}, 400)
+            return
+
+        conn = get_vocabulary_db()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('SELECT id FROM vocabulary WHERE id = ? AND user_id = ?', (vocabulary_id, user_id))
+            if not cursor.fetchone():
+                self.send_json({'success': False, 'message': '单词不存在或无权限删除'}, 404)
+                return
+
+            cursor.execute('DELETE FROM vocabulary WHERE id = ? AND user_id = ?', (vocabulary_id, user_id))
+            conn.commit()
+            self.send_json({'success': True, 'message': '单词删除成功'})
+        except Exception as e:
+            self.send_json({'success': False, 'message': str(e)})
+        finally:
+            conn.close()
+
+    def handle_vocabulary_review_post(self, user_id, data):
+        """记录单词复习"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        vocabulary_id = data.get('vocabulary_id')
+        result = data.get('result')  # 'correct' or 'wrong'
+        response_time_ms = data.get('response_time_ms', 0)
+
+        if not vocabulary_id:
+            self.send_json({'success': False, 'message': '缺少单词 ID'}, 400)
+            return
+
+        conn = get_vocabulary_db()
+        cursor = conn.cursor()
+
+        try:
+            # 检查单词是否存在
+            cursor.execute('SELECT * FROM vocabulary WHERE id = ? AND user_id = ?', (vocabulary_id, user_id))
+            vocab_row = cursor.fetchone()
+            if not vocab_row:
+                self.send_json({'success': False, 'message': '单词不存在'}, 404)
+                return
+
+            # 更新单词状态
+            current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            new_review_count = vocab_row['review_count'] + 1
+
+            # 根据结果计算下次复习时间
+            if result == 'correct':
+                # 答对了,增加熟练度,延长复习间隔
+                new_熟练度 = min(vocab_row['熟练度'] + 1, 5)
+                days_until_review = [1, 2, 4, 7, 14, 30][new_熟练度]
+                next_review = (datetime.datetime.now() + datetime.timedelta(days=days_until_review)).strftime('%Y-%m-%d')
+                status = 'mastered' if new_熟练度 >= 5 else 'reviewing'
+            else:
+                # 答错了,降低熟练度,缩短复习间隔
+                new_熟练度 = max(vocab_row['熟练度'] - 1, 0)
+                days_until_review = 1
+                next_review = (datetime.datetime.now() + datetime.timedelta(days=days_until_review)).strftime('%Y-%m-%d')
+                status = 'reviewing'
+
+            cursor.execute('''
+                UPDATE vocabulary
+                SET 熟练度 = ?, review_count = ?, last_reviewed = ?,
+                    next_review = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? AND user_id = ?
+            ''', (new_熟练度,new_review_count, current_time, next_review, status, vocabulary_id, user_id))
+
+            # 记录学习行为
+            cursor.execute('''
+                INSERT INTO vocabulary_learning_record (user_id, vocabulary_id, action, result, response_time_ms)
+                VALUES (?, ?, 'review', ?, ?)
+            ''', (user_id, vocabulary_id, result, response_time_ms))
+
+            conn.commit()
+            self.send_json({'success': True, 'message': '复习记录成功'})
+        except Exception as e:
+            self.send_json({'success': False, 'message': str(e)})
+        finally:
+            conn.close()
+
+    def handle_vocabulary_batch_import_post(self, user_id, data):
+        """批量导入单词"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        words = data.get('words', [])
+        if not words:
+            self.send_json({'success': False, 'message': '单词列表不能为空'}, 400)
+            return
+
+        conn = get_vocabulary_db()
+        cursor = conn.cursor()
+
+        imported_count = 0
+        skipped_count = 0
+
+        for word_data in words:
+            word = word_data.get('word', '').strip()
+            if not word:
+                continue
+
+            try:
+                # 检查是否已存在
+                cursor.execute('SELECT id FROM vocabulary WHERE user_id = ? AND word = ?', (user_id, word))
+                if cursor.fetchone():
+                    skipped_count += 1
+                    continue
+
+                cursor.execute('''
+                    INSERT INTO vocabulary (user_id, word, phonetic, definition, example_sentence,
+                                           example_translation, part_of_speech, tags, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    user_id,
+                    word,
+                    word_data.get('phonetic', ''),
+                    word_data.get('definition', ''),
+                    word_data.get('example_sentence', ''),
+                    word_data.get('example_translation', ''),
+                    word_data.get('part_of_speech', ''),
+                    json.dumps(word_data.get('tags', []), ensure_ascii=False),
+                    'new'
+                ))
+                imported_count += 1
+            except Exception:
+                skipped_count += 1
+                continue
+
+        conn.commit()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'message': f'导入完成',
+            'imported_count': imported_count,
+            'skipped_count': skipped_count
+        })
+
+    # ============ 配置 API ============
+
+    def handle_config_get(self, user_id):
+        """获取用户配置（合并学习配置和AI配置）"""
+        combined_config = {}
+
+        conn = None
+        try:
+            # 获取学习配置
+            if user_id:
+                conn = get_unified_db()
+                cursor = conn.cursor()
+
+                # 获取学习配置
+                cursor.execute('SELECT value FROM user_preferences WHERE user_id = ? AND key = ?', (user_id, 'learning_config'))
+                row = cursor.fetchone()
+                if row and row[0]:
+                    try:
+                        learning_config = json.loads(row[0])
+                        combined_config.update(learning_config)
+                    except json.JSONDecodeError:
+                        pass  # 如果解析失败则忽略
+
+                # 获取AI配置
+                cursor.execute('SELECT value FROM user_preferences WHERE user_id = ? AND key = ?', (user_id, 'ai_config'))
+                row = cursor.fetchone()
+                if row and row[0]:
+                    try:
+                        ai_config = json.loads(row[0])
+                        # 检查是否包含嵌套的ai_config对象
+                        if isinstance(ai_config, dict) and 'ai_config' in ai_config:
+                            # 提取嵌套的ai_config内容
+                            nested_ai_config = ai_config.get('ai_config', {})
+                            combined_config.update(nested_ai_config)
+                        else:
+                            # 直接合并AI配置
+                            combined_config.update(ai_config)
+                    except json.JSONDecodeError:
+                        pass  # 如果解析失败则忽略
+
+                conn.close()
+
+            if combined_config:
+                # 如果有用户配置,返回合并后的配置
+                self.send_json({'success': True, 'data': combined_config, 'source': 'user'})
+                return
+
+            # 没有用户配置,返回系统配置
+            config_path = os.path.join(BASE_DIR, 'config.json')
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                # 提取学习相关配置
+                learning_config = config.get('学习配置', config)
+                self.send_json({'success': True, 'data': learning_config, 'source': 'system'})
+            else:
+                self.send_json({'success': True, 'data': self.get_default_learning_config(), 'source': 'default'})
+        except Exception as e:
+            self.send_json({'success': False, 'error': str(e)})
+        finally:
+            if conn:
+                conn.close()
+
+    def handle_config_post(self, user_id, data):
+        """保存用户配置"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        conn = None
+        try:
+            conn = get_unified_db()
+            cursor = conn.cursor()
+
+            # 检查数据是否包含AI配置信息
+            if 'provider' in data:
+                # 这是一个AI配置,我们需要从现有的AI配置中合并新的数据
+                cursor.execute('SELECT value FROM user_preferences WHERE user_id = ? AND key = ?', (user_id, 'ai_config'))
+                row = cursor.fetchone()
+
+                if row and row[0]:
+                    user_config = json.loads(row[0])
+                else:
+                    user_config = {}
+
+                # 更新AI配置部分
+                if 'ai_config' not in user_config:
+                    user_config['ai_config'] = {}
+
+                # 根据provider确定配置类型
+                provider = data.get('provider', 'general')
+                user_config['ai_config'][provider] = data
+
+                config_json = json.dumps(user_config, ensure_ascii=False)
+
+                if row:
+                    # 更新AI配置
+                    cursor.execute('UPDATE user_preferences SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND key = ?', (config_json, user_id, 'ai_config'))
+                else:
+                    # 插入新AI配置
+                    cursor.execute('INSERT INTO user_preferences (user_id, key, value) VALUES (?, ?, ?)', (user_id, 'ai_config', config_json))
+
+                # 清理旧的包含AI配置的learning_config记录,避免冲突
+                cursor.execute('DELETE FROM user_preferences WHERE user_id = ? AND key = ? AND value LIKE ?', (user_id, 'learning_config', '%"provider"%'))
+            else:
+                # 这是一般学习配置
+                config_json = json.dumps(data, ensure_ascii=False)
+
+                cursor.execute('SELECT value FROM user_preferences WHERE user_id = ? AND key = ?', (user_id, 'learning_config'))
+                row = cursor.fetchone()
+
+                if row:
+                    # 更新配置
+                    cursor.execute('UPDATE user_preferences SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND key = ?', (config_json, user_id, 'learning_config'))
+                else:
+                    # 插入新配置
+                    cursor.execute('INSERT INTO user_preferences (user_id, key, value) VALUES (?, ?, ?)', (user_id, 'learning_config', config_json))
+
+            conn.commit()
+            # 返回成功响应,包括data字段以兼容前端期望
+            self.send_json({'success': True, 'message': '配置已保存', 'data': data})
+        except json.JSONDecodeError as e:
+            self.send_json({'success': False, 'error': f'JSON解析错误: {str(e)}'})
+        except Exception as e:
+            self.send_json({'success': False, 'error': str(e)})
+        finally:
+            if conn:
+                conn.close()
+
+    # ============ AI 配置 API ============
+
+    def handle_ai_config_get(self, path, user_id):
+        """获取AI配置"""
+        try:
+            # 检查路径是哪个AI提供商的配置
+            if '/api/ai-config/qianwen' in path:
+                config_type = 'qianwen'
+            elif '/api/ai-config/deepseek' in path:
+                config_type = 'deepseek'
+            elif '/api/ai-config/openai' in path:
+                config_type = 'openai'
+            else:
+                config_type = 'general'
+
+            # 如果用户已登录,尝试从用户配置获取
+            if user_id:
+                conn = get_unified_db()
+                cursor = conn.cursor()
+
+                cursor.execute('SELECT value FROM user_preferences WHERE user_id = ? AND key = ?', (user_id, 'ai_config'))
+                row = cursor.fetchone()
+
+                if row and row[0]:
+                    user_config = json.loads(row[0])
+                    # 返回特定AI提供商的配置
+                    ai_config = user_config.get('ai_config', {})
+                    if config_type != 'general' and config_type in ai_config:
+                        ai_config = ai_config[config_type]
+
+                    conn.close()
+                    self.send_json({'success': True, 'data': ai_config})
+                    return
+                conn.close()
+
+            # 用户未登录或没有用户配置,返回系统级AI配置
+            ai_config_path = os.path.join(BASE_DIR, 'ai_config.json')
+            if os.path.exists(ai_config_path):
+                with open(ai_config_path, 'r', encoding='utf-8') as f:
+                    ai_config = json.load(f)
+                if config_type != 'general' and config_type in ai_config:
+                    ai_config = ai_config[config_type]
+            else:
+                # 返回默认配置
+                ai_config = self.get_default_ai_config()
+                if config_type != 'general':
+                    ai_config = ai_config.get('providers', {}).get(config_type, {})
+
+            self.send_json({'success': True, 'data': ai_config})
+        except json.JSONDecodeError as e:
+            self.send_json({'success': False, 'error': f'JSON解析错误: {str(e)}'})
+        except Exception as e:
+            self.send_json({'success': False, 'error': str(e)})
+
+    def handle_ai_config_post(self, path, user_id, data):
+        """保存AI配置"""
+        if not user_id:
+            self.send_json({'success': False, 'message': '未登录'}, 401)
+            return
+
+        # 验证必要的字段
+        if not data.get('apiKey') or not data.get('provider'):
+            self.send_json({'success': False, 'error': '缺少必要的API配置（apiKey和provider）'})
+            return
+
+        conn = None
+        try:
+            conn = get_unified_db()
+            cursor = conn.cursor()
+
+            # 获取当前用户配置
+            cursor.execute('SELECT value FROM user_preferences WHERE user_id = ? AND key = ?', (user_id, 'ai_config'))
+            row = cursor.fetchone()
+
+            if row and row[0]:
+                user_config = json.loads(row[0])
+            else:
+                user_config = {}
+
+            # 更新AI配置部分
+            if 'ai_config' not in user_config:
+                user_config['ai_config'] = {}
+
+            # 根据路径确定是哪种AI配置
+            if '/api/ai-config/qianwen' in path:
+                user_config['ai_config']['qianwen'] = data
+            elif '/api/ai-config/deepseek' in path:
+                user_config['ai_config']['deepseek'] = data
+            else:
+                # 一般AI配置
+                user_config['ai_config']['general'] = data
+
+            config_json = json.dumps(user_config, ensure_ascii=False)
+
+            if row:
+                # 更新配置
+                cursor.execute('UPDATE user_preferences SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND key = ?', (config_json, user_id, 'ai_config'))
+            else:
+                # 插入新配置
+                cursor.execute('INSERT INTO user_preferences (user_id, key, value) VALUES (?, ?, ?)', (user_id, 'ai_config', config_json))
+
+            conn.commit()
+            self.send_json({'success': True, 'message': 'AI配置已保存'})
+        except Exception as e:
+            self.send_json({'success': False, 'error': str(e)})
+        finally:
+            if conn:
+                conn.close()
+
+    def get_default_learning_config(self):
+        """默认学习配置"""
+        return {
+            "系统信息": {
+                "名称": "高考错题系统",
+                "版本": "1.0.0",
+                "目标高考日期": "2026-06-07",
+                "倒计时天数": 90
+            },
+            "学习目标": {
+                "总分目标": 540,
+                "当前总分": 376,
+                "各科目标": {
+                    "语文": {"当前": 78, "目标": 95, "提分": 17},
+                    "数学": {"当前": 88, "目标": 110, "提分": 22},
+                    "英语": {"当前": 50, "目标": 95, "提分": 45},
+                    "物理": {"当前": 50, "目标": 75, "提分": 25},
+                    "化学": {"Current": 55, "目标": 80, "提分": 25},
+                    "政治": {"当前": 55, "目标": 85, "提分": 30}
+                }
+            },
+            "时间管理": {
+                "每日学习时间": "6:00-22:20",
+                "单日科目": ["数学", "政治"],
+                "双日科目": ["物理", "语文"]
+            }
+        }
+
+    def get_default_ai_config(self):
+        """默认AI配置"""
+        return {
+            "providers": {
+                "qwen": {
+                    "enabled": False,
+                    "apiKey": "",
+                    "apiEndpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+                    "model": "qwen-max",
+                    "maxTokens": 2000,
+                    "temperature": 0.7
+                },
+                "deepseek": {
+                    "enabled": False,
+                    "apiKey": "",
+                    "apiEndpoint": "https://api.deepseek.com/chat/completions",
+                    "model": "deepseek-chat",
+                    "maxTokens": 2000,
+                    "temperature": 0.7
+                },
+                "openai": {
+                    "enabled": False,
+                    "apiKey": "",
+                    "apiEndpoint": "https://api.openai.com/v1/chat/completions",
+                    "model": "gpt-4o",
+                    "maxTokens": 2000,
+                    "temperature": 0.7
+                }
+            }
+        }
+
+    # ============ 计划 API ============
+
+    def handle_schedule_get(self):
+        """获取学习计划"""
+        schedule_path = os.path.join(DB_DIR, 'schedule.json')
+        if os.path.exists(schedule_path):
+            with open(schedule_path, 'r', encoding='utf-8') as f:
+                schedule = json.load(f)
+            self.send_json({'success': True, 'schedule': schedule})
+        else:
+            self.send_json({'success': True, 'schedule': self.get_default_schedule()})
+
+    def get_default_schedule(self):
+        """默认学习计划"""
+        return {
+            'single_day': {
+                'subjects': ['语文', '数学', '英语'],
+                'tests': ['数学', '语文']
+            },
+            'double_day': {
+                'subjects': ['物理', '化学', '生物'],
+                'tests': ['物理', '化学']
+            }
+        }
+
+    # ============ 工具 API ============
+
+    def handle_tools_time_tracker_get(self, user_id, params):
+        """处理时间跟踪 GET 请求"""
+        tracker = get_time_tracker()
+
+        # 获取今日统计
+        stats = tracker.get_today_stats()
+        self.send_json({'success': True, 'data': stats, 'type': 'today_stats'})
+
+    def handle_tools_time_tracker_post(self, user_id, data):
+        """处理时间跟踪 POST 请求"""
+        tracker = get_time_tracker()
+        action = data.get('action', '')
+
+        if action == 'start_session':
+            subject = data.get('subject', '其他')
+            task_type = data.get('task_type', '学习')
+            result = tracker.start_session(subject, task_type)
+            self.send_json({'success': True, 'data': result})
+
+        elif action == 'end_session':
+            session_id = data.get('session_id')
+            efficiency_score = data.get('efficiency_score', 80)
+            notes = data.get('notes', '')
+            if session_id:
+                result = tracker.end_session(session_id, efficiency_score, notes)
+                self.send_json({'success': result.get('success', True), 'data': result})
+            else:
+                self.send_json({'success': False, 'error': '缺少 session_id'}, 400)
+
+        elif action == 'get_weekly':
+            result = tracker.get_weekly_report()
+            self.send_json({'success': True, 'data': result})
+
+        elif action == 'get_suggestions':
+            result = tracker.get_suggestions()
+            self.send_json({'success': True, 'data': result})
+
+        elif action == 'get_config':
+            result = tracker.get_config()
+            self.send_json({'success': True, 'data': result})
+
+        elif action == 'update_config':
+            result = tracker.update_config(data.get('config', {}))
+            self.send_json({'success': True, 'data': result})
+
+        else:
+            self.send_json({'success': False, 'error': '未知操作'}, 400)
+
+    def handle_tools_reminder_get(self, user_id, params):
+        """处理智能提醒 GET 请求"""
+        reminder = get_reminder()
+
+        # 获取时间表
+        schedule = reminder.get_schedule()
+        current_task = reminder.get_current_task()
+        next_tasks = reminder.get_next_tasks(3)
+        config = reminder.get_config()
+
+        self.send_json({
+            'success': True,
+            'data': {
+                'schedule': schedule,
+                'current_task': current_task,
+                'next_tasks': next_tasks,
+                'config': config,
+                'enabled': reminder.reminder_enabled
+            }
+        })
+
+    def handle_tools_reminder_post(self, user_id, data):
+        """处理智能提醒 POST 请求"""
+        reminder = get_reminder()
+        action = data.get('action', '')
+
+        if action == 'send_test':
+            title = data.get('title', '测试提醒')
+            message = data.get('message', '这是一条测试消息')
+            result = reminder.send_test_notification(title, message)
+            self.send_json({'success': result.get('success', False), 'data': result})
+
+        elif action == 'update_config':
+            result = reminder.update_config(data.get('config', {}))
+            self.send_json({'success': True, 'data': result})
+
+        elif action == 'toggle':
+            enabled = data.get('enabled', True)
+            result = reminder.toggle_reminder(enabled)
+            self.send_json({'success': True, 'data': result})
+
+        else:
+            self.send_json({'success': False, 'error': '未知操作'}, 400)
+
+    def handle_tools_backup_get(self, user_id, params):
+        """处理数据备份 GET 请求"""
+        backup = get_backup_service()
+
+        action = params.get('action', ['list'])[0]
+
+        if action == 'list':
+            backups = backup.list_backups()
+            self.send_json({'success': True, 'data': backups})
+
+        elif action == 'disk_space':
+            result = backup.check_disk_space()
+            self.send_json({'success': True, 'data': result})
+
+        elif action == 'get_config':
+            result = backup.get_config()
+            self.send_json({'success': True, 'data': result})
+
+        else:
+            self.send_json({'success': False, 'error': '未知操作'}, 400)
+
+    def handle_tools_backup_post(self, user_id, data):
+        """处理数据备份 POST 请求"""
+        backup = get_backup_service()
+        action = data.get('action', '')
+
+        if action == 'create':
+            backup_type = data.get('type', 'full')
+            result = backup.create_backup(backup_type)
+            self.send_json({'success': result.get('success', False), 'data': result})
+
+        elif action == 'delete':
+            backup_path = data.get('path')
+            if backup_path:
+                result = backup.delete_backup(backup_path)
+                self.send_json(result)
+            else:
+                self.send_json({'success': False, 'error': '缺少备份路径'}, 400)
+
+        elif action == 'update_config':
+            result = backup.update_config(data.get('config', {}))
+            self.send_json({'success': True, 'data': result})
+
+        else:
+            self.send_json({'success': False, 'error': '未知操作'}, 400)
+
+    # ============ 账号 API ============
+
+    def handle_account_get(self, path):
+        """处理账号 API GET 请求"""
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # 验证用户（移除SSO机制,简化验证）
+        if path == '/account/api/verify':
+            # 当前移除了token验证,返回一个默认有效的用户（适用于单用户场景）
+            # 在多用户场景中,这里可以改为基于session或其他认证方式
+            self.send_json({'valid': True, 'user': {'id': 1, 'username': 'default_user', 'email': 'user@example.com', 'vip_level': 1}})
+            return
+
+        self.send_json({'error': 'Not Found'}, 404)
+
+    def handle_account_post(self, path):
+        """处理账号 API POST 请求"""
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # 获取请求体
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else '{}'
+
+        try:
+            data = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            self.send_json({'success': False, 'message': '无效的请求'}, 400)
+            return
+
+        # 登录
+        if path == '/account/api/login':
+            username = data.get('username', '')
+            password = data.get('password', '')
+
+            # 输入验证
+            if not username or len(username) < 3:
+                self.send_json({'success': False, 'message': '用户名至少 3 个字符'}, 400)
+                return
+
+            if not password or len(password) < 6:
+                self.send_json({'success': False, 'message': '密码至少 6 个字符'}, 400)
+                return
+
+            conn = get_unified_db()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+            row = cursor.fetchone()
+
+            if row:
+                # 验证密码哈希
+                salt = row['salt']
+                expected_hash = row['password_hash']
+                actual_hash = hash_password(password, salt)
+
+                if actual_hash == expected_hash:
+                    # 检查账号状态
+                    if row['status'] != 'active':
+                        conn.close()
+                        self.send_json({'success': False, 'message': '账号已被禁用'}, 403)
+                        return
+
+                    # 检查账号是否过期（兼容两种日期格式）
+                    expires_at_str = row['expires_at']
+                    try:
+                        # 尝试完整格式
+                        expires_at = datetime.datetime.strptime(expires_at_str, '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        try:
+                            # 尝试仅日期格式
+                            expires_at = datetime.datetime.strptime(expires_at_str, '%Y-%m-%d')
+                        except ValueError:
+                            # 如果都失败，设置为很远的未来日期
+                            expires_at = datetime.datetime(2099, 12, 31)
+                    
+                    if datetime.datetime.now() > expires_at:
+                        conn.close()
+                        self.send_json({'success': False, 'message': '账号已过期'}, 403)
+                        return
+
+                    # 创建 session 并生成 token
+                    token = create_session(row['id'])
+                    
+                    user_data = {
+                        'user_id': row['id'],
+                        'username': row['username'],
+                        'email': row['email'],
+                        'vip_level': row['vip_level'],
+                        'created_at': row['created_at'],
+                        'last_login': row['last_login'],
+                        'token': token
+                    }
+                    conn.close()
+                    self.send_json({'success': True, 'user': user_data, 'message': '登录成功'})
+                    return
+
+            conn.close()
+            self.send_json({'success': False, 'message': '用户名或密码错误'}, 401)
+            return
+
+        # 注册
+        if path == '/account/api/register':
+            username = data.get('username', '')
+            password = data.get('password', '')
+            email = data.get('email', '')
+            invite_code = data.get('invite_code', '')
+
+            # 输入验证
+            if not username or len(username) < 3:
+                self.send_json({'success': False, 'message': '用户名至少 3 个字符'}, 400)
+                return
+
+            if not password or len(password) < 6:
+                self.send_json({'success': False, 'message': '密码至少 6 个字符'}, 400)
+                return
+
+            # 验证邀请码（必须提供有效的邀请码）
+            if not invite_code:
+                self.send_json({'success': False, 'message': '请输入邀请码'}, 400)
+                return
+
+            # 验证邀请码是否有效
+            conn = get_unified_db()
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, max_uses, current_uses
+                FROM invite_codes
+                WHERE code = ? AND is_active = 1 AND (max_uses = 0 OR current_uses < max_uses)
+                AND expires_at > ?
+            ''', (invite_code, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            invite_row = cursor.fetchone()
+
+            if not invite_row:
+                conn.close()
+                self.send_json({'success': False, 'message': '邀请码无效或已过期'}, 400)
+                return
+
+            # 生成 salt 和密码哈希
+            import secrets
+            salt = secrets.token_hex(16)
+            password_hash = hash_password(password, salt)
+
+            # 创建用户（注册赠送 30 天 VIP）
+            expires_at = datetime.datetime.now() + datetime.timedelta(days=30)
+
+            cursor.execute('''
+                INSERT INTO users (username, email, password_hash, salt, vip_level, expires_at, status)
+                VALUES (?, ?, ?, ?, 1, ?, 'active')
+            ''', (username, email if email else None, password_hash, salt,
+                  expires_at.strftime('%Y-%m-%d %H:%M:%S')))
+
+            user_id = cursor.lastrowid
+
+            # 更新邀请码使用次数
+            if invite_row['max_uses'] > 0:
+                cursor.execute('''
+                    UPDATE invite_codes SET current_uses = current_uses + 1 WHERE id = ?
+                ''', (invite_row['id'],))
+
+            # 创建 session 并生成 token
+            token = create_session(user_id)
+
+            user_data = {
+                'user_id': user_id,
+                'username': username,
+                'email': email,
+                'vip_level': 1,
+                'expires_at': expires_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'token': token
+            }
+            self.send_json({'success': True, 'user': user_data, 'message': '注册成功'})
+            conn.commit()
+            conn.close()
+            return
+
+        # 退出登录
+        if path == '/account/api/logout':
+            auth_header = self.headers.get('Authorization', '')
+            token = None
+            
+            if auth_header:
+                parts = auth_header.split()
+                if len(parts) == 2 and parts[0].lower() == 'bearer':
+                    token = parts[1]
+
+            if token:
+                invalidate_session(token)
+                self.send_json({'success': True, 'message': '退出登录成功'})
+            else:
+                self.send_json({'success': False, 'message': '未提供有效的 token'})
+            return
+
+        # 创建邀请码（仅管理员,vip_level >= 999）
+        if path == '/account/api/invite-code':
+            auth_header = self.headers.get('Authorization', '')
+            token = None
+            
+            if auth_header:
+                parts = auth_header.split()
+                if len(parts) == 2 and parts[0].lower() == 'bearer':
+                    token = parts[1]
+
+            if not token:
+                self.send_json({'success': False, 'message': '未提供有效的 token'})
+                return
+
+            # 验证 token 并检查是否为管理员
+            result = verify_token(token)
+            if not result['valid']:
+                self.send_json({'success': False, 'message': 'token 无效或已过期'})
+                return
+
+            conn = get_unified_db()
+            cursor = conn.cursor()
+            cursor.execute('SELECT vip_level FROM users WHERE id = ?', (result['user_id'],))
+            user_row = cursor.fetchone()
+            
+            if not user_row or user_row['vip_level'] < 999:
+                conn.close()
+                self.send_json({'success': False, 'message': '权限不足：仅管理员可创建邀请码'})
+                return
+
+            # 获取请求数据
+            invite_data = data.get('invite_code', data)  # 兼容两种格式
+            code = invite_data.get('code', '')
+            max_uses = invite_data.get('max_uses', 0)
+            days = invite_data.get('days', 365)
+            remark = invite_data.get('remark', '')
+
+            # 如果没有指定 code,自动生成
+            if not code:
+                import random
+                code = 'INV' + ''.join([str(random.randint(0, 9)) for _ in range(8)])
+
+            expires_at = datetime.datetime.now() + datetime.timedelta(days=days)
+
+            try:
+                cursor.execute('''
+                    INSERT INTO invite_codes (code, max_uses, current_uses, expires_at, remark)
+                    VALUES (?, ?, 0, ?, ?)
+                ''', (code, max_uses if max_uses > 0 else 0, 
+                      expires_at.strftime('%Y-%m-%d %H:%M:%S'), remark))
+                conn.commit()
+                invite_id = cursor.lastrowid
+                self.send_json({
+                    'success': True,
+                    'data': {
+                        'id': invite_id,
+                        'code': code,
+                        'max_uses': max_uses,
+                        'expires_at': expires_at.strftime('%Y-%m-%d %H:%M:%S'),
+                        'remark': remark
+                    },
+                    'message': '邀请码创建成功'
+                })
+            except sqlite3.IntegrityError:
+                self.send_json({'success': False, 'message': '邀请码已存在'})
+            finally:
+                conn.close()
+            return
+
+        self.send_json({'error': 'Not Found'}, 404)
+
+    def log_message(self, format, *args):
+        """自定义日志格式"""
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] {args[0]}")
+
+
+    def handle_ai_analysis_proxy(self, user_id, data):
+        """AI分析API代理 - 用于避免前端CORS问题"""
+        try:
+            # 添加调试信息
+            print(f"[YoudaoAPI] AI分析代理收到请求: {list(data.keys())}")
+
+            # 从前端请求中获取API密钥（如果有的话）作为覆盖选项
+            request_api_key = data.get('apiKey')
+
+            # 尝试从数据库获取存储的AI配置
+            conn = get_unified_db()
+            cursor = conn.cursor()
+            cursor.execute('SELECT value FROM user_preferences WHERE user_id = ? AND key = ?', (user_id, 'ai_config'))
+            row = cursor.fetchone()
+
+            if not row or not row[0]:
+                conn.close()
+                print("[ERROR] 未配置AI API密钥")
+                self.send_json({'success': False, 'error': '未配置AI API密钥'})
+                return
+
+            ai_config = json.loads(row[0])
+            qwen_config = ai_config.get('ai_config', {}).get('qwen', {})
+            conn.close()
+
+            # 如果前端提供了API密钥,使用前端的；否则使用数据库中的
+            api_key = request_api_key if request_api_key else qwen_config.get('apiKey', '')
+
+            if not api_key:
+                print("[ERROR] 未配置API密钥")
+                self.send_json({'success': False, 'error': '未配置API密钥'})
+                return
+
+            # 优先使用数据库中的配置,然后才是前端传入的,最后才是默认值
+            api_endpoint = qwen_config.get('apiEndpoint', data.get('apiEndpoint', 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'))
+            # 优先使用数据库中的模型配置,如果数据库没有再用前端传递的,最后用默认值
+            model = qwen_config.get('model', data.get('model', 'qwen-max'))
+            messages = data.get('messages', [])
+            max_tokens = data.get('maxTokens', qwen_config.get('maxTokens', 2000))
+            temperature = data.get('temperature', qwen_config.get('temperature', 0.7))
+
+            print(f"[YoudaoAPI] 使用API端点: {api_endpoint}")
+            print(f"[YoudaoAPI] 使用模型: {model}")
+            print(f"[YoudaoAPI] 消息数量: {len(messages) if isinstance(messages, list) else 'N/A'}")
+
+            # 检查是否有图像内容（多模态请求）
+            has_image_content = False
+            for msg in messages:
+                if isinstance(msg, dict) and 'content' in msg:
+                    if isinstance(msg['content'], list):
+                        # 检查多模态内容
+                        for item in msg['content']:
+                            if isinstance(item, dict) and item.get('type') == 'image_url':
+                                has_image_content = True
+                                break
+                if has_image_content:
+                    break
+
+            # 如果检测到图像内容,强制使用兼容模式API端点,因为老式端点不支持图像
+            if has_image_content and 'dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation' in api_endpoint:
+                print("[WARNING] 检测到图像内容,切换到兼容模式API端点")
+                api_endpoint = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'
+                print(f"[YoudaoAPI] 切换后的API端点: {api_endpoint}")
+
+            # 根据API端点类型构建适当的请求
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            }
+
+            # 根据API端点类型构建适当的请求格式
+            if 'dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation' in api_endpoint:
+                # 老式的通义千问API格式,需要使用input.prompt
+                if messages and isinstance(messages, list) and len(messages) > 0:
+                    # 提取用户的消息内容
+                    user_message = ""
+                    for msg in messages:
+                        if isinstance(msg, dict):
+                            if msg.get('role') == 'user':
+                                content = msg.get('content', '')
+                                if isinstance(content, str):
+                                    user_message = content
+                                elif isinstance(content, list):
+                                    # 处理多模态内容 - 提取文本部分
+                                    text_parts = []
+                                    image_count = 0
+                                    for item in content:
+                                        if isinstance(item, dict):
+                                            if item.get('type') == 'text':
+                                                text_parts.append(item.get('text', ''))
+                                            elif item.get('type') == 'image_url':
+                                                image_count += 1
+                                                # 对于老式API,需要跳过图像
+                                                print(f"[YoudaoAPI] 跳过图像内容 (数量: {image_count})")
+                                    user_message = " ".join(text_parts)
+                                break
+
+                    payload = {
+                        "model": model,
+                        "input": {
+                            "prompt": user_message
+                        },
+                        "parameters": {
+                            "max_tokens": max_tokens,
+                            "temperature": temperature
+                        }
+                    }
+                else:
+                    print("[ERROR] 消息内容为空")
+                    self.send_json({'success': False, 'error': '消息内容不能为空'})
+                    return
+
+            elif 'dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' in api_endpoint:
+                # 新的兼容OpenAI格式的API - 支持多模态
+                processed_messages = []
+                for msg in messages:
+                    if isinstance(msg, dict) and 'content' in msg and isinstance(msg['content'], list):
+                        # 处理多模态消息
+                        print(f"[YoudaoAPI] 处理多模态消息,内容类型: {[item.get('type') if isinstance(item, dict) else type(item) for item in msg['content']]}")
+                        new_content = []
+                        for item in msg['content']:
+                            if isinstance(item, dict) and item.get('type') == 'image_url':
+                                # 检查图像URL
+                                img_url = item['image_url']['url']
+
+                                # 对于通义千问,检查是否为有效的base64图像
+                                if img_url.startswith('data:image'):
+                                    # 验证图像是否足够大
+                                    base64_part = img_url.split(',', 1)[1] if ',' in img_url else ''
+
+                                    # 如果是占位符或极小图像,添加警告
+                                    if len(base64_part) < 100:  # 这可能表示一个极小的图像
+                                        print(f"[WARNING] 检测到小图像,长度: {len(base64_part)}")
+
+                                    new_content.append(item)
+                                else:
+                                    new_content.append(item)
+                            else:
+                                # 文本内容直接添加
+                                new_content.append(item)
+
+                        processed_msg = msg.copy()
+                        processed_msg['content'] = new_content
+                        processed_messages.append(processed_msg)
+                    else:
+                        # 普通消息直接添加
+                        processed_messages.append(msg)
+
+                payload = {
+                    'model': model,
+                    'messages': processed_messages,
+                    'max_tokens': max_tokens,
+                    'temperature': temperature
+                }
+            elif 'deepseek.com' in api_endpoint:
+                # DeepSeek API格式
+                payload = {
+                    'model': model,
+                    'messages': messages,
+                    'max_tokens': max_tokens,
+                    'temperature': temperature
+                }
+            else:
+                # 默认使用OpenAI兼容格式
+                payload = {
+                    'model': model,
+                    'messages': messages,
+                    'max_tokens': max_tokens,
+                    'temperature': temperature
+                }
+
+            print(f"[YoudaoAPI] 发送请求到: {api_endpoint}")
+            print(f"[YoudaoAPI] 请求头: {dict((k, v if k != 'Authorization' else '***MASKED***') for k, v in headers.items())}")
+            print(f"[YoudaoAPI] 请求体摘要: model={model}, msg_count={len(payload.get('messages', [])) if 'messages' in payload else 'N/A'}")
+
+            # 发送请求到外部AI API
+            response = requests.post(
+                api_endpoint,
+                headers=headers,
+                json=payload,
+                timeout=300  # 增加超时时间至120秒,以处理较大的图像或复杂分析请求
+            )
+
+            print(f"[YoudaoAPI] API响应状态码: {response.status_code}")
+
+            # 记录API响应的具体内容
+            try:
+                response_text = response.text
+                print(f"[YoudaoAPI] API原始响应: {response_text[:500]}...")  # 只打印前500字符
+
+                if response.status_code in [200, 201]:
+                    response_data = response.json()
+                    print(f"[YoudaoAPI] API JSON解析响应: {json.dumps(response_data, ensure_ascii=False)[:1000]}...")  # 只打印前1000字符
+                else:
+                    print(f"[YoudaoAPI] 非成功响应: {response_text}")
+            except Exception as e:
+                print(f"[YoudaoAPI] 响应解析错误: {e}")
+
+            # 返回API响应
+            if response.status_code in [200, 201]:
+                try:
+                    response_data = response.json()
+                    print(f"[YoudaoAPI] API响应成功")
+
+                    # 确保响应数据符合标准格式
+                    if 'dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation' in api_endpoint:
+                        # 老式API响应格式可能不同,需要适配
+                        if 'output' in response_data and 'choices' in response_data['output']:
+                            # 适配为标准格式
+                            adapted_response = {
+                                'choices': [
+                                    {
+                                        'message': {
+                                            'content': choice.get('text', '') if isinstance(choice, dict) else str(choice)
+                                        }
+                                    }
+                                    for choice in response_data['output']['choices']
+                                ],
+                                'usage': response_data.get('usage', {}),
+                                'model': response_data.get('model', model),
+                                'created': response_data.get('created', int(time.time()))
+                            }
+                            print(f"[YoudaoAPI] 老式API响应已适配,返回: {json.dumps(adapted_response, ensure_ascii=False)[:500]}...")
+                            self.send_json({'success': True, 'data': adapted_response})
+                        else:
+                            # 如果响应格式不符合预期,直接返回
+                            print(f"[YoudaoAPI] 老式API响应直接返回")
+                            self.send_json({'success': True, 'data': response_data})
+                    else:
+                        # 确保兼容模式API的响应格式标准化
+                        standard_response = {
+                            'choices': response_data.get('choices', []),
+                            'usage': response_data.get('usage', {}),
+                            'model': response_data.get('model', model),
+                            'created': response_data.get('created', int(time.time())),
+                            'id': response_data.get('id', '')
+                        }
+                        print(f"[YoudaoAPI] 标准化兼容模式API响应")
+                        self.send_json({'success': True, 'data': standard_response})
+                except json.JSONDecodeError:
+                    print(f"[YoudaoAPI] 响应不是JSON格式: {response.text[:200]}")
+                    # 如果响应不是JSON格式,返回原始文本
+                    self.send_json({'success': True, 'data': {'choices': [{'message': {'content': response.text}}]}})
+            else:
+                # 从响应体获取更详细的错误信息
+                try:
+                    error_details = response.text
+                    print(f"[ERROR] API请求失败: {response.status_code}, 详情: {error_details[:500]}")
+
+                    # 检查是否是图像大小错误
+                    if 'image length and width' in error_details and 'larger than 10' in error_details:
+                        print("[ERROR] 图像尺寸错误: 图像宽高必须大于10像素")
+                        self.send_json({
+                            'success': False,
+                            'error': '图像尺寸过小,宽高必须大于10像素',
+                            'details': error_details
+                        })
+                    # 检查URL错误（不支持图像的API端点）
+                    elif 'url error' in error_details:
+                        print("[ERROR] 图像URL错误: 请确保使用支持图像的API端点")
+                        self.send_json({
+                            'success': False,
+                            'error': '图像URL错误: 当前API端点不支持图像',
+                            'details': error_details
+                        })
+                    else:
+                        self.send_json({'success': False, 'error': f'API请求失败: {response.status_code}', 'details': error_details})
+                except Exception as e:
+                    error_details = str(response.reason)
+                    print(f"[ERROR] 处理响应失败: {e}")
+                    self.send_json({'success': False, 'error': f'API请求失败: {response.status_code}', 'details': error_details})
+
+        except requests.exceptions.RequestException as e:
+            print(f"[ERROR] 网络请求错误: {str(e)}")
+            self.send_json({'success': False, 'error': f'网络请求错误: {str(e)}'})
+        except Exception as e:
+            print(f"[ERROR] 其他错误: {str(e)}")
+            self.send_json({'success': False, 'error': str(e)})
+
+
+def main():
+    """启动统一服务器"""
+    # 初始化数据库
+    init_mistake_db()
+    init_study_db()
+    init_vocabulary_db()
+
+    # 确保统一数据库存在并创建所需表
+    print("检查统一数据库结构...")
+    conn = get_unified_db()
+    cursor = conn.cursor()
+
+    # 启用 WAL 模式
+    cursor.execute('PRAGMA journal_mode=WAL')
+
+    # 创建 users 表（如果不存在）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE,
+            password_hash TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            status TEXT DEFAULT 'active',
+            vip_level INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_login DATETIME,
+            expires_at DATETIME,
+            device_limit INTEGER DEFAULT 3,
+            login_count INTEGER DEFAULT 0
+        )
+    ''')
+
+    # 创建 mistakes 表（如果不存在）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS mistakes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject_id INTEGER NOT NULL,
+            content TEXT,
+            wrong_answer TEXT,
+            correct_answer TEXT,
+            error_reason TEXT,
+            difficulty INTEGER DEFAULT 2,
+            images_path TEXT,
+            knowledge_points TEXT,
+            tags TEXT,
+            analysis TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_deleted BOOLEAN DEFAULT 0,
+            review_count INTEGER DEFAULT 0,
+            last_review_date TEXT,
+            next_review_date TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+
+    # 创建 study_time 表（如果不存在）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS study_time (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            duration REAL NOT NULL,
+            date TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+
+    # 创建 course_schedule 表（如果不存在）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS course_schedule (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            weekday INTEGER NOT NULL,
+            start_time TEXT NOT NULL,
+            end_time TEXT NOT NULL,
+            is_active BOOLEAN DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+
+    # 创建 user_preferences 表（如果不存在）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_preferences (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            key TEXT NOT NULL,
+            value TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            UNIQUE(user_id, key)
+        )
+    ''')
+
+    # 创建 sessions 表（用于 token 认证）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            expires_at DATETIME NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+
+    # 创建 invite_codes 表（邀请码表）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS invite_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            max_uses INTEGER DEFAULT 0,
+            current_uses INTEGER DEFAULT 0,
+            expires_at DATETIME NOT NULL,
+            is_active BOOLEAN DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            remark TEXT
+        )
+    ''')
+
+    # 检查是否需要创建默认邀请码
+    cursor.execute('SELECT id FROM invite_codes WHERE code = ?', ('ADMIN2026',))
+    if not cursor.fetchone():
+        # 创建一个默认邀请码（无限次使用,1 年有效期）
+        default_expires = datetime.datetime.now() + datetime.timedelta(days=365)
+        cursor.execute('''
+            INSERT INTO invite_codes (code, max_uses, current_uses, expires_at, remark)
+            VALUES (?, 0, 0, ?, '默认邀请码,无限次使用')
+        ''', ('ADMIN2026', default_expires.strftime('%Y-%m-%d %H:%M:%S')))
+        print("已创建默认邀请码：ADMIN2026")
+
+    conn.commit()
+
+    # 创建默认管理员账号（如果不存在）
+    import secrets
+    salt = secrets.token_hex(16)
+    password_hash = hash_password('admin123', salt)
+
+    cursor.execute('''
+        INSERT OR IGNORE INTO users (username, email, password_hash, salt, status, vip_level, expires_at)
+        VALUES (?, ?, ?, ?, 'active', 999, '2099-12-31 23:59:59')
+    ''', ('admin', 'admin@mistake.com', password_hash, salt))
+
+    conn.commit()
+    conn.close()
+    print("统一数据库初始化完成")
+    print("表结构：users, mistakes, study_time, course_schedule, user_preferences, sessions, invite_codes")
+    print("表结构：users, mistakes, study_time, course_schedule, user_preferences")
+
+    server = HTTPServer((HOST, PORT), UnifiedHandler)
+    print(f"╔════════════════════════════════════════════════════╗")
+    print(f"║     高考学习系统 - 统一服务器已启动                 ║")
+    print(f"╠════════════════════════════════════════════════════╣")
+    print(f"║  访问地址：http://localhost:{PORT}                    ║")
+    if DEV_MODE:
+        print(f"║  模式：开发模式 (代理到 Vite: {VITE_DEV_SERVER})    ║")
+        print(f"║  提示：修改代码后刷新浏览器即可生效                ║")
+    else:
+        print(f"║  模式：生产模式 (静态文件)                        ║")
+        print(f"║  提示：运行前需要 npm run build 构建前端           ║")
+    print(f"║                                                    ║")
+    print(f"║  路由说明：                                         ║")
+    print(f"║    /           - 学习系统主页                      ║")
+    print(f"║    /tools      - 工具中心（时间跟踪/提醒/备份）    ║")
+    print(f"║    /mistake/   - 错题系统前端                      ║")
+    print(f"║    /api/*      - 统一 API（错题 + 学习时间 + 配置）   ║")
+    print(f"║    /api/tools  - 工具 API（时间跟踪/提醒/备份）     ║")
+    print(f"║    /account/*  - 账号 API（登录/注册）               ║")
+    print(f"║                                                    ║")
+    print(f"║  数据库：统一数据库 (unified_learning.db)           ║")
+    print(f"║  表格：users, mistakes, study_time, course_schedule, ║")
+    print(f"║       user_preferences                             ║")
+    print(f"╚════════════════════════════════════════════════════╝")
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\n服务器已停止")
+        server.shutdown()
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,7 @@
+{
+  "server": {
+    "url": "http://116.8.1.195",
+    "enableCustomServer": true,
+    "allowInsecureConnection": true
+  }
+}

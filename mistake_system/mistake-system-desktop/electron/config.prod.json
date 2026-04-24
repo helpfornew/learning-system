@@ -1,0 +1,7 @@
+{
+  "server": {
+    "url": "http://192.168.1.72",
+    "enableCustomServer": true,
+    "allowInsecureConnection": true
+  }
+}

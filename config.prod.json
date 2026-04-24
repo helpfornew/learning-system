@@ -1,0 +1,43 @@
+{
+  "系统信息": {
+    "名称": "高考学习系统 - 生产环境",
+    "版本": "2.0",
+    "环境": "production"
+  },
+  "网络配置": {
+    "监听地址": "0.0.0.0",
+    "端口": 8080,
+    "使用 HTTPS": false,
+    "域名": "your-domain.com"
+  },
+  "数据存储": {
+    "数据库路径": "/var/lib/learning-system/database",
+    "备份路径": "/var/lib/learning-system/backup",
+    "日志路径": "/var/log/learning-system",
+    "静态文件路径": "/var/www/learning-system"
+  },
+  "AI 配置": {
+    "qianwen": {
+      "apiKey": "${QIANWEN_API_KEY}",
+      "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "model": "qwen3.5-plus",
+      "enabled": true,
+      "maxTokens": 2000,
+      "temperature": 0.7
+    },
+    "deepseek": {
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "endpoint": "https://api.deepseek.com/chat/completions",
+      "model": "deepseek-chat",
+      "enabled": true,
+      "maxTokens": 2000,
+      "temperature": 0.7
+    }
+  },
+  "安全配置": {
+    "允许跨域": ["https://your-domain.com"],
+    "会话超时分钟": 1440,
+    "最大登录尝试": 5,
+    "启用日志记录": true
+  }
+}

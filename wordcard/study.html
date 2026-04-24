@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词记忆系统</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="translations.js"></script>
+    <!-- 统一导航栏样式 -->
+    <link rel="stylesheet" href="/shared/navbar.css">
+</head>
+<body>
+    <!-- 统一导航栏容器 -->
+    <div id="unified-navbar"></div>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1><i class="fas fa-book-open"></i> 单词记忆系统 - 学习页面</h1>
+                <div class="navigation-buttons">
+                    <a href="/" class="nav-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                        <i class="fas fa-arrow-left"></i>
+                        学习系统主页
+                    </a>
+                    <a href="index.html" class="nav-btn">
+                        <i class="fas fa-home"></i>
+                        单词系统主页
+                    </a>
+                    <a href="vocabulary-map.html" class="nav-btn">
+                        <i class="fas fa-map"></i>
+                        词汇地图
+                    </a>
+                </div>
+            </div>
+            <div class="header-info">
+                <div class="date-display" id="currentDate"></div>
+                <div class="progress-summary">
+                    <span>今日进度: <span id="todayProgress">0%</span></span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="main-content">
+                <section class="daily-task-section">
+                    <h2><i class="fas fa-calendar-day"></i> 今日任务</h2>
+                    <div class="task-controls">
+                        <div class="task-setting">
+                            <label for="dailyGoal">每日单词数:</label>
+                            <input type="number" id="dailyGoal" min="5" max="50" value="10">
+                            <button id="updateGoalBtn">更新目标</button>
+                        </div>
+                        <div class="task-stats">
+                            <p>已完成: <span id="completedCount">0</span>/<span id="totalGoal">10</span></p>
+                            <button id="resetTaskBtn" class="secondary-btn">重置今日任务</button>
+                        </div>
+                    </div>
+                    
+                    <div class="word-card" id="currentWordCard">
+                        <div class="word-header">
+                            <div class="word-title">
+                                <h3 id="currentWord">加载中...</h3>
+                                <div class="word-translation-card" id="currentWordTranslation">翻译加载中...</div>
+                            </div>
+                            <div class="word-actions">
+                                <button id="markKnownBtn" class="action-btn known-btn">
+                                    <i class="fas fa-check-circle"></i> 已掌握
+                                </button>
+                                <button id="markReviewBtn" class="action-btn review-btn">
+                                    <i class="fas fa-redo"></i> 需复习
+                                </button>
+                                <button id="nextWordBtn" class="action-btn next-btn">
+                                    <i class="fas fa-arrow-right"></i> 下一个
+                                </button>
+                            </div>
+                        </div>
+                        <div class="word-details">
+                            <div class="word-info">
+                                <p><strong>进度:</strong> <span id="wordProgress">0%</span></p>
+                                <p><strong>复习次数:</strong> <span id="reviewCount">0</span></p>
+                                <p><strong>最后复习:</strong> <span id="lastReviewed">从未</span></p>
+                            </div>
+                            <div class="word-example">
+                                <p id="wordExample">例句将在这里显示</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-words-list">
+                        <h3>今日单词列表</h3>
+                        <div class="words-container" id="todayWordsList">
+                            <!-- 今日单词列表将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </section>
+
+                <section class="vocabulary-map-section">
+                    <h2><i class="fas fa-map"></i> 词汇地图</h2>
+                    <div class="map-controls">
+                        <div class="filter-controls">
+                            <label>筛选:</label>
+                            <select id="categoryFilter">
+                                <option value="all">全部单词</option>
+                                <option value="known">已掌握</option>
+                                <option value="review">需复习</option>
+                                <option value="new">新单词</option>
+                            </select>
+                            <button id="refreshMapBtn" class="secondary-btn">
+                                <i class="fas fa-sync-alt"></i> 刷新地图
+                            </button>
+                        </div>
+                        <div class="map-stats">
+                            <p>总词汇量: <span id="totalWordsCount">0</span></p>
+                            <p>已掌握: <span id="knownWordsCount">0</span></p>
+                            <p>需复习: <span id="reviewWordsCount">0</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="map-container">
+                        <div id="vocabularyMap">
+                            <!-- 词汇地图将通过D3.js动态生成 -->
+                        </div>
+                        <div class="map-legend">
+                            <h4>图例</h4>
+                            <div class="legend-item">
+                                <span class="legend-color known-color"></span>
+                                <span>已掌握</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color review-color"></span>
+                                <span>需复习</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color new-color"></span>
+                                <span>新单词</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-size small"></span>
+                                <span>低频词</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-size large"></span>
+                                <span>高频词</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="word-details-panel" id="wordDetailsPanel">
+                        <h3>单词详情</h3>
+                        <div id="selectedWordDetails">
+                            <p>点击地图中的单词查看详情</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p>单词记忆系统 &copy; 2023 | 使用 cards.json 词汇数据</p>
+            <div class="footer-links">
+                <button id="exportDataBtn" class="footer-btn">
+                    <i class="fas fa-download"></i> 导出数据
+                </button>
+                <button id="importDataBtn" class="footer-btn">
+                    <i class="fas fa-upload"></i> 导入数据
+                </button>
+                <button id="helpBtn" class="footer-btn">
+                    <i class="fas fa-question-circle"></i> 帮助
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 帮助模态框 -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2><i class="fas fa-question-circle"></i> 使用帮助</h2>
+            <div class="help-content">
+                <h3>每日任务</h3>
+                <p>1. 设置每日要学习的单词数量</p>
+                <p>2. 系统会从词汇库中随机选择单词</p>
+                <p>3. 点击"已掌握"或"需复习"来标记单词状态</p>
+                <p>4. 完成所有单词后，今日任务结束</p>
+                
+                <h3>词汇地图</h3>
+                <p>1. 可视化显示所有单词的状态</p>
+                <p>2. 圆圈大小表示单词使用频率</p>
+                <p>3. 颜色表示单词掌握状态</p>
+                <p>4. 点击单词查看详细信息</p>
+                
+                <h3>数据管理</h3>
+                <p>1. 所有学习数据保存在浏览器本地存储中</p>
+                <p>2. 可以导出数据备份</p>
+                <p>3. 可以导入之前备份的数据</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <!-- 统一认证和导航栏 -->
+    <script src="/shared/auth.js"></script>
+    <script src="/shared/navbar.js"></script>
+    <script>
+        // 初始化统一导航栏
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Navbar !== 'undefined') {
+                Navbar.init('wordcard');
+            }
+        });
+    </script>
+</body>
+</html>

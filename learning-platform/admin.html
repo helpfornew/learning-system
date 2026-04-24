@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内容管理 - 学习平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'SF Pro Text', 'Inter', system-ui, sans-serif;
+            background: #f6f8fa;
+            color: #1e2a3a;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: #1e2a3a;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo span:first-child {
+            background: #4c9aff;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .subject-list {
+            list-style: none;
+        }
+
+        .subject-item {
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .subject-item:hover {
+            background: #f3f4f6;
+        }
+
+        .subject-item.active {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .subject-item .actions {
+            display: none;
+            gap: 8px;
+        }
+
+        .subject-item:hover .actions {
+            display: flex;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            color: #6b7280;
+        }
+
+        .btn-icon:hover {
+            background: rgba(0,0,0,0.1);
+            color: #1e2a3a;
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 10px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 12px;
+            font-size: 0.9rem;
+        }
+
+        .btn-add:hover {
+            background: #2563eb;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .section-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .btn-primary {
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            color: #374151;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-danger {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .chapter-list {
+            list-style: none;
+        }
+
+        .chapter-item {
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chapter-item h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .chapter-item p {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .chapter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group textarea.content-editor {
+            min-height: 400px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(59,130,246,0.3);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <span>Admin</span>
+            <span>内容管理系统</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">返回学习平台</a>
+            <span id="adminUser">管理员</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>科目与内容管理</h1>
+            <p>管理学习平台的科目和章节内容</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="admin-grid">
+            <aside class="sidebar">
+                <h3>科目列表</h3>
+                <ul class="subject-list" id="subjectList">
+                    <li class="subject-item active">
+                        <span>加载中...</span>
+                    </li>
+                </ul>
+                <button class="btn-add" onclick="showSubjectModal()">+ 添加科目</button>
+            </aside>
+
+            <main class="main-content">
+                <div class="section-header">
+                    <div>
+                        <h2 id="currentSubjectName">选择一个科目</h2>
+                        <p id="currentSubjectDesc" style="color: #6b7280; margin-top: 4px;"></p>
+                    </div>
+                    <button class="btn-primary" id="addChapterBtn" onclick="showChapterModal()" style="display: none;">
+                        + 添加章节
+                    </button>
+                </div>
+
+                <div id="chapterContainer">
+                    <div class="empty-state">
+                        <h3>请选择一个科目</h3>
+                        <p>从左侧选择科目查看和管理章节</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 科目模态框 -->
+    <div class="modal" id="subjectModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="subjectModalTitle">添加科目</h3>
+                <button class="modal-close" onclick="closeModals()">&times;</button>
+            </div>
+            <form id="subjectForm" onsubmit="saveSubject(event)">
+                <input type="hidden" id="subjectId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>科目标识（英文）*</label>
+                        <input type="text" id="subjectKey" required placeholder="如：chemistry, physics">
+                    </div>
+                    <div class="form-group">
+                        <label>科目名称 *</label>
+                        <input type="text" id="subjectName" required placeholder="如：化学">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Logo 文字 *</label>
+                        <input type="text" id="subjectLogo" required placeholder="如：Chem">
+                    </div>
+                    <div class="form-group">
+                        <label>主题颜色 *</label>
+                        <input type="text" id="subjectColor" required placeholder="如：#4c9aff">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <input type="text" id="subjectDesc" placeholder="科目简介">
+                </div>
+                <div class="form-group">
+                    <label>排序</label>
+                    <input type="number" id="subjectOrder" value="0" min="0">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModals()">取消</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 章节模态框 -->
+    <div class="modal" id="chapterModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 id="chapterModalTitle">添加章节</h3>
+                <button class="modal-close" onclick="closeModals()">&times;</button>
+            </div>
+            <form id="chapterForm" onsubmit="saveChapter(event)">
+                <input type="hidden" id="chapterId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>章节标识（英文）*</label>
+                        <input type="text" id="chapterKey" required placeholder="如：intro, chapter1">
+                    </div>
+                    <div class="form-group">
+                        <label>章节标题 *</label>
+                        <input type="text" id="chapterTitle" required placeholder="如：化学研究对象">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <input type="text" id="chapterDesc" placeholder="章节简介">
+                </div>
+                <div class="form-group">
+                    <label>内容（支持 HTML）*</label>
+                    <textarea class="content-editor" id="chapterContent" required placeholder="<div class='doc-section'>
+  <h2>标题</h2>
+  <p>内容...</p>
+</div>"></textarea>
+                </div>
+                <div class="form-group help-section" style="background: #f8fafc; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <label style="cursor: pointer;" onclick="toggleHelp()">📖 样式使用说明（点击展开/收起）</label>
+                    <div id="helpContent" style="display: none; margin-top: 12px;">
+                        <p style="color: #6b7280; font-size: 0.85rem; margin-bottom: 12px;">使用以下 CSS 类名可以创建美观的文档样式：</p>
+
+                        <div class="help-item" style="margin: 10px 0; padding: 10px; background: white; border-radius: 6px;">
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;div class="doc-section"&gt;</code>
+                            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;">文档内容区块，包含底部间距</p>
+                        </div>
+
+                        <div class="help-item" style="margin: 10px 0; padding: 10px; background: white; border-radius: 6px;">
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;h2&gt;标题&lt;/h2&gt;</code>
+                            <span style="color: #6b7280; font-size: 0.8rem;"> 或 </span>
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;h3&gt;小标题&lt;/h3&gt;</code>
+                            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;">带底部边框的标题样式</p>
+                        </div>
+
+                        <div class="help-item" style="margin: 10px 0; padding: 10px; background: white; border-radius: 6px;">
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;div class="formula-box"&gt;公式&lt;/div&gt;</code>
+                            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;">公式展示框（居中、蓝色背景）</p>
+                        </div>
+
+                        <div class="help-item" style="margin: 10px 0; padding: 10px; background: white; border-radius: 6px;">
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;div class="code-block"&gt;&lt;pre&gt;代码&lt;/pre&gt;&lt;/div&gt;</code>
+                            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;">深色代码块</p>
+                        </div>
+
+                        <div class="help-item" style="margin: 10px 0; padding: 10px; background: white; border-radius: 6px;">
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;div class="warning-note"&gt;警告内容&lt;/div&gt;</code>
+                            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;">黄色警告提示</p>
+                        </div>
+
+                        <div class="help-item" style="margin: 10px 0; padding: 10px; background: white; border-radius: 6px;">
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;div class="success-note"&gt;提示内容&lt;/div&gt;</code>
+                            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;">绿色成功提示</p>
+                        </div>
+
+                        <div class="help-item" style="margin: 10px 0; padding: 10px; background: white; border-radius: 6px;">
+                            <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">&lt;table&gt;...&lt;/table&gt;</code>
+                            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 4px;">带边框和斑马纹的表格</p>
+                        </div>
+
+                        <div style="margin-top: 16px; padding: 12px; background: #1e2a3a; color: #e2e8f0; border-radius: 8px; font-family: monospace; font-size: 0.8rem; overflow-x: auto;">
+                            <strong style="color: #4c9aff;">完整示例：</strong><br><br>
+&lt;div class="doc-section"&gt;<br>
+&nbsp;&nbsp;&lt;h2&gt;化学方程式&lt;/h2&gt;<br>
+&nbsp;&nbsp;&lt;p&gt;氢气和氧气反应生成水：&lt;/p&gt;<br>
+&nbsp;&nbsp;&lt;div class="formula-box"&gt;2H₂ + O₂ → 2H₂O&lt;/div&gt;<br>
+&nbsp;&nbsp;&lt;div class="warning-note"&gt;注意：反应条件为点燃&lt;/div&gt;<br>
+&lt;/div&gt;
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>排序</label>
+                    <input type="number" id="chapterOrder" value="0" min="0">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModals()">取消</button>
+                    <button type="submit" class="btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // 检查登录和管理员权限
+        async function checkAdmin() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = '/learning-platform/login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/account/api/user', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    localStorage.removeItem('auth_token');
+                    window.location.href = '/learning-platform/login.html';
+                    return;
+                }
+
+                const result = await response.json();
+                const user = result.data || result;
+                if (!(user.is_admin || user.vip_level >= 9)) {
+                    showAlert('您没有管理员权限', 'error');
+                    setTimeout(() => window.location.href = '/learning-platform/index.html', 2000);
+                    return;
+                }
+
+                document.getElementById('adminUser').textContent = user.username;
+                loadSubjects();
+            } catch (error) {
+                console.error('检查权限失败:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // 加载科目列表
+        let subjects = [];
+        let currentSubject = null;
+
+        async function loadSubjects() {
+            try {
+                const response = await fetch(`${API_BASE}/subjects`);
+                const result = await response.json();
+                subjects = result.data || [];
+                renderSubjectList();
+            } catch (error) {
+                showAlert('加载科目失败', 'error');
+            }
+        }
+
+        // 渲染科目列表
+        function renderSubjectList() {
+            const list = document.getElementById('subjectList');
+            if (subjects.length === 0) {
+                list.innerHTML = '<li class="subject-item">暂无科目</li>';
+                return;
+            }
+
+            list.innerHTML = subjects.map(s => `
+                <li class="subject-item ${currentSubject?.id === s.id ? 'active' : ''}"
+                    onclick="selectSubject(${s.id})">
+                    <span>
+                        ${s.logo} ${s.name}
+                    </span>
+                    <span class="actions" onclick="event.stopPropagation()">
+                        <button class="btn-icon" onclick="editSubject(${s.id})" title="编辑">✏️</button>
+                        <button class="btn-icon" onclick="deleteSubject(${s.id})" title="删除">🗑️</button>
+                    </span>
+                </li>
+            `).join('');
+        }
+
+        // 选择科目
+        async function selectSubject(subjectId) {
+            currentSubject = subjects.find(s => s.id === subjectId);
+            if (!currentSubject) return;
+
+            renderSubjectList();
+
+            document.getElementById('currentSubjectName').textContent = currentSubject.name;
+            document.getElementById('currentSubjectDesc').textContent = currentSubject.description || '';
+            document.getElementById('addChapterBtn').style.display = 'inline-block';
+
+            // 加载章节
+            await loadChapters(subjectId);
+        }
+
+        // 加载章节
+        let chapters = [];
+
+        async function loadChapters(subjectId) {
+            try {
+                const response = await fetch(`${API_BASE}/subjects/${currentSubject.key}`);
+                const result = await response.json();
+                const data = result.data || result;
+                chapters = data.chapters || [];
+                renderChapters();
+            } catch (error) {
+                showAlert('加载章节失败', 'error');
+            }
+        }
+
+        // 渲染章节列表
+        function renderChapters() {
+            const container = document.getElementById('chapterContainer');
+            if (chapters.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无章节</h3>
+                        <p>点击"添加章节"创建第一个章节</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <ul class="chapter-list">
+                    ${chapters.map(c => `
+                        <li class="chapter-item">
+                            <div>
+                                <h4>${c.title}</h4>
+                                <p>${c.description || '暂无描述'} · 排序: ${c.sort_order}</p>
+                            </div>
+                            <div class="chapter-actions">
+                                <button class="btn-secondary" onclick="editChapter(${c.id})">编辑</button>
+                                <button class="btn-danger" onclick="deleteChapter(${c.id})">删除</button>
+                            </div>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        // 显示/隐藏模态框
+        function showSubjectModal(subject = null) {
+            document.getElementById('subjectModalTitle').textContent = subject ? '编辑科目' : '添加科目';
+            document.getElementById('subjectId').value = subject?.id || '';
+            document.getElementById('subjectKey').value = subject?.key || '';
+            document.getElementById('subjectName').value = subject?.name || '';
+            document.getElementById('subjectLogo').value = subject?.logo || '';
+            document.getElementById('subjectColor').value = subject?.color || '#4c9aff';
+            document.getElementById('subjectDesc').value = subject?.description || '';
+            document.getElementById('subjectOrder').value = subject?.sort_order ?? 0;
+
+            document.getElementById('subjectKey').disabled = !!subject;
+            document.getElementById('subjectModal').classList.add('show');
+        }
+
+        function showChapterModal(chapter = null) {
+            if (!currentSubject) {
+                showAlert('请先选择一个科目', 'error');
+                return;
+            }
+
+            document.getElementById('chapterModalTitle').textContent = chapter ? '编辑章节' : '添加章节';
+            document.getElementById('chapterId').value = chapter?.id || '';
+            document.getElementById('chapterKey').value = chapter?.key || '';
+            document.getElementById('chapterTitle').value = chapter?.title || '';
+            document.getElementById('chapterDesc').value = chapter?.description || '';
+            document.getElementById('chapterContent').value = chapter?.content || '';
+            document.getElementById('chapterOrder').value = chapter?.sort_order ?? 0;
+
+            document.getElementById('chapterKey').disabled = !!chapter;
+            document.getElementById('chapterModal').classList.add('show');
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
+        }
+
+        // 切换帮助内容显示
+        function toggleHelp() {
+            const helpContent = document.getElementById('helpContent');
+            if (helpContent) {
+                helpContent.style.display = helpContent.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // 保存科目
+        async function saveSubject(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('auth_token');
+            const subjectId = document.getElementById('subjectId').value;
+
+            const data = {
+                key: document.getElementById('subjectKey').value,
+                name: document.getElementById('subjectName').value,
+                logo: document.getElementById('subjectLogo').value,
+                color: document.getElementById('subjectColor').value,
+                description: document.getElementById('subjectDesc').value,
+                sort_order: parseInt(document.getElementById('subjectOrder').value) || 0
+            };
+
+            try {
+                const url = subjectId
+                    ? `${API_BASE}/admin/subjects/${subjectId}`
+                    : `${API_BASE}/admin/subjects`;
+                const method = subjectId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showAlert(subjectId ? '科目更新成功' : '科目创建成功', 'success');
+                    closeModals();
+                    loadSubjects();
+                } else {
+                    const err = await response.json();
+                    showAlert(err.error || '保存失败', 'error');
+                }
+            } catch (error) {
+                showAlert('网络错误', 'error');
+            }
+        }
+
+        // 编辑科目
+        function editSubject(subjectId) {
+            const subject = subjects.find(s => s.id === subjectId);
+            if (subject) showSubjectModal(subject);
+        }
+
+        // 删除科目
+        async function deleteSubject(subjectId) {
+            if (!confirm('确定要删除这个科目吗？相关章节也会被隐藏。')) return;
+
+            const token = localStorage.getItem('auth_token');
+            try {
+                const response = await fetch(`${API_BASE}/admin/subjects/${subjectId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showAlert('科目已删除', 'success');
+                    if (currentSubject?.id === subjectId) {
+                        currentSubject = null;
+                        document.getElementById('currentSubjectName').textContent = '选择一个科目';
+                        document.getElementById('currentSubjectDesc').textContent = '';
+                        document.getElementById('addChapterBtn').style.display = 'none';
+                        document.getElementById('chapterContainer').innerHTML = `
+                            <div class="empty-state">
+                                <h3>请选择一个科目</h3>
+                                <p>从左侧选择科目查看和管理章节</p>
+                            </div>
+                        `;
+                    }
+                    loadSubjects();
+                } else {
+                    showAlert('删除失败', 'error');
+                }
+            } catch (error) {
+                showAlert('网络错误', 'error');
+            }
+        }
+
+        // 保存章节
+        async function saveChapter(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('auth_token');
+            const chapterId = document.getElementById('chapterId').value;
+
+            const data = {
+                subject_id: currentSubject.id,
+                key: document.getElementById('chapterKey').value,
+                title: document.getElementById('chapterTitle').value,
+                description: document.getElementById('chapterDesc').value,
+                content: document.getElementById('chapterContent').value,
+                sort_order: parseInt(document.getElementById('chapterOrder').value) || 0
+            };
+
+            try {
+                const url = chapterId
+                    ? `${API_BASE}/admin/chapters/${chapterId}`
+                    : `${API_BASE}/admin/chapters`;
+                const method = chapterId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showAlert(chapterId ? '章节更新成功' : '章节创建成功', 'success');
+                    closeModals();
+                    loadChapters(currentSubject.id);
+                } else {
+                    const err = await response.json();
+                    showAlert(err.error || '保存失败', 'error');
+                }
+            } catch (error) {
+                showAlert('网络错误', 'error');
+            }
+        }
+
+        // 编辑章节
+        async function editChapter(chapterId) {
+            try {
+                const response = await fetch(`${API_BASE}/chapters/${chapters.find(c => c.id === chapterId)?.key}`);
+                const chapter = await response.json();
+                showChapterModal(chapter);
+            } catch (error) {
+                showAlert('加载章节失败', 'error');
+            }
+        }
+
+        // 删除章节
+        async function deleteChapter(chapterId) {
+            if (!confirm('确定要删除这个章节吗？')) return;
+
+            const token = localStorage.getItem('auth_token');
+            try {
+                const response = await fetch(`${API_BASE}/admin/chapters/${chapterId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showAlert('章节已删除', 'success');
+                    loadChapters(currentSubject.id);
+                } else {
+                    showAlert('删除失败', 'error');
+                }
+            } catch (error) {
+                showAlert('网络错误', 'error');
+            }
+        }
+
+        // 显示提示
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(alert);
+
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', checkAdmin);
+    </script>
+</body>
+</html>

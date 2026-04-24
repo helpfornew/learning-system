@@ -1,0 +1,127 @@
+# GitHub Actions 自动构建配置
+# 创建 .github/workflows/build.yml 即可使用
+
+name: Build All Platforms
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # 手动触发
+  workflow_dispatch:
+
+jobs:
+  # Windows 构建
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Build Windows
+        run: npm run electron:build -- --win
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mistake-system-windows
+          path: mistake_system/mistake-system-desktop/release/*.exe
+
+  # Linux 构建
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Build Linux DEB
+        run: npm run electron:build -- --linux deb
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Build Linux AppImage
+        run: npm run electron:build -- --linux AppImage
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Upload DEB artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mistake-system-linux-deb
+          path: mistake_system/mistake-system-desktop/release/*.deb
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mistake-system-linux-appimage
+          path: mistake_system/mistake-system-desktop/release/*.AppImage
+
+  # macOS 构建
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Build macOS
+        run: npm run electron:build -- --mac
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mistake-system-macos
+          path: mistake_system/mistake-system-desktop/release/*.dmg
+
+  # Web 版构建
+  build-web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Build Web
+        run: npm run build:web
+        working-directory: mistake_system/mistake-system-desktop
+
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mistake-system-web
+          path: mistake_system/mistake-system-desktop/dist/

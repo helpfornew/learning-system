@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词记忆系统 - 主页</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .home-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .hero-section {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
+            color: #5c5c5c;
+            border-radius: 20px;
+            margin-bottom: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero-section h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .hero-section p {
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.8;
+            opacity: 0.9;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: #4b6cb7;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        /* 返回主页按钮样式 */
+        .home-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: #4b6cb7;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .home-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            background: white;
+        }
+
+        .action-btn {
+            padding: 18px 35px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .primary-btn {
+            background: linear-gradient(90deg, #27ae60 0%, #229954 100%);
+            color: white;
+        }
+        
+        .secondary-btn {
+            background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stats-section {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            margin-top: 50px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .stat-item h4 {
+            font-size: 2.5rem;
+            color: #4b6cb7;
+            margin-bottom: 10px;
+        }
+        
+        .stat-item p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .hero-section p {
+                font-size: 1.1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+    <!-- 统一导航栏样式 -->
+    <link rel="stylesheet" href="/shared/navbar.css">
+</head>
+<body>
+    <!-- 统一导航栏容器 -->
+    <div id="unified-navbar"></div>
+
+    <div class="home-container" style="padding-top: 84px;">
+        <div class="hero-section">
+            <h1>
+                <i class="fas fa-book-open"></i>
+                单词记忆系统
+            </h1>
+            <p>
+                一个智能的单词学习平台，帮助您高效记忆英语单词。
+                使用科学的间隔重复算法，结合可视化词汇地图，让单词学习变得轻松有趣。
+            </p>
+            <div class="action-buttons">
+                <a href="study.html" class="action-btn primary-btn">
+                    <i class="fas fa-graduation-cap"></i>
+                    开始学习
+                </a>
+                <a href="quiz.html" class="action-btn" style="background: linear-gradient(90deg, #9b59b6 0%, #8e44ad 100%); color: white;">
+                    <i class="fas fa-question-circle"></i>
+                    四选一
+                </a>
+                <a href="vocabulary-map.html" class="action-btn secondary-btn">
+                    <i class="fas fa-map"></i>
+                    查看词汇地图
+                </a>
+            </div>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <h3>每日任务</h3>
+                <p>
+                    系统会根据您的学习进度，智能安排每日学习任务。
+                    通过科学的间隔重复算法，确保单词长期记忆。
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <h3>词汇地图</h3>
+                <p>
+                    可视化展示所有单词的掌握状态，直观了解学习进度。
+                    支持缩放、平移，点击单词查看详细信息和进行标记。
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>学习统计</h3>
+                <p>
+                    详细记录学习数据，包括掌握单词数、复习次数、学习进度等。
+                    帮助您了解自己的学习情况，调整学习策略。
+                </p>
+            </div>
+        </div>
+        
+        <div class="stats-section">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">
+                <i class="fas fa-chart-bar"></i> 系统特点
+            </h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h4 id="totalWordsCount">0</h4>
+                    <p>总词汇量</p>
+                </div>
+                <div class="stat-item">
+                    <h4><i class="fas fa-check-circle" style="color: #27ae60;"></i></h4>
+                    <p>智能记忆算法</p>
+                </div>
+                <div class="stat-item">
+                    <h4><i class="fas fa-language" style="color: #3498db;"></i></h4>
+                    <p>中英翻译支持</p>
+                </div>
+                <div class="stat-item">
+                    <h4><i class="fas fa-mobile-alt" style="color: #9b59b6;"></i></h4>
+                    <p>响应式设计</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer style="margin-top: 50px; text-align: center; color: #666; padding: 20px;">
+            <p>单词记忆系统 &copy; 2023 | 使用 cards.json 词汇数据</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i>
+                所有学习数据保存在浏览器本地存储中，请定期导出备份。
+            </p>
+        </footer>
+    </div>
+
+    <script src="translations.js"></script>
+    <script>
+        // 加载词汇数据并更新统计
+        async function loadStats() {
+            try {
+                const response = await fetch('cards.json');
+                const data = await response.json();
+                const vocabulary = data.vocabulary || [];
+                document.getElementById('totalWordsCount').textContent = vocabulary.length;
+            } catch (error) {
+                console.error('加载词汇数据失败:', error);
+            }
+        }
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+    <!-- 统一认证和导航栏 -->
+    <script src="/shared/auth.js"></script>
+    <script src="/shared/navbar.js"></script>
+    <script>
+        // 初始化统一导航栏
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Navbar !== 'undefined') {
+                Navbar.init('wordcard');
+            }
+        });
+    </script>
+</body>
+</html>

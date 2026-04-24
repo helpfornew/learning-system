@@ -1,0 +1,15 @@
+{
+  "daily_goal_minutes": 480,
+  "pomodoro_duration": 25,
+  "break_duration": 5,
+  "subjects": [
+    "英语",
+    "化学",
+    "语文",
+    "数学",
+    "物理",
+    "政治"
+  ],
+  "reminder_interval": 30,
+  "auto_save": true
+}

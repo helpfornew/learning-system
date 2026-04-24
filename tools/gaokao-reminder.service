@@ -1,0 +1,14 @@
+[Unit]
+Description=高考学习智能提醒系统
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/learning_system/tools/smart_reminder.py --auto
+Restart=on-failure
+RestartSec=10
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,49 @@
+# 编译产物和依赖
+release/
+.electron-cache/
+node_modules/
+desktop_app/release/
+desktop_app/.electron-cache/
+desktop_app/node_modules/
+web_modules/
+
+# 大文件类型
+*.zip
+*.exe
+*.dll
+*.dylib
+*.framework/
+*.app/
+*.dmg
+*.tar
+*.gz
+*.iso
+*.bin
+*.dat
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.cache
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+.venv/
+.pytest_cache/
+
+# 日志和临时文件
+logs/
+*.log
+temp/
+tmp/

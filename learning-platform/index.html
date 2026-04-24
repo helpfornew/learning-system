@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>化学菜鸟教程 | 在线化学文档手册</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'SF Pro Text', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            background: #f6f8fa;
+            color: #1e2a3a;
+            line-height: 1.5;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #1e2a3a;
+            color: white;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo span:first-child {
+            background: #4c9aff;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+        }
+
+        .logo span:last-child {
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            font-weight: 500;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #e2e8f0;
+            text-decoration: none;
+            transition: 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        /* 科目选择器样式 */
+        .subject-selector {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .subject-select {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            padding: 8px 28px 8px 12px;
+            font-size: 0.95rem;
+            color: white;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            min-width: 120px;
+            display: block;
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .subject-select:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .subject-select:focus {
+            background: rgba(255,255,255,0.2);
+            border-color: #4c9aff;
+        }
+
+        .subject-select option {
+            background: #1e2a3a;
+            color: white;
+            padding: 8px;
+        }
+
+        /* 用户菜单样式 */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-menu-trigger {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .user-menu-trigger:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4c9aff 0%, #3b82f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            min-width: 180px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .user-dropdown.show {
+            display: block;
+        }
+
+        .user-dropdown-item {
+            padding: 12px 16px;
+            color: #374151;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .user-dropdown-item:hover {
+            background: #f3f4f6;
+        }
+
+        .user-dropdown-item.danger {
+            color: #ef4444;
+        }
+
+        .user-dropdown-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 4px 0;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.02);
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: #f9fafb;
+            border-right: 1px solid #e9ecef;
+            padding: 28px 0 32px 0;
+            position: sticky;
+            top: 64px;
+            height: calc(100vh - 64px);
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #5b6e8c;
+            padding: 0 20px 8px 20px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            padding: 8px 20px;
+            margin: 2px 0;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: #2c3e4e;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .sidebar-menu li:hover {
+            background-color: #eef2f6;
+            color: #1e466e;
+        }
+
+        .sidebar-menu li.active {
+            background-color: #eef2ff;
+            border-left-color: #3b82f6;
+            color: #1e40af;
+            font-weight: 600;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 32px 40px 80px 40px;
+            overflow: auto;
+            background: white;
+            position: relative;
+            height: calc(100vh - 64px);
+        }
+
+        .doc-header {
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 16px;
+            margin-bottom: 28px;
+        }
+
+        .doc-header h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .doc-header .desc {
+            color: #475569;
+            font-size: 1rem;
+        }
+
+        .doc-section {
+            margin-bottom: 32px;
+        }
+
+        .doc-section h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin: 24px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #eef2ff;
+            color: #0c4e6e;
+        }
+
+        .doc-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+            color: #2c3e66;
+        }
+
+        .doc-section h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 16px 0 10px 0;
+            color: #3d4f5f;
+        }
+
+        .doc-section p {
+            margin: 12px 0;
+            color: #2d3e50;
+            line-height: 1.6;
+        }
+
+        .doc-section ul, .doc-section ol {
+            margin: 12px 0 12px 28px;
+            color: #2d3e50;
+            line-height: 1.6;
+        }
+
+        .doc-section li {
+            margin: 6px 0;
+        }
+
+        .code-block {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 16px 20px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            margin: 20px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .demo-note {
+            background: #eef6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .warning-note {
+            background: #fff8e6;
+            border-left: 4px solid #f5a623;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .success-note {
+            background: #e6f7ed;
+            border-left: 4px solid #28a745;
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .reaction-card {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 12px 20px;
+            margin: 16px 0;
+            border: 1px solid #e2edf2;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+            font-size: 1rem;
+        }
+
+        .formula-box {
+            background: #f0f7ff;
+            border: 1px solid #b8d4f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #fff3cd 0%, #fff3cd 100%);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-right: 6px;
+        }
+
+        @media (max-width: 780px) {
+            .sidebar {
+                width: 240px;
+            }
+            .content-area {
+                padding: 20px 20px 60px 20px;
+            }
+            .navbar {
+                padding: 0 16px;
+            }
+            .nav-links {
+                gap: 16px;
+            }
+        }
+
+        footer {
+            background: #f1f5f9;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: #4b5563;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* 掌握标记按钮 */
+        .master-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .master-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .master-btn.mastered {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .master-btn.mastered:hover {
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .master-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* 已掌握的章节样式 */
+        .sidebar-menu li.mastered {
+            text-decoration: line-through;
+            opacity: 0.5;
+            color: #9ca3af;
+        }
+
+        .sidebar-menu li.mastered:hover {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+
+        /* 同步状态指示器 */
+        .sync-status {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            padding: 10px 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 999;
+            transition: all 0.3s;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .sync-status.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .sync-status.success {
+            color: #059669;
+        }
+
+        .sync-status.error {
+            color: #ef4444;
+        }
+
+        .sync-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Canvas 绘图区域 */
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            cursor: crosshair;
+        }
+
+        #drawingCanvas.active {
+            pointer-events: auto;
+        }
+
+        /* 绘图工具按钮组 */
+        .drawing-tools {
+            position: fixed;
+            bottom: 30px;
+            right: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1001;
+        }
+
+        .drawing-tools.collapsed .tool-item {
+            display: none;
+        }
+
+        .drawing-tools.collapsed .toggle-btn {
+            display: flex;
+        }
+
+        .tool-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tool-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .tool-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .tool-btn.active {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3), 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 收纳按钮 */
+        .toggle-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            font-size: 1.2rem;
+        }
+
+        .toggle-btn:hover {
+            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+        }
+
+        /* 画笔按钮 */
+        .brush-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .brush-btn:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        .brush-btn.active {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        /* 荧光笔按钮 */
+        .highlighter-btn {
+            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+        }
+
+        .highlighter-btn:hover {
+            background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+        }
+
+        .highlighter-btn.active {
+            background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+        }
+
+        /* 橡皮擦按钮 */
+        .eraser-btn {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        }
+
+        .eraser-btn:hover {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        }
+
+        .eraser-btn.active {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        }
+
+        /* 清除按钮 */
+        .clear-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            font-size: 1.2rem;
+        }
+
+        .clear-btn:hover {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+        }
+
+        /* 保存按钮 */
+        .save-drawing-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            font-size: 1.2rem;
+        }
+
+        .save-drawing-btn:hover {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        /* 画笔颜色选择器 */
+        .color-picker {
+            position: fixed;
+            bottom: 30px;
+            right: 170px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+        }
+
+        .color-picker.show {
+            display: flex;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #1e2a3a;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #1e2a3a;
+        }
+
+        /* 荧光笔颜色选择器 */
+        .highlighter-colors {
+            position: fixed;
+            bottom: 30px;
+            right: 170px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+        }
+
+        .highlighter-colors.show {
+            display: flex;
+        }
+
+        .highlighter-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .highlighter-option:hover {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        .highlighter-option.active {
+            border-color: #1e2a3a;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #1e2a3a;
+            opacity: 1;
+        }
+
+        /* 画笔大小调节 */
+        .brush-size-slider {
+            position: fixed;
+            bottom: 100px;
+            right: 170px;
+            width: 150px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: none;
+        }
+
+        .brush-size-slider.show {
+            display: block;
+        }
+
+        .brush-size-slider label {
+            font-size: 0.85rem;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .brush-size-slider input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #e5e7eb;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .brush-size-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #f59e0b;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* 荧光笔大小调节 */
+        .highlighter-size-slider {
+            position: fixed;
+            bottom: 100px;
+            right: 170px;
+            width: 150px;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: none;
+        }
+
+        .highlighter-size-slider.show {
+            display: block;
+        }
+
+        .highlighter-size-slider label {
+            font-size: 0.85rem;
+            color: #374151;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .highlighter-size-slider input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #e5e7eb;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .highlighter-size-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #84cc16;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+    <!-- 统一导航栏样式 -->
+    <link rel="stylesheet" href="/shared/navbar.css">
+</head>
+<body>
+<div class="app">
+    <div class="navbar">
+        <div class="logo">
+            <span id="logoPrefix">Chem</span>
+            <span id="siteTitle">化学菜鸟教程</span>
+        </div>
+        <div class="nav-links">
+            <!-- 科目选择下拉框 -->
+            <div class="subject-selector">
+                <select id="subjectSelect" class="subject-select">
+                    <option value="chemistry">⚗️ 化学</option>
+                    <option value="physics">⚡ 物理</option>
+                    <option value="chinese">📖 语文</option>
+                    <option value="math">🔢 数学</option>
+                    <option value="english">🔤 英语</option>
+                    <option value="politics">🏛️ 政治</option>
+                </select>
+            </div>
+            <a href="#" id="navManual">化学手册</a>
+            <div class="user-menu">
+                <div class="user-menu-trigger" id="userMenuTrigger">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span class="user-name" id="userName">加载中...</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </div>
+                <div class="user-dropdown" id="userDropdown">
+                    <div class="user-dropdown-item" id="userInfo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span id="userInfoName">用户</span>
+                    </div>
+                    <div class="user-dropdown-item" id="adminLink" style="display: none;" onclick="window.location.href='admin.html'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                            <path d="M2 17l10 5 10-5"></path>
+                            <path d="M2 12l10 5 10-5"></path>
+                        </svg>
+                        <span>内容管理</span>
+                    </div>
+                    <div class="user-dropdown-divider"></div>
+                    <div class="user-dropdown-item danger" id="logoutBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>退出登录</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <!-- 动态生成的菜单内容 -->
+        </div>
+
+        <div class="content-area" id="dynamicContent">
+            <!-- 画布层 -->
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+    </div>
+    <footer id="pageFooter">
+        <span id="footerText">在线化学文档 | 高中化学核心知识 + 反应式实例 | 化学菜鸟教程</span><br>
+        <span style="opacity: 0.7; font-size: 0.75rem; margin-top: 5px; display: inline-block;">💡 提示：← → 切换章节 | Enter/Return 标记掌握 | 鼠标点击右下角按钮 | B画笔 H荧光笔 E橡皮擦</span>
+    </footer>
+
+    <!-- 画笔颜色选择器 -->
+    <div class="color-picker" id="colorPicker">
+        <div class="color-option active" data-color="#000000" style="background: #000000;"></div>
+        <div class="color-option" data-color="#ef4444" style="background: #ef4444;"></div>
+        <div class="color-option" data-color="#f59e0b" style="background: #f59e0b;"></div>
+        <div class="color-option" data-color="#10b981" style="background: #10b981;"></div>
+        <div class="color-option" data-color="#3b82f6" style="background: #3b82f6;"></div>
+        <div class="color-option" data-color="#8b5cf6" style="background: #8b5cf6;"></div>
+    </div>
+
+    <!-- 荧光笔颜色选择器 -->
+    <div class="highlighter-colors" id="highlighterColors">
+        <div class="highlighter-option active" data-color="rgba(255, 255, 0, 0.4)" style="background: rgba(255, 255, 0, 0.6);"></div>
+        <div class="highlighter-option" data-color="rgba(0, 255, 0, 0.3)" style="background: rgba(0, 255, 0, 0.5);"></div>
+        <div class="highlighter-option" data-color="rgba(255, 0, 0, 0.3)" style="background: rgba(255, 0, 0, 0.5);"></div>
+        <div class="highlighter-option" data-color="rgba(0, 191, 255, 0.3)" style="background: rgba(0, 191, 255, 0.5);"></div>
+        <div class="highlighter-option" data-color="rgba(255, 105, 180, 0.3)" style="background: rgba(255, 105, 180, 0.5);"></div>
+        <div class="highlighter-option" data-color="rgba(255, 165, 0, 0.3)" style="background: rgba(255, 165, 0, 0.5);"></div>
+    </div>
+
+    <!-- 画笔大小调节 -->
+    <div class="brush-size-slider" id="brushSizeSlider">
+        <label>画笔大小: <span id="brushSizeValue">3</span>px</label>
+        <input type="range" id="brushSize" min="1" max="20" value="3">
+    </div>
+
+    <!-- 荧光笔大小调节 -->
+    <div class="highlighter-size-slider" id="highlighterSizeSlider">
+        <label>荧光笔粗细: <span id="highlighterSizeValue">24</span>px</label>
+        <input type="range" id="highlighterSize" min="12" max="48" value="24">
+    </div>
+
+    <!-- 绘图工具按钮组 -->
+    <div class="drawing-tools collapsed" id="drawingTools">
+        <!-- 收纳按钮 - 始终显示 -->
+        <button class="tool-btn toggle-btn" id="toggleToolsBtn" title="展开工具 (T)">
+            🧰
+        </button>
+        <!-- 工具项容器 - 可收起 -->
+        <div class="tool-item" id="toolItems">
+            <button class="tool-btn brush-btn" id="brushBtn" title="画笔工具 (B)">
+                ✏️
+            </button>
+            <button class="tool-btn highlighter-btn" id="highlighterBtn" title="荧光笔 (H)">
+                🖍️
+            </button>
+            <button class="tool-btn eraser-btn" id="eraserBtn" title="橡皮擦 (E)">
+                🧼
+            </button>
+            <button class="tool-btn clear-btn" id="clearBtn" title="清除全部 (C)">
+                🗑️
+            </button>
+            <button class="tool-btn save-drawing-btn" id="saveDrawingBtn" title="保存涂鸦 (Ctrl+S)">
+                💾
+            </button>
+        </div>
+    </div>
+
+    <!-- 掌握标记按钮 -->
+    <button id="masterBtn" class="master-btn" title="标记为已掌握">
+        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <svg class="icon-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </button>
+
+    <!-- 同步状态指示器 -->
+    <div class="sync-status" id="syncStatus">
+        <div class="sync-spinner" id="syncSpinner"></div>
+        <span id="syncText">同步中...</span>
+    </div>
+</div>
+
+<!-- 配置文件 -->
+<script src="config.js"></script>
+
+<script>
+    // API基础URL从配置文件读取
+
+    // 当前选中的科目
+    let currentSubjectId = localStorage.getItem('current_subject') || 'chemistry';
+
+    // 动态科目数据（从API加载）
+    let subjectsData = [];
+    let currentSubjectDetail = null;
+    let currentChapterContent = null;
+
+    // 默认科目数据（当API不可用时使用）
+    const defaultSubjects = [
+        { key: 'chemistry', name: '化学', logo: '⚗️' },
+        { key: 'physics', name: '物理', logo: '⚡' },
+        { key: 'chinese', name: '语文', logo: '📖' },
+        { key: 'math', name: '数学', logo: '🔢' },
+        { key: 'english', name: '英语', logo: '🔤' },
+        { key: 'politics', name: '政治', logo: '🏛️' }
+    ];
+
+    // 从API加载科目列表
+    async function loadSubjects() {
+        try {
+            console.log('开始加载科目列表...');
+            const response = await apiRequest('/subjects');
+            console.log('API 响应:', response);
+            
+            if (response && response.ok) {
+                const result = await response.json();
+                console.log('API 返回数据:', result);
+                
+                subjectsData = result.data || [];
+                console.log('科目数据:', subjectsData);
+                
+                // 更新科目选择下拉框
+                updateSubjectSelect();
+                return subjectsData;
+            } else {
+                console.warn('API 响应不正常:', response);
+            }
+        } catch (error) {
+            console.error('加载科目列表失败:', error);
+        }
+        
+        // API 失败时使用默认科目
+        console.log('使用默认科目数据');
+        subjectsData = defaultSubjects;
+        updateSubjectSelect();
+        return subjectsData;
+    }
+
+    // 更新科目选择下拉框
+    function updateSubjectSelect() {
+        console.log('更新科目选择下拉框...');
+        const select = document.getElementById('subjectSelect');
+        if (!select) {
+            console.error('找不到 subjectSelect 元素');
+            return;
+        }
+        
+        // 使用 subjectsData 或默认数据
+        const data = subjectsData.length > 0 ? subjectsData : defaultSubjects;
+        console.log('使用的数据:', data);
+        
+        // 验证数据格式
+        const validData = data.filter(s => s.key && s.name);
+        if (validData.length === 0) {
+            console.error('没有有效的科目数据');
+            return;
+        }
+        
+        select.innerHTML = validData.map(s =>
+            `<option value="${s.key}">${s.logo || '📚'} ${s.name}</option>`
+        ).join('');
+        select.value = currentSubjectId;
+        console.log('科目选择下拉框已更新，选项数:', validData.length);
+    }
+
+    // 从API加载科目详情（包含章节列表）
+    async function loadSubjectDetail(subjectKey) {
+        try {
+            const response = await apiRequest(`/subjects/${subjectKey}`);
+            if (response && response.ok) {
+                const result = await response.json();
+                currentSubjectDetail = result.data || result;
+                return currentSubjectDetail;
+            }
+        } catch (error) {
+            console.error('加载科目详情失败:', error);
+        }
+        return null;
+    }
+
+    // 从API加载章节内容
+    async function loadChapterContent(chapterKey) {
+        try {
+            const response = await apiRequest(`/chapters/${chapterKey}`);
+            if (response && response.ok) {
+                const result = await response.json();
+                currentChapterContent = result.data || result;
+                return currentChapterContent;
+            }
+        } catch (error) {
+            console.error('加载章节内容失败:', error);
+        }
+        return null;
+    }
+
+    // 获取当前章节数据（兼容原有代码）
+    function getChaptersData() {
+        if (currentChapterContent && currentChapterContent.key === currentChapterKey) {
+            return { [currentChapterKey]: currentChapterContent };
+        }
+        return {};
+    }
+
+    // 获取当前科目数据（兼容原有代码）
+    function getCurrentSubjectData() {
+        if (currentSubjectDetail) {
+            return currentSubjectDetail;
+        }
+        // 返回默认数据
+        const subject = subjectsData.find(s => s.key === currentSubjectId);
+        if (subject) {
+            return {
+                ...subject,
+                chapters: []
+            };
+        }
+        return null;
+    }
+
+    // 获取存储前缀
+    function getStoragePrefix() {
+        return 'user';
+    }
+
+    // 切换科目
+    function switchSubject(subjectId) {
+        const subject = subjectsData.find(s => s.key === subjectId);
+        if (subject) {
+            currentSubjectId = subjectId;
+            localStorage.setItem('current_subject', subjectId);
+            return true;
+        }
+        return false;
+    }
+
+    // 存储已掌握的章节
+    let masteredChapters = new Set();
+
+    // 当前显示的章节key
+    let currentChapterKey = null;
+
+    // 获取JWT Token（使用与主系统统一的键名）
+    function getToken() {
+        return localStorage.getItem('auth_token');
+    }
+
+    // API请求封装
+    async function apiRequest(url, options = {}) {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}${url}`, {
+                ...options,
+                headers
+            });
+
+            if (response.status === 401) {
+                // Token过期或无效，清除并跳转到主站登录页
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_info');
+                window.location.href = '/?needLogin=1&returnUrl=' + encodeURIComponent(window.location.href);
+                return null;
+            }
+
+            return response;
+        } catch (error) {
+            console.error('API请求失败:', error);
+            showSyncStatus('网络连接失败', 'error');
+            return null;
+        }
+    }
+
+    // 显示同步状态
+    function showSyncStatus(text, type = 'success') {
+        const statusEl = document.getElementById('syncStatus');
+        const textEl = document.getElementById('syncText');
+        const spinnerEl = document.getElementById('syncSpinner');
+
+        textEl.textContent = text;
+        statusEl.className = 'sync-status show ' + type;
+
+        if (type === 'loading') {
+            spinnerEl.style.display = 'block';
+        } else {
+            spinnerEl.style.display = 'none';
+        }
+
+        setTimeout(() => {
+            statusEl.classList.remove('show');
+        }, 2000);
+    }
+
+    // 检查登录状态 - 使用统一认证
+    async function checkAuth() {
+        const token = getToken();
+        if (!token) {
+            // 未登录时跳转到主站登录页
+            window.location.href = '/?needLogin=1&returnUrl=' + encodeURIComponent(window.location.href);
+            return false;
+        }
+
+        // 使用完整的 URL 访问账户 API
+        const response = await fetch('/account/api/user', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response || !response.ok) {
+            // Token 无效时跳转到主站登录页
+            window.location.href = '/?needLogin=1&returnUrl=' + encodeURIComponent(window.location.href);
+            return false;
+        }
+
+        const result = await response.json();
+        const user = result.data || result;
+        localStorage.setItem('user_info', JSON.stringify(user));
+        updateUserDisplay(user.username);
+
+        // 显示管理入口（仅admin）
+        if (user.is_admin || user.vip_level >= 9) {
+            document.getElementById('adminLink').style.display = 'flex';
+        }
+
+        return true;
+    }
+
+    // 更新用户显示
+    function updateUserDisplay(username) {
+        document.getElementById('userName').textContent = username;
+        document.getElementById('userInfoName').textContent = username;
+        document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
+    }
+
+    // 获取已掌握章节
+    async function loadMasteredChapters() {
+        showSyncStatus('加载中...', 'loading');
+
+        const response = await apiRequest('/mastered');
+        if (response && response.ok) {
+            const result = await response.json();
+            const chapters = result.data || [];
+            masteredChapters.clear();
+            chapters.forEach(c => masteredChapters.add(c.chapter_key));
+            updateAllMenuItemStates();
+            showSyncStatus('已同步');
+        }
+    }
+
+    // 上报阅读记录
+    async function reportProgress(chapterKey) {
+        const response = await apiRequest('/progress', {
+            method: 'POST',
+            body: JSON.stringify({ chapter_key: chapterKey })
+        });
+
+        if (response && response.ok) {
+            console.log('阅读记录已更新:', chapterKey);
+        }
+    }
+
+    // 切换掌握状态（同步到服务器）
+    async function toggleMasteredServer(chapterKey) {
+        showSyncStatus('同步中...', 'loading');
+
+        const response = await apiRequest('/mastered', {
+            method: 'POST',
+            body: JSON.stringify({ chapter_key: chapterKey })
+        });
+
+        if (response && response.ok) {
+            const data = await response.json();
+
+            // 更新本地状态
+            if (data.mastered) {
+                masteredChapters.add(chapterKey);
+            } else {
+                masteredChapters.delete(chapterKey);
+            }
+
+            updateMasterBtnState();
+            updateAllMenuItemStates();
+            showSyncStatus(data.message);
+        } else {
+            showSyncStatus('同步失败', 'error');
+        }
+    }
+
+    // 渲染章节内容
+    async function renderChapter(chapterKey) {
+        // 从API加载章节内容
+        const chapter = await loadChapterContent(chapterKey);
+        if (!chapter) return;
+
+        // 保存 Canvas 引用
+        const canvasEl = document.getElementById('drawingCanvas');
+
+        const contentHTML = `
+            <div class="doc-header">
+                <h1>${chapter.title}</h1>
+                <div class="desc">${chapter.description || ''}</div>
+            </div>
+            ${chapter.content}
+        `;
+        document.getElementById('dynamicContent').innerHTML = contentHTML;
+
+        // 重新添加 Canvas
+        if (canvasEl) {
+            document.getElementById('dynamicContent').appendChild(canvasEl);
+            // 重新获取上下文（因为 DOM 操作可能导致上下文失效）
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+            }
+        }
+
+        // 上报阅读进度
+        reportProgress(chapterKey);
+    }
+
+    // 更新按钮状态
+    function updateMasterBtnState() {
+        if (!currentChapterKey) return;
+
+        const masterBtn = document.getElementById('masterBtn');
+        const iconCheck = masterBtn.querySelector('.icon-check');
+        const iconCross = masterBtn.querySelector('.icon-cross');
+
+        const isMastered = masteredChapters.has(currentChapterKey);
+        if (isMastered) {
+            masterBtn.classList.add('mastered');
+            masterBtn.title = '取消标记';
+            iconCheck.style.display = 'none';
+            iconCross.style.display = 'block';
+        } else {
+            masterBtn.classList.remove('mastered');
+            masterBtn.title = '标记为已掌握';
+            iconCheck.style.display = 'block';
+            iconCross.style.display = 'none';
+        }
+    }
+
+    // 更新所有菜单项状态
+    function updateAllMenuItemStates() {
+        const menuItems = document.querySelectorAll('.sidebar-menu li');
+        menuItems.forEach(item => {
+            const key = item.getAttribute('data-chapter');
+            if (masteredChapters.has(key)) {
+                item.classList.add('mastered');
+            } else {
+                item.classList.remove('mastered');
+            }
+        });
+    }
+
+    // 渲染指定索引的章节
+    async function renderChapterByIndex(index, menuItems) {
+        if (index < 0) index = menuItems.length - 1;
+        if (index >= menuItems.length) index = 0;
+
+        const newChapterKey = menuItems[index].getAttribute('data-chapter');
+        const oldChapterKey = currentChapterKey;
+
+        // 先保存旧章节的涂鸦
+        if (oldChapterKey && canvas && ctx) {
+            const drawingData = canvas.toDataURL('image/png');
+            apiRequest('/drawing', {
+                method: 'POST',
+                body: JSON.stringify({
+                    chapter_key: oldChapterKey,
+                    drawing_data: drawingData
+                })
+            }).catch(() => {});
+        }
+
+        menuItems.forEach(i => i.classList.remove('active'));
+        menuItems[index].classList.add('active');
+        currentChapterKey = newChapterKey;
+        await renderChapter(currentChapterKey);
+        updateMasterBtnState();
+        menuItems[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // 获取当前激活项的索引
+    function getActiveIndex(menuItems) {
+        for (let i = 0; i < menuItems.length; i++) {
+            if (menuItems[i].classList.contains('active')) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    // 登出 - 跳转到主站
+    async function logout() {
+        await apiRequest('/logout', { method: 'POST' });
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_info');
+        localStorage.removeItem('user_id');
+        window.location.href = '/';
+    }
+
+    // 生成侧边栏菜单
+    async function generateSidebar() {
+        const sidebar = document.getElementById('sidebar');
+
+        // 先加载科目详情
+        await loadSubjectDetail(currentSubjectId);
+        const subjectData = getCurrentSubjectData();
+
+        if (!subjectData || !subjectData.chapters || subjectData.chapters.length === 0) {
+            sidebar.innerHTML = '<div class="sidebar-section"><div class="sidebar-title">暂无内容</div></div>';
+            return;
+        }
+
+        // 更新 Logo 和标题
+        document.getElementById('logoPrefix').textContent = subjectData.logo;
+        document.getElementById('siteTitle').textContent = subjectData.name + '菜鸟教程';
+        document.getElementById('navManual').textContent = subjectData.name + '手册';
+        document.title = subjectData.name + '菜鸟教程 | 在线' + subjectData.name + '文档手册';
+
+        // 更新科目选择器
+        const subjectSelect = document.getElementById('subjectSelect');
+        if (subjectSelect) {
+            subjectSelect.value = currentSubjectId;
+        }
+
+        // 更新页脚
+        const footerText = document.getElementById('footerText');
+        if (footerText) {
+            footerText.textContent = `在线${subjectData.name}文档 | 高中${subjectData.name}核心知识 | ${subjectData.name}菜鸟教程`;
+        }
+
+        // 按章节分组（简化版：所有章节放在一组）
+        let html = `
+            <div class="sidebar-section">
+                <div class="sidebar-title">${subjectData.name}章节</div>
+                <ul class="sidebar-menu">
+                    ${subjectData.chapters.map(item => `
+                        <li data-chapter="${item.key}">${item.title}</li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+
+        sidebar.innerHTML = html;
+
+        // 重新绑定菜单点击事件
+        const menuItems = document.querySelectorAll('.sidebar-menu li');
+        menuItems.forEach((item, index) => {
+            item.addEventListener('click', function() {
+                renderChapterByIndex(index, menuItems);
+            });
+        });
+
+        return menuItems;
+    }
+
+    // 切换科目并热更新
+    async function switchSubjectAndReload(subjectId) {
+        if (subjectId === currentSubjectId) return;
+
+        // 保存当前章节的涂鸦
+        if (currentChapterKey && canvas && ctx) {
+            const drawingData = canvas.toDataURL('image/png');
+            await apiRequest('/drawing', {
+                method: 'POST',
+                body: JSON.stringify({
+                    chapter_key: currentChapterKey,
+                    drawing_data: drawingData
+                })
+            }).catch(() => {});
+        }
+
+        // 切换科目
+        currentSubjectId = subjectId;
+        localStorage.setItem('current_subject', subjectId);
+
+        // 重新生成菜单
+        const menuItems = await generateSidebar();
+
+        // 清除画布
+        if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // 加载新科目的掌握状态
+        await loadMasteredChapters();
+
+        // 加载第一个章节
+        if (menuItems && menuItems.length > 0) {
+            renderChapterByIndex(0, menuItems);
+        }
+
+        // 显示切换提示
+        showSyncStatus('已切换到' + getCurrentSubjectData().name, 'success');
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', async function() {
+        // 检查登录状态
+        const isLoggedIn = await checkAuth();
+        if (!isLoggedIn) return;
+
+        // 先加载科目列表
+        await loadSubjects();
+
+        // 生成侧边栏菜单
+        const menuItems = await generateSidebar();
+
+        // 加载已掌握章节
+        await loadMasteredChapters();
+
+        const masterBtn = document.getElementById('masterBtn');
+
+        // 按钮点击事件
+        masterBtn.addEventListener('click', () => {
+            if (currentChapterKey) {
+                toggleMasteredServer(currentChapterKey);
+            }
+        });
+
+        // 科目选择器事件
+        const subjectSelect = document.getElementById('subjectSelect');
+        if (subjectSelect) {
+            subjectSelect.addEventListener('change', function() {
+                switchSubjectAndReload(this.value);
+            });
+        }
+
+        // 键盘事件监听
+        document.addEventListener('keydown', function(e) {
+            const menuItems = document.querySelectorAll('.sidebar-menu li');
+            const activeIndex = getActiveIndex(menuItems);
+            if (activeIndex === -1) return;
+
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                renderChapterByIndex(activeIndex - 1, menuItems);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                renderChapterByIndex(activeIndex + 1, menuItems);
+            } else if (e.key === 'Enter' || e.key === 'Return') {
+                e.preventDefault();
+                if (currentChapterKey) {
+                    toggleMasteredServer(currentChapterKey);
+                }
+            }
+        });
+
+        // 用户菜单事件
+        const userMenuTrigger = document.getElementById('userMenuTrigger');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userMenuTrigger.addEventListener('click', () => {
+            userDropdown.classList.toggle('show');
+        });
+
+        // 点击外部关闭下拉菜单
+        document.addEventListener('click', (e) => {
+            if (!userMenuTrigger.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // 登出按钮
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // 默认加载第一个章节
+        if (menuItems && menuItems.length > 0) {
+            await renderChapterByIndex(0, menuItems);
+        }
+
+        // 初始化绘图功能
+        initDrawing();
+    });
+
+    // ============ Canvas 绘图功能 ============
+    let canvas, ctx;
+    let isDrawing = false;
+    let currentTool = null; // 'brush', 'eraser', 'highlighter'
+    let currentColor = '#000000';
+    let currentBrushSize = 3;
+    let currentHighlighterColor = 'rgba(255, 255, 0, 0.4)';
+    let currentHighlighterSize = 24;
+    let lastX = 0, lastY = 0;
+    let toolsExpanded = false; // 工具栏默认收纳状态
+
+    // 初始化绘图功能
+    function initDrawing() {
+        console.log('initDrawing called');
+
+        canvas = document.getElementById('drawingCanvas');
+        if (!canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
+        ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('Canvas context not supported');
+            return;
+        }
+        console.log('Canvas initialized');
+
+        // 设置画布大小
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 监听内容区域滚动，同步 Canvas
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+            contentArea.addEventListener('scroll', syncCanvasWithScroll);
+        }
+
+        // 鼠标/触摸事件
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // 触摸事件支持
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // 工具收纳按钮
+        const toggleToolsBtn = document.getElementById('toggleToolsBtn');
+        if (toggleToolsBtn) {
+            toggleToolsBtn.addEventListener('click', toggleTools);
+            console.log('Toggle tools button bound');
+        } else {
+            console.error('Toggle tools button not found');
+        }
+
+        // 工具按钮事件
+        const brushBtn = document.getElementById('brushBtn');
+        const highlighterBtn = document.getElementById('highlighterBtn');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveDrawingBtn = document.getElementById('saveDrawingBtn');
+
+        if (brushBtn) {
+            brushBtn.addEventListener('click', () => setTool('brush'));
+            console.log('Brush button bound');
+        } else {
+            console.error('Brush button not found');
+        }
+
+        if (highlighterBtn) {
+            highlighterBtn.addEventListener('click', () => setTool('highlighter'));
+            console.log('Highlighter button bound');
+        } else {
+            console.error('Highlighter button not found');
+        }
+
+        if (eraserBtn) {
+            eraserBtn.addEventListener('click', () => setTool('eraser'));
+            console.log('Eraser button bound');
+        } else {
+            console.error('Eraser button not found');
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', clearCanvas);
+            console.log('Clear button bound');
+        } else {
+            console.error('Clear button not found');
+        }
+
+        if (saveDrawingBtn) {
+            saveDrawingBtn.addEventListener('click', saveDrawing);
+            console.log('Save button bound');
+        } else {
+            console.error('Save button not found');
+        }
+
+        // 画笔颜色选择器
+        const colorOptions = document.querySelectorAll('.color-option');
+        colorOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                colorOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentColor = opt.dataset.color;
+                // 选择颜色时自动切换到画笔
+                setTool('brush');
+            });
+        });
+
+        // 荧光笔颜色选择器
+        const highlighterOptions = document.querySelectorAll('.highlighter-option');
+        highlighterOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                highlighterOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentHighlighterColor = opt.dataset.color;
+                // 选择颜色时自动切换到荧光笔
+                setTool('highlighter');
+            });
+        });
+
+        // 画笔大小调节
+        const brushSizeInput = document.getElementById('brushSize');
+        if (brushSizeInput) {
+            brushSizeInput.addEventListener('input', (e) => {
+                currentBrushSize = parseInt(e.target.value);
+                document.getElementById('brushSizeValue').textContent = currentBrushSize;
+            });
+        }
+
+        // 荧光笔大小调节
+        const highlighterSizeInput = document.getElementById('highlighterSize');
+        if (highlighterSizeInput) {
+            highlighterSizeInput.addEventListener('input', (e) => {
+                currentHighlighterSize = parseInt(e.target.value);
+                document.getElementById('highlighterSizeValue').textContent = currentHighlighterSize;
+            });
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return; // 在输入框时不触发
+
+            if (e.key === 'b' || e.key === 'B') {
+                setTool('brush');
+            } else if (e.key === 'h' || e.key === 'H') {
+                setTool('highlighter');
+            } else if (e.key === 'e' || e.key === 'E') {
+                setTool('eraser');
+            } else if (e.key === 'c' || e.key === 'C') {
+                clearCanvas();
+            } else if (e.key === 't' || e.key === 'T') {
+                toggleTools();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveDrawing();
+            } else if (e.key === 'Escape') {
+                setTool(null);
+            }
+        });
+
+        // 点击页面其他地方隐藏选择器
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.drawing-tools') &&
+                !e.target.closest('.color-picker') &&
+                !e.target.closest('.highlighter-colors')) {
+                document.getElementById('colorPicker').classList.remove('show');
+                document.getElementById('highlighterColors').classList.remove('show');
+                document.getElementById('brushSizeSlider').classList.remove('show');
+                const highlighterSlider = document.getElementById('highlighterSizeSlider');
+                if (highlighterSlider) {
+                    highlighterSlider.classList.remove('show');
+                }
+            }
+        });
+    }
+
+    // 同步 Canvas 与内容滚动
+    let canvasOffsetY = 0;
+    function syncCanvasWithScroll() {
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea && canvas) {
+            canvasOffsetY = contentArea.scrollTop;
+        }
+    }
+
+    // 工具收纳切换
+    function toggleTools() {
+        toolsExpanded = !toolsExpanded;
+        const drawingTools = document.getElementById('drawingTools');
+        const toggleBtn = document.getElementById('toggleToolsBtn');
+
+        if (toolsExpanded) {
+            drawingTools.classList.remove('collapsed');
+            toggleBtn.innerHTML = '📌';
+            toggleBtn.title = '收起工具 (T)';
+        } else {
+            drawingTools.classList.add('collapsed');
+            toggleBtn.innerHTML = '🧰';
+            toggleBtn.title = '展开工具 (T)';
+            // 收起时清除当前工具
+            setTool(null);
+        }
+    }
+
+    // 调整画布大小
+    function resizeCanvas() {
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea && canvas) {
+            // 使用 clientWidth/clientHeight 获取实际显示尺寸
+            // 确保 Canvas 属性和 CSS 尺寸一致，避免缩放导致坐标偏移
+            const width = contentArea.clientWidth;
+            const height = contentArea.clientHeight;
+
+            // 只有尺寸真正变化时才重置，避免清空已有绘图
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+        }
+    }
+
+    // 设置工具
+    function setTool(tool) {
+        // 如果工具栏是收起的，展开它
+        if (!toolsExpanded && tool !== null) {
+            toggleTools();
+        }
+
+        currentTool = tool;
+
+        // 更新按钮状态
+        document.getElementById('brushBtn').classList.toggle('active', tool === 'brush');
+        document.getElementById('highlighterBtn').classList.toggle('active', tool === 'highlighter');
+        document.getElementById('eraserBtn').classList.toggle('active', tool === 'eraser');
+
+        // 更新画布指针
+        canvas.classList.toggle('active', tool !== null);
+
+        // 隐藏所有选择器
+        document.getElementById('colorPicker').classList.remove('show');
+        document.getElementById('highlighterColors').classList.remove('show');
+        document.getElementById('brushSizeSlider').classList.remove('show');
+        const highlighterSlider = document.getElementById('highlighterSizeSlider');
+        if (highlighterSlider) {
+            highlighterSlider.classList.remove('show');
+        }
+
+        // 根据工具显示对应的选择器
+        if (tool === 'brush') {
+            document.getElementById('colorPicker').classList.add('show');
+            document.getElementById('brushSizeSlider').classList.add('show');
+        } else if (tool === 'highlighter') {
+            document.getElementById('highlighterColors').classList.add('show');
+            if (highlighterSlider) {
+                highlighterSlider.classList.add('show');
+            }
+        }
+    }
+
+    // 开始绘图
+    function startDrawing(e) {
+        if (!currentTool) return;
+        isDrawing = true;
+
+        // 计算相对于 Canvas 的坐标
+        const rect = canvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+
+        // 设置绘图样式
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (currentTool === 'eraser') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 20;
+        } else if (currentTool === 'highlighter') {
+            // 荧光笔使用半透明
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.lineWidth = currentHighlighterSize;
+            ctx.strokeStyle = currentHighlighterColor;
+        } else {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.lineWidth = currentBrushSize;
+            ctx.strokeStyle = currentColor;
+        }
+
+        // 绘制一个点（点击时）
+        if (currentTool !== 'highlighter') {
+            ctx.beginPath();
+            ctx.arc(lastX, lastY, ctx.lineWidth / 2, 0, Math.PI * 2);
+            if (currentTool === 'eraser') {
+                ctx.fill();
+            } else {
+                ctx.fillStyle = currentColor;
+                ctx.fill();
+            }
+            ctx.closePath();
+        }
+    }
+
+    // 绘图
+    function draw(e) {
+        if (!isDrawing || !currentTool) return;
+
+        // 计算相对于 Canvas 的坐标
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lastX = x;
+        lastY = y;
+    }
+
+    // 停止绘图
+    function stopDrawing() {
+        if (isDrawing) {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+    }
+
+    // 触摸事件处理
+    function handleTouchStart(e) {
+        if (!currentTool) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+
+        isDrawing = true;
+        lastX = touch.clientX - rect.left;
+        lastY = touch.clientY - rect.top;
+
+        // 设置绘图样式
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (currentTool === 'eraser') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = 20;
+        } else if (currentTool === 'highlighter') {
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.lineWidth = currentHighlighterSize;
+            ctx.strokeStyle = currentHighlighterColor;
+        } else {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.lineWidth = currentBrushSize;
+            ctx.strokeStyle = currentColor;
+        }
+    }
+
+    function handleTouchMove(e) {
+        if (!currentTool || !isDrawing) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lastX = x;
+        lastY = y;
+    }
+
+    // 清除画布
+    function clearCanvas() {
+        if (confirm('确定要清除所有涂鸦吗？')) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            showSyncStatus('画布已清除', 'success');
+        }
+    }
+
+    // 保存涂鸦到服务器
+    async function saveDrawing() {
+        if (!currentChapterKey) return;
+
+        showSyncStatus('保存涂鸦中...', 'loading');
+
+        try {
+            const drawingData = canvas.toDataURL('image/png');
+
+            const response = await apiRequest('/drawing', {
+                method: 'POST',
+                body: JSON.stringify({
+                    chapter_key: currentChapterKey,
+                    drawing_data: drawingData
+                })
+            });
+
+            if (response && response.ok) {
+                showSyncStatus('涂鸦已保存');
+            } else {
+                showSyncStatus('保存失败', 'error');
+            }
+        } catch (error) {
+            showSyncStatus('保存失败', 'error');
+        }
+    }
+
+    // 加载章节的涂鸦
+    async function loadChapterDrawing(chapterKey) {
+        if (!chapterKey || !canvas || !ctx) return;
+
+        // 先清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        try {
+            const response = await apiRequest(`/drawing/${chapterKey}`);
+            if (response && response.ok) {
+                const data = await response.json();
+                if (data.drawing_data) {
+                    // 加载保存的图片
+                    const img = new Image();
+                    img.onload = function() {
+                        if (ctx) {
+                            ctx.drawImage(img, 0, 0);
+                        }
+                    };
+                    img.src = data.drawing_data;
+                }
+            }
+        } catch (error) {
+            console.error('加载涂鸦失败:', error);
+        }
+    }
+
+    // 扩展 renderChapter 函数，在渲染章节时加载涂鸦
+    const originalRenderChapter = renderChapter;
+    renderChapter = function(chapterKey) {
+        // 清除画布
+        if (canvas && ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // 调用原始 renderChapter（会渲染新内容并重新添加 Canvas）
+        originalRenderChapter(chapterKey);
+
+        // 重新调整画布大小并加载新章节的涂鸦
+        resizeCanvas();
+        setTimeout(() => loadChapterDrawing(chapterKey), 50);
+    };
+</script>
+<!-- 统一认证和导航栏 -->
+<script src="/shared/auth.js"></script>
+<script src="/shared/navbar.js"></script>
+<script>
+    // 初始化统一导航栏
+    document.addEventListener('DOMContentLoaded', function() {
+        // 隐藏原有的导航栏
+        const oldNavbar = document.querySelector('.navbar');
+        if (oldNavbar) {
+            oldNavbar.style.display = 'none';
+        }
+
+        // 初始化统一导航栏
+        if (typeof Navbar !== 'undefined') {
+            Navbar.init('learning');
+        }
+    });
+</script>
+</body>
+</html>

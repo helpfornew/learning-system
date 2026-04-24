@@ -1,0 +1,139 @@
+{
+  "name": "mistake-system-desktop",
+  "version": "2.0.0",
+  "description": "高考错题系统 - 客户端",
+  "author": {
+    "name": "高考学习系统团队",
+    "email": "support@mistake-system.com"
+  },
+  "homepage": "https://your-domain.com",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && ELECTRON_OZONE_PLATFORM_HINT=auto NODE_ENV=development npx electron electron/main.js --no-sandbox --disable-gpu\"",
+    "build": "vite build",
+    "build:web": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && ELECTRON_OZONE_PLATFORM_HINT=auto NODE_ENV=development npx electron electron/main.js --no-sandbox --disable-gpu\"",
+    "electron:build": "npm run build && electron-builder",
+    "build:win": "npm run build && electron-builder --win --x64",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:linux": "npm run build && electron-builder --linux",
+    "start": "electron --no-sandbox ."
+  },
+  "keywords": [
+    "高考",
+    "错题",
+    "学习",
+    "electron",
+    "react"
+  ],
+  "license": "Commercial",
+  "dependencies": {
+    "@types/axios": "^0.9.36",
+    "antd": "^5.0.0",
+    "axios": "^1.13.6",
+    "cropperjs": "^1.5.9",
+    "echarts": "^5.5.0",
+    "echarts-for-react": "^3.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.33",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^8.0.0",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "tailwindcss": "^3.0.0",
+    "terser": "^5.46.1",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "wait-on": "^7.0.0"
+  },
+  "build": {
+    "appId": "com.learning.mistake-system",
+    "productName": "高考错题系统",
+    "copyright": "Copyright © 2026 高考学习系统团队",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "electron/**/*",
+      "**/*.node"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/config.json",
+        "to": "config.json"
+      },
+      {
+        "from": "electron/config.prod.json",
+        "to": "config.prod.json"
+      },
+      {
+        "from": "electron/init_db.py",
+        "to": "init_db.py"
+      },
+      {
+        "from": "electron/migrate.py",
+        "to": "migrate.py"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "resources/icons/icon.icns"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "resources/icons/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "icon": "resources/icons/icon.png",
+      "category": "Education",
+      "maintainer": "高考学习系统团队 <support@mistake-system.com>",
+      "vendor": "高考学习系统团队",
+      "synopsis": "高考错题整理与学习系统",
+      "description": "一款专为高考学生设计的错题整理与学习系统，提供错题记录、分类管理、数据分析等功能。",
+      "desktop": {
+        "Name": "高考错题系统",
+        "Comment": "高考错题整理与学习系统",
+        "Categories": "Education;Office;",
+        "StartupWMClass": "mistake-system-desktop",
+        "MimeType": "application/x-mistake-db;"
+      }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "高考错题系统"
+    }
+  }
+}

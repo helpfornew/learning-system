@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高考学习系统 · 统一主页</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 登录页面样式 */
+        #loginPage {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        #loginPage.active {
+            display: flex;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .login-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+        }
+        .login-tab.active {
+            color: #8b7355;
+            border-bottom: 2px solid #d4c4a8;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .login-form input:focus {
+            border-color: #d4c4a8;
+            outline: none;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-message {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+        .login-message.error {
+            background: #fee;
+            color: #c00;
+            display: block;
+        }
+        .login-message.success {
+            background: #efe;
+            color: #060;
+            display: block;
+        }
+        .login-tip {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+        .user-info-card {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+        }
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+            color: white;
+        }
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .user-email {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .user-vip {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .logout-btn {
+            padding: 12px 30px;
+            background: #ff4d4f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #8b7355, #a08060);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .header-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .header-badge {
+            background: #f8f5f0;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: #8b7355;
+        }
+
+        /* 网格布局 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0ebe0;
+        }
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-body {
+            min-height: 200px;
+        }
+
+        /* 实时任务 */
+        .current-task {
+            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .current-task-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .current-task-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .current-task-time {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 统计卡片 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f5f0;
+            border-radius: 12px;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #8b7355;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* 按钮 */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            font-size: 0.95rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+        .btn-block {
+            display: block;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* 课表 */
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: #f8f5f0;
+            border-radius: 10px;
+            border-left: 4px solid #d4c4a8;
+        }
+        .schedule-time {
+            font-weight: 600;
+            color: #666;
+        }
+        .schedule-subject {
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* 详细课表样式 (原始仪表盘) */
+        .flow-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .flow-row {
+            display: grid;
+            grid-template-columns: 90px 1fr 70px;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,20,40,0.04);
+            transition: all 0.2s;
+            border: 1px solid #e8ecf4;
+        }
+        .flow-row.current {
+            border: 2px solid #2563eb;
+            background: #ecf3ff;
+            transform: scale(1.01);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.15);
+        }
+        .flow-row.completed {
+            opacity: 0.6;
+            background: #f5f7fa;
+        }
+        .flow-row.completed .flow-task {
+            text-decoration: line-through;
+            color: #999;
+        }
+        .flow-time {
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: #0b2c5f;
+        }
+        .flow-task {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #1e2f50;
+        }
+        .flow-task-desc {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 3px;
+        }
+        .flow-tag {
+            justify-self: end;
+            background: #e2e9ff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2d4680;
+            text-align: center;
+        }
+        .flow-tag.exercise {
+            background: #c3f0d6;
+            color: #0b5432;
+        }
+        .flow-tag.rest {
+            background: #f0d6e8;
+            color: #6b2d5c;
+        }
+        .flow-tag.daily {
+            background: #e8e8e8;
+            color: #555;
+        }
+
+        /* 状态指示灯 */
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online { background: #38ef7d; }
+        .status-offline { background: #f5576c; }
+
+        /* 底部 */
+        .footer {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        /* 时钟 */
+        .clock {
+            font-size: 3rem;
+            font-weight: 800;
+            text-align: center;
+            color: #667eea;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 20px 0;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            height: 10px;
+            background: #f0f3ff;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+
+        /* ===== 响应式设计 ===== */
+        /* 移动端优化 (< 768px) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+                padding-bottom: 70px;
+            }
+
+            /* 登录卡片 */
+            .login-card {
+                padding: 20px !important;
+                max-width: 100%;
+            }
+
+            .login-title {
+                font-size: 1.5rem !important;
+            }
+
+            /* 头部 */
+            .header {
+                padding: 20px !important;
+            }
+
+            .header h1 {
+                font-size: 1.8rem !important;
+            }
+
+            .header-badge {
+                font-size: 0.8rem !important;
+                padding: 6px 12px !important;
+            }
+
+            /* 网格布局改为单列 */
+            .dashboard-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* 卡片 */
+            .card {
+                padding: 20px !important;
+            }
+
+            .card-title {
+                font-size: 1.1rem !important;
+            }
+
+            /* 统计项 */
+            .stat-item {
+                padding: 15px !important;
+            }
+
+            .stat-value {
+                font-size: 1.5rem !important;
+            }
+
+            .stat-label {
+                font-size: 0.8rem !important;
+            }
+
+            /* 当前任务 */
+            .current-task-name {
+                font-size: 1.3rem !important;
+            }
+
+            /* 按钮最小触摸区域 */
+            .btn {
+                min-height: 44px;
+                padding: 12px 16px !important;
+                font-size: 0.9rem !important;
+            }
+
+            /* 隐藏非必要元素 */
+            .hidden-mobile {
+                display: none !important;
+            }
+
+            /* 时钟 */
+            .clock {
+                font-size: 2rem !important;
+            }
+
+            /* 表格容器 */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table {
+                min-width: 600px;
+            }
+
+            /* 导航 */
+            .nav-menu {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            /* 全宽元素 */
+            .full-width-mobile {
+                width: 100% !important;
+            }
+
+            /* ===== 移动端底部导航栏 ===== */
+            .mobile-bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                display: flex;
+                justify-content: space-around;
+                padding: 8px 0;
+                padding-bottom: calc(8px + env(safe-area-inset-bottom));
+                box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+                z-index: 1000;
+            }
+
+            .mobile-bottom-nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                padding: 8px 12px;
+                min-width: 60px;
+                cursor: pointer;
+                border-radius: 8px;
+                transition: all 0.2s;
+                text-decoration: none;
+                color: #666;
+            }
+
+            .mobile-bottom-nav-item.active {
+                background: #e6f7ff;
+                color: #667eea;
+            }
+
+            .mobile-bottom-nav-icon {
+                font-size: 20px;
+            }
+
+            .mobile-bottom-nav-label {
+                font-size: 11px;
+                color: #666;
+            }
+        }
+
+        /* 平板优化 (768px - 1024px) */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="loginPage">
+        <div class="login-card">
+            <h1 class="login-title">高考学习系统</h1>
+            <div class="login-tabs">
+                <div class="login-tab active" onclick="switchTab('login')">登录</div>
+                <div class="login-tab" onclick="switchTab('register')">注册</div>
+            </div>
+
+            <div id="loginMessage" class="login-message"></div>
+
+            <form id="loginForm" class="login-form" onsubmit="handleLogin(event)">
+                <input type="text" id="loginUsername" placeholder="用户名" required autocomplete="username">
+                <input type="password" id="loginPassword" placeholder="密码" required autocomplete="current-password">
+                <button type="submit" class="login-btn" id="loginBtn">登录</button>
+            </form>
+
+            <form id="registerForm" class="login-form" style="display: none;" onsubmit="handleRegister(event)">
+                <input type="text" id="regUsername" placeholder="用户名（至少 3 个字符）" required minlength="3" autocomplete="username">
+                <input type="email" id="regEmail" placeholder="邮箱（可选）" autocomplete="email">
+                <input type="password" id="regPassword" placeholder="密码（至少 6 个字符）" required minlength="6" autocomplete="new-password">
+                <input type="password" id="regConfirm" placeholder="确认密码" required autocomplete="new-password">
+                <button type="submit" class="login-btn" id="registerBtn">注册（赠送 30 天体验期）</button>
+                <p class="login-tip">注册即送 30 天 VIP 体验</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 用户信息卡片（未登录时显示在 header 处） -->
+    <div id="userInfoCard" class="user-info-card" style="display: none;">
+        <div class="user-avatar">👤</div>
+        <div class="user-name" id="displayUsername">用户名</div>
+        <div class="user-email" id="displayEmail">email@example.com</div>
+        <div class="user-vip" id="displayVip">VIP0</div>
+        <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+    </div>
+
+    <div class="container" id="mainContainer" style="display: none;">
+        <!-- 头部 -->
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>🎓 高考学习系统</h1>
+                <div id="headerUserStatus" style="display: none; align-items: center; gap: 12px;">
+                    <span class="header-badge" id="headerUsername">用户名</span>
+                    <span class="header-badge" id="headerVip">VIP0</span>
+                    <button onclick="handleLogout()" style="padding: 6px 12px; background: #ff4d4f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">退出</button>
+                </div>
+            </div>
+            <div class="header-info">
+                <span class="header-badge">🎯 目标：540 分</span>
+                <span class="header-badge">📊 当前：376 分</span>
+                <span class="header-badge">⏰ 倒计时：<span id="countdown">90</span>天</span>
+                <span class="header-badge" id="dayTypeBadge">单日·数学</span>
+            </div>
+
+            <!-- 实时时钟 -->
+            <div class="clock" id="clock">00:00:00</div>
+        </div>
+
+        <!-- 主网格 -->
+        <div class="dashboard-grid">
+            <!-- 当前任务 -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📚 当前学习任务</span>
+                    <span><span class="status-dot status-online"></span>实时</span>
+                </div>
+                <div class="card-body">
+                    <div class="current-task" id="currentTask">
+                        <div class="current-task-label">正在进行</div>
+                        <div class="current-task-name">加载中...</div>
+                        <div class="current-task-time">--:-- - --:--</div>
+                    </div>
+                    <div class="current-task" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+                        <div class="current-task-label">接下来</div>
+                        <div class="current-task-name" id="nextTask">加载中...</div>
+                        <div class="current-task-time" id="nextTime">--:--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 学习统计 + 快速操作 -->
+            <div class="card" style="grid-column: span 2;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="card-title">📊 学习统计</span>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="openMistakeSystem()" style="padding: 8px 16px; font-size: 0.9rem;">
+                            🖥️ 错题系统
+                        </button>
+                        <button class="btn btn-success" onclick="startTimeTracker()" style="padding: 8px 16px; font-size: 0.9rem;">
+                            ⏱️ 时间跟踪
+                        </button>
+                        <button class="btn btn-warning" onclick="startFocusMode()" style="padding: 8px 16px; font-size: 0.9rem;">
+                            🧘 专注模式
+                        </button>
+                        <a href="schedule-editor.html" target="_blank" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #ff9966, #ff5e62); color: white; text-decoration: none;">
+                            📝 编辑时间表
+                        </a>
+                        <a href="#" onclick="alert('仪表盘功能尚未实现')" target="_blank" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; text-decoration: none;">
+                            📺 仪表盘
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-value" id="studyMinutes">0</div>
+                            <div class="stat-label">今日学习 (分钟)</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="mistakeCount">0</div>
+                            <div class="stat-label">错题总数</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="todayMistakes">0</div>
+                            <div class="stat-label">今日新增</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>今日目标完成度</span>
+                            <span id="progressText">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 监控画面 -->
+            <div class="card" id="monitorCard" style="grid-column: 1 / -1; display: none;">
+                <div class="card-header">
+                    <span class="card-title">📹 <span id="monitorName">监控摄像头</span></span>
+                    <span><span class="status-dot status-online"></span>直播</span>
+                </div>
+                <div class="card-body" style="padding: 0; background: #000; display: flex; align-items: center; justify-content: center;">
+                    <iframe id="monitorFrame" src="" style="width: 100%; height: 400px; border: none;" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <!-- 今日课表 -->
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <span class="card-title">📋 今日课表</span>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <span class="header-badge" id="dayTypeBadge">单日</span>
+                        <span class="header-badge" id="weekTypeBadge">单周</span>
+                    </div>
+                </div>
+                <div class="card-body" id="scheduleList">
+                    <div style="text-align: center; color: #999; padding: 40px;">
+                        加载课表中...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <p>高考学习系统 v2.0 | 距离 2026 年高考还有 <strong id="footerCountdown">90</strong> 天</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                API 状态：<span id="apiStatus">检测中...</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ===== 设备检测：移动端跳转到 mobile.html =====
+        function isMobileDevice() {
+            const isSmallScreen = window.innerWidth <= 768;
+            const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            return (isMobileUA && isTouchDevice) || (isSmallScreen && isTouchDevice);
+        }
+
+        if (isMobileDevice() && !window.location.pathname.includes('mobile.html')) {
+            const forceDesktop = new URLSearchParams(window.location.search).get('desktop') === '1';
+            if (!forceDesktop) {
+                window.location.href = 'mobile.html' + window.location.search;
+            }
+        }
+
+        // 动态获取 API 基础地址（统一 API 端口 8080）
+        // 检测是否在 Electron 环境中
+        const isElectron = typeof window !== 'undefined' && window.process && window.process.type;
+
+        let ACCOUNT_API_BASE, API_BASE, MISTAKE_SYSTEM_URL;
+
+        if (isElectron) {
+            // 在Electron环境中，使用本地服务器地址
+            ACCOUNT_API_BASE = 'http://localhost:8080/account';
+            API_BASE = 'http://localhost:8080';
+            MISTAKE_SYSTEM_URL = 'http://localhost:8080/mistake/';
+        } else {
+            // 在浏览器环境中，使用原来的动态检测方式，但要检查hostname是否为空
+            const hostname = window.location.hostname || 'localhost';
+            const protocol = (window.location.protocol && window.location.protocol !== 'file:') ? window.location.protocol : 'http:';
+            ACCOUNT_API_BASE = 'http://' + hostname + ':8080/account';
+            API_BASE = 'http://' + hostname + ':8080';
+            MISTAKE_SYSTEM_URL = 'http://' + hostname + ':8080/mistake/';
+        }
+
+        // ============ 登录验证相关 ============
+        let currentUser = null;
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            const token = localStorage.getItem('auth_token');
+            const userInfo = localStorage.getItem('user_info');
+
+            if (token && userInfo) {
+                currentUser = JSON.parse(userInfo);
+                // 在非SSO模式下，不再验证token，直接进入主页面
+                showMainPage();
+            } else {
+                showLoginPage();
+            }
+        }
+
+        // 在非SSO模式下，不再需要验证token函数
+
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.add('active');
+            document.getElementById('mainContainer').style.display = 'none';
+        }
+
+        // 显示主页面
+        function showMainPage() {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('mainContainer').style.display = 'block';
+            updateUserDisplay();
+            loadData();
+        }
+
+        // 更新用户显示
+        function updateUserDisplay() {
+            if (currentUser) {
+                // 更新登录卡片中的用户信息
+                const displayCard = document.getElementById('userInfoCard');
+                if (displayCard) {
+                    document.getElementById('displayUsername').textContent = currentUser.username;
+                    document.getElementById('displayEmail').textContent = currentUser.email || '未设置邮箱';
+                    document.getElementById('displayVip').textContent = `VIP${currentUser.vip_level}`;
+                }
+                // 更新 header 中的用户状态
+                const headerStatus = document.getElementById('headerUserStatus');
+                if (headerStatus) {
+                    headerStatus.style.display = 'flex';
+                    document.getElementById('headerUsername').textContent = currentUser.username;
+                    document.getElementById('headerVip').textContent = `VIP${currentUser.vip_level}`;
+                }
+            }
+        }
+
+        // 切换登录/注册标签
+        function switchTab(tab) {
+            document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (tab === 'login') {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            } else {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+            }
+            hideMessage();
+        }
+
+        // 显示消息
+        function showMessage(msg, type) {
+            const el = document.getElementById('loginMessage');
+            el.textContent = msg;
+            el.className = 'login-message ' + type;
+        }
+
+        function hideMessage() {
+            document.getElementById('loginMessage').className = 'login-message';
+        }
+
+        // 处理登录
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.disabled = true;
+            btn.textContent = '登录中...';
+            hideMessage();
+
+            try {
+                const response = await fetch(`${ACCOUNT_API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+
+                if (result.success && result.user) {
+                    // 移除SSO机制，不再存储token，仅存储用户信息
+                    localStorage.setItem('user_info', JSON.stringify(result.user));
+                    currentUser = result.user;
+                    showMessage('登录成功！正在跳转...', 'success');
+                    setTimeout(() => showMainPage(), 1000);
+                } else {
+                    showMessage(result.message || '登录失败', 'error');
+                }
+            } catch (error) {
+                console.error('登录失败:', error);
+                showMessage('网络连接失败，请检查服务器', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '登录';
+            }
+        }
+
+        // 处理注册
+        async function handleRegister(event) {
+            event.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirm').value;
+            const btn = document.getElementById('registerBtn');
+
+            if (password !== confirm) {
+                showMessage('两次输入的密码不一致', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '注册中...';
+            hideMessage();
+
+            try {
+                const response = await fetch(`${ACCOUNT_API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const result = await response.json();
+
+                if (result.success && result.user) {
+                    // 移除SSO机制，不再存储token，仅存储用户信息
+                    localStorage.setItem('user_info', JSON.stringify(result.user));
+                    currentUser = result.user;
+                    showMessage('注册成功！赠送 30 天体验期', 'success');
+                    setTimeout(() => showMainPage(), 1000);
+                } else {
+                    showMessage(result.message || '注册失败', 'error');
+                }
+            } catch (error) {
+                console.error('注册失败:', error);
+                showMessage('网络连接失败，请检查服务器', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '注册';
+            }
+        }
+
+        // 退出登录
+        function handleLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                logout();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_info');
+            currentUser = null;
+            showLoginPage();
+        }
+
+        // ============ 原有功能 ============
+
+        // 更新时钟和倒计时
+        function updateClock() {
+            const now = new Date();
+            // 更新时钟
+            document.getElementById('clock').textContent =
+                now.getHours().toString().padStart(2, '0') + ':' +
+                now.getMinutes().toString().padStart(2, '0') + ':' +
+                now.getSeconds().toString().padStart(2, '0');
+
+            // 更新高考倒计时（目标：2026 年 6 月 7 日）
+            const gaokaoDate = new Date('2026-06-07T00:00:00');
+            const diffTime = gaokaoDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // 更新所有倒计时显示
+            const countdownEls = document.querySelectorAll('#countdown, #footerCountdown');
+            countdownEls.forEach(el => {
+                if (diffDays > 0) {
+                    el.textContent = diffDays;
+                } else {
+                    el.textContent = '0';
+                }
+            });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 从 API 加载数据
+        async function loadData() {
+            try {
+                // 检查 API 状态
+                const configRes = await fetch(`${API_BASE}/api/config`).catch(() => null);
+                if (configRes && configRes.ok) {
+                    document.getElementById('apiStatus').innerHTML = '<span class="status-dot status-online"></span>正常运行';
+                    const config = await configRes.json();
+
+                    // 更新目标
+                    if (config.config?.学习目标) {
+                        document.getElementById('countdown').textContent = config.config.系统信息?.倒计时天数 || 90;
+                        document.getElementById('footerCountdown').textContent = config.config.系统信息?.倒计时天数 || 90;
+                    }
+
+                    // 加载监控配置
+                    loadMonitorConfig(config.config);
+                } else {
+                    document.getElementById('apiStatus').innerHTML = '<span class="status-dot status-offline"></span>未连接 (请启动 API 服务)';
+                }
+
+                // 加载课表 - 使用原始仪表盘的详细时间表
+                renderDetailedSchedule();
+
+                // 加载错题统计
+                const mistakeRes = await fetch(`${API_BASE}/api/mistakes/stats`).catch(() => null);
+                if (mistakeRes && mistakeRes.ok) {
+                    const stats = await mistakeRes.json();
+                    document.getElementById('mistakeCount').textContent = stats.total || 0;
+                    document.getElementById('todayMistakes').textContent = stats.today || 0;
+                }
+
+                // 加载学习时间
+                const studyRes = await fetch(`${API_BASE}/api/study-time/today`).catch(() => null);
+                if (studyRes && studyRes.ok) {
+                    const study = await studyRes.json();
+                    document.getElementById('studyMinutes').textContent = study.today_minutes || 0;
+
+                    // 更新进度 (假设目标 480 分钟)
+                    const progress = Math.min(100, Math.round((study.today_minutes / 480) * 100));
+                    document.getElementById('progressBar').style.width = progress + '%';
+                    document.getElementById('progressText').textContent = progress + '%';
+                }
+
+            } catch (error) {
+                console.log('数据加载失败:', error.message);
+            }
+        }
+
+        // 加载监控配置
+        function loadMonitorConfig(config) {
+            console.log('[Monitor] 收到的配置:', JSON.stringify(config, null, 2));
+            const monitorConfig = config?.功能模块?.监控摄像头;
+            console.log('[Monitor] 监控配置:', monitorConfig);
+            if (monitorConfig && monitorConfig.启用 && monitorConfig.地址) {
+                document.getElementById('monitorCard').style.display = 'block';
+                document.getElementById('monitorName').textContent = monitorConfig.名称 || '监控摄像头';
+                const iframe = document.getElementById('monitorFrame');
+                iframe.style.width = monitorConfig.宽度 || '100%';
+                iframe.style.height = monitorConfig.高度 || '400px';
+                iframe.src = monitorConfig.地址;
+                console.log('[Monitor] 监控已加载:', monitorConfig.地址);
+            } else {
+                console.log('[Monitor] 监控未启用或配置不完整');
+            }
+        }
+
+        // 获取日期信息 (来自原始仪表盘)
+        function getDateInfo() {
+            const now = new Date();
+            const dayIndex = now.getDay(); // 0=周日，1=周一...6=周六
+
+            // 计算第几周 (从 3 月 1 日算起)
+            const startOfTerm = new Date(2025, 2, 1); // 3 月 1 日
+            const diffDays = Math.floor((now - startOfTerm) / (1000*60*60*24));
+            let weekOfTerm = Math.floor(diffDays / 7) + 1;
+            if (weekOfTerm < 1) weekOfTerm = 1;
+            if (weekOfTerm > 6) weekOfTerm = ((weekOfTerm-1) % 6) + 1;
+
+            // 单双日判断
+            let dayType = '周测日';
+            let mathOrPhysics = '周测';
+            if (dayIndex === 1 || dayIndex === 3 || dayIndex === 5) {
+                dayType = '单日 (数学)';
+                mathOrPhysics = '数学';
+            } else if (dayIndex === 2 || dayIndex === 4 || dayIndex === 6) {
+                dayType = '双日 (物理)';
+                mathOrPhysics = '物理';
+            } else {
+                dayType = '周日·周测';
+                mathOrPhysics = '周测';
+            }
+
+            // 单双周判断
+            const weekType = (weekOfTerm % 2 === 1) ? '单周·政治' : '双周·语文';
+
+            // 周测科目表 (6 周计划)
+            const testSubjects = [
+                { sub1: '英语', sub2: '化学' },
+                { sub1: '数学', sub2: '物理' },
+                { sub1: '语文', sub2: '英语' },
+                { sub1: '化学', sub2: '政治' },
+                { sub1: '数学', sub2: '政治' },
+                { sub1: '全科模拟', sub2: '全科模拟' }
+            ];
+            const weekIdx = (weekOfTerm - 1) % 6;
+
+            return {
+                dayIndex,
+                dayType,
+                mathOrPhysics,
+                weekOfTerm,
+                weekType,
+                testSub1: testSubjects[weekIdx].sub1,
+                testSub2: testSubjects[weekIdx].sub2
+            };
+        }
+
+        // 获取下午时段科目
+        function getAfternoonSubject(dayIndex, weekType) {
+            if (dayIndex === 0) return '📊 周测总结';
+            return weekType === '单周·政治' ? '🟢 政治·术语 + 选择题' : '🟣 语文·文言文/古诗/素材';
+        }
+
+        function getAfternoonDesc(dayIndex, weekType) {
+            if (dayIndex === 0) return '周测总结与复盘';
+            return weekType === '单周·政治' ? '背 5 术语 +10 选择题' : '文言文精读/古诗鉴赏/作文素材';
+        }
+
+        function getAfternoonSubjectName(dayIndex, weekType) {
+            if (dayIndex === 0) return '周测';
+            return weekType === '单周·政治' ? '政治' : '语文';
+        }
+
+        // 构建详细时间表 (与本周日程表保持一致)
+        function buildDetailedSchedule() {
+            const info = getDateInfo();
+            const isSunday = (info.dayIndex === 0);
+
+            // 检查是否有自定义时间表
+            const customSchedule = getCustomScheduleForDay(info.dayIndex);
+            if (customSchedule && customSchedule.length > 0) {
+                return customSchedule;
+            }
+
+            // 默认时间表 - 7 点起床优化版 (含做饭时间)
+            return [
+                { start: 7.0, end: 7.333, title: '起床洗漱', desc: '清醒 + 喝水', subject: '⏰ 起床', tag: 'daily' },
+                { start: 7.333, end: 7.667, title: '🧘 晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
+                { start: 7.667, end: 8.0, title: '🔵 英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
+                { start: 8.0, end: 9.0, title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '🍽️ 早餐', tag: 'daily' },
+                { start: 9.0, end: 10.3, title: isSunday ? `📊 周测·${info.testSub1}` : '🔴 化学分块输入', desc: isSunday ? `周测 70 分钟：${info.testSub1}` : '1 概念 +3 例题 +4 练习', subject: isSunday ? '周测' : '化学', tag: '学习' },
+                { start: 10.3, end: 10.5, title: '☕ 休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
+                { start: 10.5, end: 12.0, title: isSunday ? `📊 周测·${info.testSub2}` : `🟡 ${info.mathOrPhysics}刻意练习`, desc: isSunday ? `周测 70 分钟：${info.testSub2}` : '模型思维：画示意图 + 边界条件', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
+                { start: 12.0, end: 13.0, title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '🍲 午餐', tag: 'daily' },
+                { start: 13.0, end: 14.0, title: '午休', desc: '休息', subject: '😴 午休', tag: '休息' },
+                { start: 14.0, end: 15.0, title: '💻 AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
+                { start: 15.0, end: 15.167, title: '📝 项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
+                { start: 15.167, end: 16.3, title: isSunday ? '📊 周测复盘' : `🟡 ${info.mathOrPhysics}错题复盘`, desc: isSunday ? '周测总结' : '盲做→对比→费曼', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
+                { start: 16.3, end: 17.0, title: '🧘 微运动 + 深呼吸', desc: '靠墙拉伸', subject: '锻炼', tag: 'exercise' },
+                { start: 17.0, end: 18.3, title: getAfternoonSubject(info.dayIndex, info.weekType), desc: getAfternoonDesc(info.dayIndex, info.weekType), subject: getAfternoonSubjectName(info.dayIndex, info.weekType), tag: '学习' },
+                { start: 18.3, end: 19.5, title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '🍲 晚餐', tag: 'daily' },
+                { start: 19.5, end: 20.0, title: '彻底放空', desc: '无手机', subject: '🧘 放空', tag: '休息' },
+                { start: 20.0, end: 21.0, title: '🟣 化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
+                { start: 21.0, end: 21.25, title: '休息', desc: '小憩', subject: '✨ 休息', tag: '休息' },
+                { start: 21.25, end: 22.0, title: '🔵 英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
+                { start: 22.0, end: 22.5, title: '📋 复盘 + 明日计划', desc: '费曼总结', subject: '复盘', tag: '学习' },
+                { start: 22.5, end: 22.833, title: '💬 费曼总结', desc: '用英文说 1-2 句', subject: '英语', tag: '学习' },
+                { start: 22.833, end: 23.167, title: '洗漱', desc: '', subject: '🚿 洗漱', tag: 'daily' },
+                { start: 23.167, end: 23.5, title: '🧘 冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
+                { start: 23.5, end: 24.0, title: '睡觉', desc: '23:30 休息', subject: '💤 睡觉', tag: '休息' },
+            ];
+        }
+
+        // 获取自定义时间表
+        let cachedCustomSchedule = null;
+        function getCustomScheduleForDay(dayIndex) {
+            if (cachedCustomSchedule === null) {
+                // 同步获取（仅在初始化时调用一次）
+                try {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', `${API_BASE}/api/schedule/custom`, false);
+                    xhr.send();
+                    if (xhr.status === 200) {
+                        const data = JSON.parse(xhr.responseText);
+                        if (data.enabled && data.schedules) {
+                            const dayKey = dayIndex === 0 ? '0' : String(dayIndex);
+                            const customData = data.schedules[dayKey];
+                            if (customData && Array.isArray(customData)) {
+                                cachedCustomSchedule = customData.map(slot => ({
+                                    start: timeToDecimal(slot.start),
+                                    end: timeToDecimal(slot.end),
+                                    title: slot.title,
+                                    desc: slot.desc || '',
+                                    subject: slot.subject || slot.tag || '学习',
+                                    tag: slot.tag || '学习'
+                                }));
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log('[getCustomSchedule] 获取失败:', e.message);
+                }
+            }
+            return cachedCustomSchedule;
+        }
+
+        // 时间格式转换 (HH:MM -> 小数)
+        function timeToDecimal(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours + minutes / 60;
+        }
+
+        // 格式化时间 (小数转 HH:MM)
+        function formatTime(decimal) {
+            const hours = Math.floor(decimal);
+            const minutes = Math.round((decimal - hours) * 60);
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // 渲染详细时间表
+        function renderDetailedSchedule() {
+            const schedule = buildDetailedSchedule();
+            const info = getDateInfo();
+            const now = new Date();
+            const currentDec = now.getHours() + now.getMinutes() / 60;
+
+            // 更新徽章
+            document.getElementById('dayTypeBadge').textContent = `${info.dayType} · 第${info.weekOfTerm}周`;
+            document.getElementById('weekTypeBadge').textContent = info.weekType;
+
+            // 找到当前和下一个任务
+            let currentTask = null;
+            let nextTask = null;
+
+            for (let i = 0; i < schedule.length; i++) {
+                const item = schedule[i];
+                if (currentDec >= item.start && currentDec < item.end) {
+                    currentTask = item;
+                    nextTask = schedule[i + 1] || null;
+                    break;
+                }
+                // 如果还没找到当前任务，且这个任务在未来，那就是下一个任务
+                if (!currentTask && currentDec < item.start) {
+                    nextTask = item;
+                }
+            }
+
+            // 更新当前任务卡片
+            const currentTaskNameEl = document.querySelector('#currentTask .current-task-name');
+            const currentTaskTimeEl = document.querySelector('#currentTask .current-task-time');
+            const currentTaskEl = document.getElementById('currentTask');
+            const nextTaskNameEl = document.getElementById('nextTask');
+            const nextTimeEl = document.getElementById('nextTime');
+
+            if (currentTask) {
+                currentTaskNameEl.textContent = currentTask.title;
+                currentTaskTimeEl.textContent = `${formatTime(currentTask.start)} - ${formatTime(currentTask.end)}`;
+                currentTaskEl.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            } else {
+                // 当前时间不在任何时间段内
+                currentTaskNameEl.textContent = '休息时间';
+                currentTaskTimeEl.textContent = '暂无任务';
+                currentTaskEl.style.background = 'linear-gradient(135deg, #999, #666)';
+            }
+
+            if (nextTask) {
+                nextTaskNameEl.textContent = nextTask.title;
+                nextTimeEl.textContent = formatTime(nextTask.start);
+            } else {
+                nextTaskNameEl.textContent = '今日学习结束';
+                nextTimeEl.textContent = '明天继续';
+            }
+
+            // 渲染时间表
+            const container = document.getElementById('scheduleList');
+            let html = '<div class="flow-grid">';
+
+            schedule.forEach((item) => {
+                const completed = (currentDec >= item.end);
+                const isCurrent = (currentDec >= item.start && currentDec < item.end);
+
+                let rowClass = 'flow-row';
+                if (isCurrent) rowClass += ' current';
+                else if (completed) rowClass += ' completed';
+
+                let tagClass = 'flow-tag';
+                if (item.tag === 'exercise') tagClass += ' exercise';
+                else if (item.tag === '休息' || item.tag === 'rest') tagClass += ' rest';
+                else if (item.tag === 'daily') tagClass += ' daily';
+
+                html += `
+                    <div class="${rowClass}">
+                        <span class="flow-time">${formatTime(item.start)}</span>
+                        <div>
+                            <div class="flow-task">${item.title}</div>
+                            <div class="flow-task-desc">${item.desc}</div>
+                        </div>
+                        <span class="${tagClass}">${item.subject}</span>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // 更新当前任务
+        function updateCurrentTask(schedule) {
+            const now = new Date();
+            const currentDecimal = now.getHours() + now.getMinutes() / 60;
+
+            let current = null;
+            let next = null;
+
+            for (let i = 0; i < schedule.length; i++) {
+                const [start, end] = schedule[i].time.split('-');
+                const [startH, startM] = start.split(':').map(Number);
+                const [endH, endM] = end.split(':').map(Number);
+                const startDec = startH + startM / 60;
+                const endDec = endH + endM / 60;
+
+                if (currentDecimal >= startDec && currentDecimal < endDec) {
+                    current = schedule[i];
+                    next = schedule[i + 1] || null;
+                    break;
+                }
+            }
+
+            // 如果当前时间不在任何时间段内，找到下一个即将到来的任务
+            if (!current) {
+                for (let i = 0; i < schedule.length; i++) {
+                    const [start, end] = schedule[i].time.split('-');
+                    const [startH, startM] = start.split(':').map(Number);
+                    const startDec = startH + startM / 60;
+
+                    if (currentDecimal < startDec) {
+                        next = schedule[i];
+                        break;
+                    }
+                }
+            }
+
+            // 更新显示
+            const currentTaskEl = document.querySelector('#currentTask .current-task-name');
+            const currentTimeEl = document.querySelector('#currentTask .current-task-time');
+            const nextTaskEl = document.getElementById('nextTask');
+            const nextTimeEl = document.getElementById('nextTime');
+
+            if (current) {
+                currentTaskEl.textContent = current.subject;
+                currentTimeEl.textContent = current.time;
+                currentTaskEl.parentElement.parentElement.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            } else {
+                currentTaskEl.textContent = '休息时间';
+                currentTimeEl.textContent = '暂无任务';
+                currentTaskEl.parentElement.parentElement.style.background = 'linear-gradient(135deg, #999, #666)';
+            }
+
+            if (next) {
+                nextTaskEl.textContent = next.subject;
+                nextTimeEl.textContent = next.time;
+            } else {
+                nextTaskEl.textContent = '今日学习结束';
+                nextTimeEl.textContent = '明天继续';
+            }
+        }
+
+        // 快速操作
+        async function openMistakeSystem() {
+            // 使用配置文件中的服务器地址
+            let serverUrl = MISTAKE_SYSTEM_URL;
+
+            // 在 Electron 环境中，从配置文件获取服务器地址
+            if (window.electronAPI && window.electronAPI.getServerConfig) {
+                try {
+                    const config = await window.electronAPI.getServerConfig();
+                    if (config && config.url) {
+                        serverUrl = config.url + '/mistake/';
+                    }
+                } catch (e) {
+                    console.warn('无法获取服务器配置，使用默认地址');
+                }
+            }
+
+            // 确保 URL 是有效的 HTTP URL
+            if (!serverUrl.startsWith('http')) {
+                serverUrl = 'http://localhost:8080/mistake/';
+            }
+
+            // 在当前窗口直接跳转
+            window.location.href = serverUrl;
+        }
+
+        function startTimeTracker() {
+            // 打开新窗口显示时间跟踪器 (需要手动运行 Python 脚本)
+            alert('时间跟踪器使用说明：\n\n请在终端运行：\npython3 ~/learning_system/tools/time_tracker.py\n\n或者使用启动脚本选择选项 4');
+        }
+
+        function startFocusMode() {
+            // 打开专注模式页面
+            alert('专注模式使用说明：\n\n请在终端运行：\nbash ~/learning_system/tools/focus_mode.sh\n\n或者直接运行 Electron 应用，在工具菜单中选择专注模式');
+        }
+
+        // DOM 加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[DOMContentLoaded] 页面加载完成，开始初始化...');
+            // 检查登录状态
+            checkLoginStatus();
+            // 每 30 秒刷新
+            setInterval(loadData, 30000);
+
+            // 移动端添加底部导航栏
+            if (isMobileDevice()) {
+                addMobileBottomNav();
+            }
+        });
+
+        // 添加移动端底部导航栏
+        function addMobileBottomNav() {
+            const navHtml = `
+                <div class="mobile-bottom-nav">
+                    <a href="javascript:void(0)" class="mobile-bottom-nav-item active" onclick="scrollToTop()">
+                        <span class="mobile-bottom-nav-icon">🏠</span>
+                        <span class="mobile-bottom-nav-label">首页</span>
+                    </a>
+                    <a href="javascript:void(0)" class="mobile-bottom-nav-item" onclick="scrollToSchedule()">
+                        <span class="mobile-bottom-nav-icon">📋</span>
+                        <span class="mobile-bottom-nav-label">课表</span>
+                    </a>
+                    <a href="javascript:openMistakeSystem()" class="mobile-bottom-nav-item">
+                        <span class="mobile-bottom-nav-icon">📚</span>
+                        <span class="mobile-bottom-nav-label">错题</span>
+                    </a>
+                    <a href="javascript:void(0)" class="mobile-bottom-nav-item" onclick="scrollToStats()">
+                        <span class="mobile-bottom-nav-icon">📊</span>
+                        <span class="mobile-bottom-nav-label">统计</span>
+                    </a>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', navHtml);
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToSchedule() {
+            const scheduleEl = document.getElementById('scheduleList');
+            if (scheduleEl) {
+                scheduleEl.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function scrollToStats() {
+            const statsEl = document.getElementById('studyMinutes');
+            if (statsEl) {
+                statsEl.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+</body>
+</html>

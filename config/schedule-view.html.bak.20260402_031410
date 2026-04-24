@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本周日程 - 高考学习系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .week-info {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .week-badge {
+            background: #f0f3ff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: #667eea;
+        }
+
+        /* 星期卡片网格 */
+        .week-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f3ff;
+            margin-bottom: 15px;
+        }
+
+        .day-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .day-type {
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .day-type.单周 { background: #e8f4ff; color: #1e90ff; }
+        .day-type.双周 { background: #ffe8f0; color: #ff69b4; }
+        .day-type.单日 { background: #e8fff0; color: #32cd32; }
+        .day-type.双日 { background: #fff8e8; color: #ffa500; }
+        .day-type.周测 { background: #f0e8ff; color: #9370db; }
+
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .schedule-item {
+            display: grid;
+            grid-template-columns: 80px 1fr 70px;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #f8f9ff;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s;
+        }
+
+        .schedule-item:hover {
+            background: #eef1ff;
+            transform: translateX(3px);
+        }
+
+        .schedule-item.current {
+            background: #ecf3ff;
+            border-left-color: #2563eb;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+        }
+
+        .schedule-time {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #0b2c5f;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .schedule-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1e2f50;
+        }
+
+        .schedule-desc {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .schedule-tag {
+            justify-self: end;
+            background: #e2e9ff;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #2d4680;
+        }
+
+        .schedule-tag.exercise {
+            background: #c3f0d6;
+            color: #0b5432;
+        }
+
+        .schedule-tag.rest {
+            background: #f0d6e8;
+            color: #6b2d5c;
+        }
+
+        .schedule-tag.daily {
+            background: #e8e8e8;
+            color: #555;
+        }
+
+        .schedule-tag.学习 {
+            background: #e2e9ff;
+            color: #2d4680;
+        }
+
+        /* 今天是第几天高亮 */
+        .day-card.today {
+            border: 2px solid #11998e;
+            position: relative;
+        }
+
+        .day-card.today::before {
+            content: '今天';
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #11998e;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* 滚动条样式 */
+        .schedule-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .schedule-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .schedule-list::-webkit-scrollbar-thumb {
+            background: #c1c9e0;
+            border-radius: 3px;
+        }
+
+        .schedule-list::-webkit-scrollbar-thumb:hover {
+            background: #a1aec9;
+        }
+
+        /* 打印按钮 */
+        .print-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .header {
+                box-shadow: none;
+                border: 1px solid #eee;
+            }
+            .week-grid {
+                display: block;
+            }
+            .day-card {
+                break-inside: avoid;
+                margin-bottom: 20px;
+                border: 1px solid #ddd;
+            }
+            .back-btn, .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div>
+                <h1>📅 本周日程</h1>
+                <div class="week-info">
+                    <span class="week-badge" id="weekTypeBadge">单周·政治</span>
+                    <span class="week-badge" id="dateRangeBadge">3/1 - 3/7</span>
+                    <span class="week-badge" id="countdownBadge">距高考 90 天</span>
+                </div>
+            </div>
+            <div>
+                <button class="print-btn" onclick="window.print()">🖨️ 打印</button>
+                <a href="index.html" class="back-btn">← 返回首页</a>
+            </div>
+        </div>
+
+        <!-- 星期卡片 -->
+        <div class="week-grid" id="weekGrid">
+            <!-- 由 JS 动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        // API 基础地址
+        const isElectron = typeof window !== 'undefined' && window.process && window.process.type;
+        let API_BASE = isElectron ? 'http://localhost:8080' : '';
+
+        // 星期名称
+        const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const dayIcons = ['🌞', '📚', '📖', '✏️', '📝', '📕', '🎯'];
+
+        // 获取日期信息
+        function getDateInfo() {
+            const now = new Date();
+            const dayIndex = now.getDay();
+
+            // 计算第几周 (从 3 月 1 日算起)
+            const startOfTerm = new Date(2025, 2, 1);
+            const diffDays = Math.floor((now - startOfTerm) / (1000*60*60*24));
+            let weekOfTerm = Math.floor(diffDays / 7) + 1;
+            if (weekOfTerm < 1) weekOfTerm = 1;
+            if (weekOfTerm > 6) weekOfTerm = ((weekOfTerm-1) % 6) + 1;
+
+            // 单双周判断
+            const weekType = (weekOfTerm % 2 === 1) ? '单周·政治' : '双周·语文';
+
+            return { dayIndex, weekOfTerm, weekType };
+        }
+
+        // 构建详细时间表
+        function buildDetailedSchedule(dayIndex, weekType) {
+            const isSunday = (dayIndex === 0);
+
+            // 单双日判断
+            let mathOrPhysics = '周测';
+            if (dayIndex === 1 || dayIndex === 3 || dayIndex === 5) {
+                mathOrPhysics = '数学';
+            } else if (dayIndex === 2 || dayIndex === 4 || dayIndex === 6) {
+                mathOrPhysics = '物理';
+            }
+
+            // 周测科目
+            const testSub1 = isSunday ? '英语/化学' : '';
+            const testSub2 = isSunday ? '数学/物理' : '';
+
+            // 检查是否有自定义时间表
+            const customSchedule = getCustomScheduleForDay(dayIndex);
+            if (customSchedule && customSchedule.length > 0) {
+                return customSchedule;
+            }
+
+            // 默认时间表 - 7 点起床优化版 (含做饭时间)
+            return [
+                { start: 7.0, end: 7.333, title: '起床洗漱', desc: '清醒 + 喝水', subject: '⏰ 起床', tag: 'daily' },
+                { start: 7.333, end: 7.667, title: '🧘 晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
+                { start: 7.667, end: 8.0, title: '🔵 英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
+                { start: 8.0, end: 9.0, title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '🍽️ 早餐', tag: 'daily' },
+                { start: 9.0, end: 10.3, title: isSunday ? `📊 周测·${testSub1}` : '🔴 化学分块输入', desc: isSunday ? `周测 70 分钟：${testSub1}` : '1 概念 +3 例题 +4 练习', subject: isSunday ? '周测' : '化学', tag: '学习' },
+                { start: 10.3, end: 10.5, title: '☕ 休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
+                { start: 10.5, end: 12.0, title: isSunday ? `📊 周测·${testSub2}` : `🟡 ${mathOrPhysics}刻意练习`, desc: isSunday ? `周测 70 分钟：${testSub2}` : '模型思维：画示意图 + 边界条件', subject: isSunday ? '周测' : mathOrPhysics, tag: '学习' },
+                { start: 12.0, end: 13.0, title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '🍲 午餐', tag: 'daily' },
+                { start: 13.0, end: 14.0, title: '午休', desc: '休息', subject: '😴 午休', tag: '休息' },
+                { start: 14.0, end: 15.0, title: '💻 AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
+                { start: 15.0, end: 15.167, title: '📝 项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
+                { start: 15.167, end: 16.3, title: isSunday ? '📊 周测复盘' : '🟡 数理错题复盘', desc: isSunday ? '周测总结' : '盲做→对比→费曼', subject: '数理', tag: '学习' },
+                { start: 16.3, end: 17.0, title: '🧘 微运动 + 深呼吸', desc: '靠墙拉伸', subject: '锻炼', tag: 'exercise' },
+                { start: 17.0, end: 18.3, title: getAfternoonSubject(dayIndex, weekType), desc: getAfternoonDesc(dayIndex, weekType), subject: getAfternoonSubjectName(dayIndex, weekType), tag: '学习' },
+                { start: 18.3, end: 19.5, title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '🍲 晚餐', tag: 'daily' },
+                { start: 19.5, end: 20.0, title: '彻底放空', desc: '无手机', subject: '🧘 放空', tag: '休息' },
+                { start: 20.0, end: 21.0, title: '🟣 化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
+                { start: 21.0, end: 21.25, title: '休息', desc: '小憩', subject: '✨ 休息', tag: '休息' },
+                { start: 21.25, end: 22.0, title: '🔵 英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
+                { start: 22.0, end: 22.333, title: '🚿 洗漱', desc: '', subject: '洗漱', tag: 'daily' },
+                { start: 22.333, end: 22.5, title: '🧘 冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
+                { start: 22.5, end: 23.0, title: '睡觉', desc: '22:30 休息', subject: '💤 睡觉', tag: '休息' },
+            ];
+        }
+
+        function getAfternoonSubject(dayIndex, weekType) {
+            if (dayIndex === 0) return '📊 周测总结';
+            return weekType === '单周·政治' ? '🟢 政治·术语 + 选择题' : '🟣 语文·文言文/古诗/素材';
+        }
+
+        function getAfternoonDesc(dayIndex, weekType) {
+            if (dayIndex === 0) return '周测总结与复盘';
+            return weekType === '单周·政治' ? '背 5 术语 +10 选择题' : '文言文精读/古诗鉴赏/作文素材';
+        }
+
+        function getAfternoonSubjectName(dayIndex, weekType) {
+            if (dayIndex === 0) return '周测';
+            return weekType === '单周·政治' ? '政治' : '语文';
+        }
+
+        // 获取自定义时间表
+        function getCustomScheduleForDay(dayIndex) {
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', `${API_BASE}/api/schedule/custom`, false);
+                xhr.send();
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data.enabled && data.schedules) {
+                        const dayKey = dayIndex === 0 ? '0' : String(dayIndex);
+                        const customData = data.schedules[dayKey];
+                        if (customData && Array.isArray(customData)) {
+                            return customData.map(slot => ({
+                                start: timeToDecimal(slot.start),
+                                end: timeToDecimal(slot.end),
+                                title: slot.title,
+                                desc: slot.desc || '',
+                                subject: slot.subject || slot.tag || '学习',
+                                tag: slot.tag || '学习'
+                            }));
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('[getCustomSchedule] 获取失败:', e.message);
+            }
+            return null;
+        }
+
+        // 时间格式转换
+        function timeToDecimal(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours + minutes / 60;
+        }
+
+        function formatTime(decimal) {
+            const hours = Math.floor(decimal);
+            const minutes = Math.round((decimal - hours) * 60);
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // 获取本周日期范围
+        function getWeekDateRange() {
+            const now = new Date();
+            const day = now.getDay();
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - day);
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+            const startStr = `${startOfWeek.getMonth()+1}/${startOfWeek.getDate()}`;
+            const endStr = `${endOfWeek.getMonth()+1}/${endOfWeek.getDate()}`;
+
+            return `${startStr} - ${endStr}`;
+        }
+
+        // 渲染星期卡片
+        function renderDayCard(dayIndex, isToday) {
+            const { weekType } = getDateInfo();
+            const schedule = buildDetailedSchedule(dayIndex, weekType);
+
+            // 判断单双日
+            let dayTypeClass = '单周';
+            let dayTypeText = weekType;
+            if (dayIndex === 1 || dayIndex === 3 || dayIndex === 5) {
+                dayTypeClass = '单日';
+                dayTypeText = '单日·数学';
+            } else if (dayIndex === 2 || dayIndex === 4 || dayIndex === 6) {
+                dayTypeClass = '双日';
+                dayTypeText = '双日·物理';
+            } else if (dayIndex === 0) {
+                dayTypeClass = '周测';
+                dayTypeText = '周日·周测';
+            }
+
+            const now = new Date();
+            const currentDec = now.getHours() + now.getMinutes() / 60;
+
+            let html = `<div class="day-card ${isToday ? 'today' : ''}">`;
+            html += `
+                <div class="day-header">
+                    <span class="day-title">${dayIcons[dayIndex]} ${dayNames[dayIndex]}</span>
+                    <span class="day-type ${dayTypeClass}">${dayTypeText}</span>
+                </div>
+                <div class="schedule-list">
+            `;
+
+            schedule.forEach((item) => {
+                const isCurrent = isToday && (currentDec >= item.start && currentDec < item.end);
+                let tagClass = 'schedule-tag';
+                if (item.tag === 'exercise') tagClass += ' exercise';
+                else if (item.tag === '休息' || item.tag === 'rest') tagClass += ' rest';
+                else if (item.tag === 'daily') tagClass += ' daily';
+
+                html += `
+                    <div class="schedule-item ${isCurrent ? 'current' : ''}">
+                        <span class="schedule-time">${formatTime(item.start)}</span>
+                        <div>
+                            <div class="schedule-title">${item.title}</div>
+                            <div class="schedule-desc">${item.desc}</div>
+                        </div>
+                        <span class="${tagClass}">${item.subject}</span>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            return html;
+        }
+
+        // 主渲染函数
+        function renderWeekSchedule() {
+            const { dayIndex, weekOfTerm, weekType } = getDateInfo();
+            const now = new Date();
+
+            // 更新头部信息
+            document.getElementById('weekTypeBadge').textContent = weekType;
+            document.getElementById('dateRangeBadge').textContent = getWeekDateRange();
+
+            // 更新高考倒计时
+            const gaokaoDate = new Date('2026-06-07T00:00:00');
+            const diffTime = gaokaoDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            document.getElementById('countdownBadge').textContent = `距高考 ${diffDays > 0 ? diffDays : 0} 天`;
+
+            // 渲染 7 天卡片
+            const grid = document.getElementById('weekGrid');
+            let html = '';
+            for (let i = 0; i < 7; i++) {
+                html += renderDayCard(i, i === dayIndex);
+            }
+            grid.innerHTML = html;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderWeekSchedule();
+        });
+    </script>
+</body>
+</html>

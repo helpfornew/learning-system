@@ -1,0 +1,52 @@
+[Unit]
+Description=高考学习系统统一服务器
+Documentation=https://github.com/your-org/learning-system
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+
+# 工作环境目录
+WorkingDirectory=/opt/learning-system
+
+# 环境变量配置
+Environment="LEARNING_SYSTEM_DIR=/opt/learning-system"
+Environment="LEARNING_SYSTEM_DATA=/var/lib/learning-system"
+Environment="LEARNING_SYSTEM_HOST=0.0.0.0"
+Environment="LEARNING_SYSTEM_PORT=8080"
+Environment="LOG_LEVEL=INFO"
+Environment="LOG_FILE_PATH=/var/log/learning-system/server.log"
+Environment="ALLOWED_ORIGIN=*"
+Environment="PATH=/usr/bin:/usr/local/bin"
+Environment="PYTHONUNBUFFERED=1"
+
+# 从 .env 文件加载敏感配置（如果存在）
+EnvironmentFile=-/opt/learning-system/.env
+
+# 启动命令
+ExecStart=/usr/bin/python3 -u /opt/learning-system/unified_server.py
+
+# 自动重启
+Restart=always
+RestartSec=5
+
+# 资源限制
+LimitNOFILE=65535
+Nice=10
+
+# 日志配置（journal）
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=learning-system
+
+# 安全增强
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/learning-system /var/log/learning-system
+
+[Install]
+WantedBy=multi-user.target

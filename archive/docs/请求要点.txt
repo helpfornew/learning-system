@@ -1,0 +1,124 @@
+# 有道智云题目识别 API 请求要点
+
+## 认证信息
+- 应用 ID (APP_KEY): 70312765fec01f95
+- 应用密钥 (APP_SECRET): njBnhjj1wh5rAeLQrO2D0uOZnSFhzkp7
+
+## API 接口
+- 请求 URL: https://openapi.youdao.com/cut_question
+- 请求方法: POST
+- Content-Type: application/x-www-form-urlencoded
+
+## 请求参数
+
+### 业务参数
+| 参数名 | 说明 | 示例值 |
+|--------|------|--------|
+| q | 图片的 Base64 编码 | 待识别图片转 Base64 |
+| imageType | 图片类型 | "1" |
+| docType | 返回格式 | "json" |
+
+### 鉴权参数 (由 AuthV3Util 自动生成)
+| 参数名 | 说明 | 生成方式 |
+|--------|------|----------|
+| appKey | 应用 ID | 直接使用 APP_KEY |
+| salt | 随机 UUID | uuid.uuid1() |
+| curtime | 当前时间戳 (秒) | int(time.time()) |
+| signType | 签名版本 | "v3" |
+| sign | SHA256 签名 | 见下方签名算法 |
+
+## 签名算法
+
+```
+sign = sha256(appKey + getInput(q) + salt + curtime + appSecret)
+```
+
+### getInput 规则
+当 q 长度 <= 20 时：返回原字符串
+当 q 长度 > 20 时：返回 前 10 位 + 长度 + 后 10 位
+
+## 完整请求流程
+
+1. 读取图片文件，转为 Base64 编码
+2. 生成 salt (UUID) 和 curtime (时间戳)
+3. 计算签名 sign
+4. 组装所有参数
+5. 发送 POST 请求
+6. 解析响应结果
+
+## Python 示例代码
+
+```python
+import base64
+import hashlib
+import time
+import uuid
+import requests
+
+APP_KEY = '70312765fec01f95'
+APP_SECRET = 'njBnhjj1wh5rAeLQrO2D0uOZnSFhzkp7'
+
+def calculate_sign(app_key, app_secret, q, salt, curtime):
+    def get_input(s):
+        if len(s) <= 20:
+            return s
+        return s[:10] + str(len(s)) + s[-10:]
+
+    sign_str = app_key + get_input(q) + salt + curtime + app_secret
+    return hashlib.sha256(sign_str.encode()).hexdigest()
+
+def cut_question(image_path):
+    # 读取图片转 Base64
+    with open(image_path, 'rb') as f:
+        q = base64.b64encode(f.read()).decode('utf-8')
+
+    # 生成鉴权参数
+    salt = str(uuid.uuid1())
+    curtime = str(int(time.time()))
+    sign = calculate_sign(APP_KEY, APP_SECRET, q, salt, curtime)
+
+    # 组装请求数据
+    data = {
+        'q': q,
+        'imageType': '1',
+        'docType': 'json',
+        'appKey': APP_KEY,
+        'salt': salt,
+        'curtime': curtime,
+        'signType': 'v3',
+        'sign': sign
+    }
+
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    res = requests.post('https://openapi.youdao.com/cut_question', data, headers=headers)
+    return res.json()
+```
+
+## 响应示例
+
+```json
+{
+    "errorCode": "0",
+    "result": {
+        "questions": [...],
+        "answers": [...]
+    }
+}
+```
+
+## 常见错误码
+
+| 错误码 | 说明 |
+|--------|------|
+| 0 | 成功 |
+| 101 | 缺少必要参数 |
+| 202 | 签名验证失败 |
+| 401 | 账户余额不足 |
+
+## 注意事项
+
+1. 签名中的 q 值需要使用 getInput 方法处理（长度截取）
+2. curtime 必须是当前时间戳（秒），过期请求会失败
+3. salt 每次请求必须是唯一的 UUID
+4. 图片必须是 Base64 编码的字符串
+5. 请求头必须设置 Content-Type 为 application/x-www-form-urlencoded

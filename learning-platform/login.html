@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 学习平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'SF Pro Text', 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1e2a3a 0%, #2d3e50 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo span {
+            background: #4c9aff;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .logo.physics span {
+            background: #10b981;
+        }
+
+        .logo h1 {
+            margin-top: 15px;
+            font-size: 1.4rem;
+            color: #1e2a3a;
+            font-weight: 600;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .back-link a {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .back-link a:hover {
+            color: #3b82f6;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab:hover {
+            color: #3b82f6;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .form-content {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .form-content.hidden {
+            display: none;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-group input.error {
+            border-color: #ef4444;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            color: #10b981;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .default-account {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .default-account p {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .default-account code {
+            background: #e5e7eb;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #374151;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .subject-selector {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .subject-selector p {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .subject-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .subject-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .subject-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .subject-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .subject-btn.physics.active {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .subject-btn.physics:hover {
+            border-color: #10b981;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo" id="logo">
+            <span id="logoPrefix">Chem</span>
+            <h1 id="title">化学菜鸟教程</h1>
+        </div>
+
+        <div class="back-link">
+            <a href="index.html">← 返回学科选择</a>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="login">登录</div>
+            <div class="tab" data-tab="register">注册</div>
+        </div>
+
+        <!-- 登录表单 -->
+        <form id="loginForm" class="form-content">
+            <div class="form-group">
+                <label for="loginUsername">用户名</label>
+                <input type="text" id="loginUsername" placeholder="请输入用户名" required>
+                <div class="error-message" id="loginUsernameError"></div>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">密码</label>
+                <input type="password" id="loginPassword" placeholder="请输入密码" required>
+                <div class="error-message" id="loginPasswordError"></div>
+            </div>
+            <button type="submit" class="btn-primary" id="loginBtn">
+                登录
+            </button>
+            <div class="error-message show" id="loginError"></div>
+        </form>
+
+        <!-- 注册表单 -->
+        <form id="registerForm" class="form-content hidden">
+            <div class="form-group">
+                <label for="registerUsername">用户名</label>
+                <input type="text" id="registerUsername" placeholder="至少3个字符" required>
+                <div class="error-message" id="registerUsernameError"></div>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">密码</label>
+                <input type="password" id="registerPassword" placeholder="至少6个字符" required>
+                <div class="error-message" id="registerPasswordError"></div>
+            </div>
+            <div class="form-group">
+                <label for="registerPasswordConfirm">确认密码</label>
+                <input type="password" id="registerPasswordConfirm" placeholder="再次输入密码" required>
+                <div class="error-message" id="registerPasswordConfirmError"></div>
+            </div>
+            <div class="form-group">
+                <label for="inviteCode">邀请码</label>
+                <input type="text" id="inviteCode" placeholder="请输入邀请码" required>
+                <div class="error-message" id="inviteCodeError"></div>
+            </div>
+            <button type="submit" class="btn-primary" id="registerBtn">
+                注册
+            </button>
+            <div class="error-message show" id="registerError"></div>
+        </form>
+
+        <div class="default-account">
+            <p>提示</p>
+            <p>请使用主系统账号登录，或联系管理员获取邀请码注册</p>
+        </div>
+
+        <div class="subject-selector">
+            <p>切换学科</p>
+            <div class="subject-buttons">
+                <a href="login.html?subject=chemistry" class="subject-btn" id="chemBtn">化学</a>
+                <a href="login.html?subject=physics" class="subject-btn physics" id="physBtn">物理</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置文件 -->
+    <script src="config.js"></script>
+
+    <script>
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const subject = urlParams.get('subject') || 'chemistry';
+
+        // 学科配置（使用与主系统统一的存储键名）
+        const subjectConfigs = {
+            chemistry: {
+                subject: 'chemistry',
+                prefix: 'Chem',
+                title: '化学菜鸟教程',
+                tokenKey: 'auth_token',
+                usernameKey: 'user_info',
+                userIdKey: 'user_id',
+                redirect: 'index.html',
+                colorClass: ''
+            },
+            physics: {
+                subject: 'physics',
+                prefix: 'Phys',
+                title: '物理菜鸟教程',
+                tokenKey: 'auth_token',
+                usernameKey: 'user_info',
+                userIdKey: 'user_id',
+                redirect: 'index.html',
+                colorClass: 'physics'
+            }
+        };
+
+        const config = subjectConfigs[subject] || subjectConfigs.chemistry;
+
+        // 更新页面显示
+        document.getElementById('logoPrefix').textContent = config.prefix;
+        document.getElementById('title').textContent = config.title;
+        if (config.colorClass) {
+            document.getElementById('logo').classList.add(config.colorClass);
+            document.getElementById(config.subject === 'physics' ? 'physBtn' : 'chemBtn').classList.add('active');
+        } else {
+            document.getElementById('chemBtn').classList.add('active');
+        }
+
+        // DOM元素
+        const tabs = document.querySelectorAll('.tab');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+
+        // 检查是否已登录
+        function checkAuth() {
+            const token = localStorage.getItem(config.tokenKey);
+            if (token) {
+                // 验证token有效性
+                fetch('/account/api/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(res => {
+                    if (res.ok) {
+                        window.location.href = config.redirect;
+                    } else {
+                        localStorage.removeItem(config.tokenKey);
+                        localStorage.removeItem(config.usernameKey);
+                        localStorage.removeItem(config.userIdKey);
+                    }
+                })
+                .catch(() => {
+                    // 后端未启动，继续留在登录页
+                });
+            }
+        }
+
+        // Tab切换
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const tabName = tab.dataset.tab;
+                if (tabName === 'login') {
+                    loginForm.classList.remove('hidden');
+                    registerForm.classList.add('hidden');
+                } else {
+                    loginForm.classList.add('hidden');
+                    registerForm.classList.remove('hidden');
+                }
+
+                // 清除错误信息
+                clearErrors();
+            });
+        });
+
+        // 清除错误信息
+        function clearErrors() {
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.textContent = '';
+                el.classList.remove('show');
+            });
+            document.querySelectorAll('input.error').forEach(el => {
+                el.classList.remove('error');
+            });
+        }
+
+        // 显示错误
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            const inputEl = document.getElementById(elementId.replace('Error', ''));
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.classList.add('show');
+            }
+            if (inputEl) {
+                inputEl.classList.add('error');
+            }
+        }
+
+        // 登录处理
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            if (!username || !password) {
+                showError('loginError', '请填写用户名和密码');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>登录中...';
+
+            try {
+                const response = await fetch('/account/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // 保存token（与主系统统一）
+                    localStorage.setItem(config.tokenKey, data.token);
+                    localStorage.setItem(config.usernameKey, JSON.stringify(data.user));
+                    localStorage.setItem(config.userIdKey, data.user.id);
+                    window.location.href = config.redirect;
+                } else {
+                    showError('loginError', data.message || '登录失败');
+                }
+            } catch (error) {
+                showError('loginError', '网络错误，请确保后端服务已启动');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '登录';
+            }
+        });
+
+        // 注册处理
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+            const inviteCode = document.getElementById('inviteCode').value.trim();
+            const btn = document.getElementById('registerBtn');
+
+            // 验证
+            if (username.length < 3) {
+                showError('registerUsernameError', '用户名至少3个字符');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('registerPasswordError', '密码至少6个字符');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showError('registerPasswordConfirmError', '两次密码不一致');
+                return;
+            }
+
+            if (!inviteCode) {
+                showError('inviteCodeError', '请输入邀请码');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>注册中...';
+
+            try {
+                const response = await fetch('/account/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, invite_code: inviteCode })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showError('registerError', '注册成功！请登录');
+                    document.getElementById('registerError').classList.remove('show');
+                    document.getElementById('registerError').classList.add('success-message');
+                    document.getElementById('registerError').style.display = 'block';
+                    document.getElementById('registerError').textContent = '注册成功！请登录';
+                    document.getElementById('registerError').style.color = '#10b981';
+
+                    // 切换到登录Tab
+                    setTimeout(() => {
+                        tabs[0].click();
+                        document.getElementById('loginUsername').value = username;
+                    }, 1000);
+                } else {
+                    showError('registerError', data.message || '注册失败');
+                }
+            } catch (error) {
+                showError('registerError', '网络错误，请确保后端服务已启动');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '注册';
+            }
+        });
+
+        // 页面加载时检查登录状态
+        checkAuth();
+    </script>
+</body>
+</html>

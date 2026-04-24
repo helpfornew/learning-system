@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>拍照上传错题 - 移动端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover, .upload-area:active {
+            background: #eef0ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .upload-hint {
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .preview-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .preview-container.active {
+            display: block;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            display: block;
+        }
+
+        .tip {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #1565c0;
+        }
+
+        .icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 拍照上传错题</h1>
+        <p class="subtitle">专为手机优化的快速上传</p>
+
+        <div class="card">
+            <div class="tip">
+                <strong>💡 提示：</strong>点击下方的上传区域，选择「相机」直接拍照，或从相册选择照片
+                <br><small>⚠️ iPhone 用户：如果上传失败，请更改相机格式为「兼容性最佳」（设置 → 相机 → 格式）</small>
+            </div>
+
+            <div class="form-group">
+                <label>选择科目 *</label>
+                <select id="subject" required>
+                    <option value="">请选择科目</option>
+                    <option value="数学">数学</option>
+                    <option value="物理">物理</option>
+                    <option value="化学">化学</option>
+                    <option value="英语">英语</option>
+                    <option value="语文">语文</option>
+                    <option value="政治">政治</option>
+                    <option value="历史">历史</option>
+                    <option value="地理">地理</option>
+                    <option value="生物">生物</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>拍照/选择图片 *</label>
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div style="font-size: 48px; color: #667eea; margin-bottom: 10px;">📷</div>
+                    <div class="upload-text">点击拍照或选择图片</div>
+                    <div class="upload-hint">支持 JPG、PNG 格式</div>
+                </div>
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept="image/*"
+                    capture="environment"
+                    onchange="handleFileSelect(event)"
+                >
+            </div>
+
+            <div id="previewContainer" class="preview-container">
+                <label>预览</label>
+                <img id="previewImage" class="preview-image" alt="预览">
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label>错题描述（可选）</label>
+                <input type="text" id="description" placeholder="简单描述这道错题...">
+            </div>
+
+            <button class="btn btn-primary" onclick="uploadMistake()" id="uploadBtn">
+                上传错题
+            </button>
+            <button class="btn btn-secondary" onclick="resetForm()">
+                重新选择
+            </button>
+
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="card" style="text-align: center;">
+            <p style="color: #666; font-size: 0.9rem;">
+                访问电脑端查看完整功能<br>
+                <a href="/mistake/" style="color: #667eea;">打开错题系统</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        const API_BASE = window.location.origin;
+
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            selectedFile = file;
+
+            // 检测 HEIC/HEIF 格式
+            const isHeic = file.name.toLowerCase().endsWith('.heic') ||
+                           file.name.toLowerCase().endsWith('.heif') ||
+                           file.type === 'image/heic' ||
+                           file.type === 'image/heif';
+
+            if (isHeic) {
+                // 显示 HEIC 格式提示
+                showStatus('检测到 iPhone HEIC 格式，尝试转换...', 'loading');
+            }
+
+            // 显示预览
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImage').src = e.target.result;
+                document.getElementById('previewContainer').classList.add('active');
+
+                if (isHeic) {
+                    // 清除 HEIC 提示
+                    document.getElementById('status').className = 'status';
+                }
+            };
+            reader.onerror = function(e) {
+                if (isHeic) {
+                    showStatus('❌ HEIC 格式不支持，请截图后上传或更改相机格式为「兼容性最佳」', 'error');
+                }
+            };
+            reader.readAsDataURL(file);
+
+            // 更新上传区域文本
+            document.querySelector('.upload-text').textContent = '已选择: ' + file.name;
+            document.querySelector('.upload-hint').textContent = isHeic ? 'HEIC 格式可能需要转换' : '点击重新选择';
+        }
+
+        // 上传错题
+        async function uploadMistake() {
+            const subject = document.getElementById('subject').value;
+            const description = document.getElementById('description').value;
+            const statusDiv = document.getElementById('status');
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            // 验证
+            if (!subject) {
+                showStatus('请选择科目', 'error');
+                return;
+            }
+            if (!selectedFile) {
+                showStatus('请选择或拍照上传图片', 'error');
+                return;
+            }
+
+            // 显示加载状态
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '上传中...';
+            showStatus('正在上传，请稍候...', 'loading');
+
+            try {
+                // 压缩图片
+                let compressedImage;
+                try {
+                    compressedImage = await compressImage(selectedFile);
+                } catch (compressError) {
+                    showStatus('❌ ' + compressError.message, 'error');
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = '上传错题';
+                    return;
+                }
+
+                // 准备数据
+                const formData = new FormData();
+                formData.append('subject_id', subject);
+                formData.append('content', description || '手机拍照上传');
+                formData.append('error_reason', '');
+                formData.append('knowledge_points', '');
+
+                // 将 base64 转换为文件
+                const blob = dataURItoBlob(compressedImage);
+                formData.append('image', blob, 'mistake.jpg');
+
+                // 发送请求
+                const response = await fetch(`${API_BASE}/api/mistakes`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('✅ 上传成功！', 'success');
+                    setTimeout(() => {
+                        resetForm();
+                    }, 2000);
+                } else {
+                    showStatus('❌ 上传失败: ' + (result.message || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showStatus('❌ 上传出错: ' + error.message, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '上传错题';
+            }
+        }
+
+        // 压缩并转换图片为 JPEG
+        async function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        // 计算压缩后的尺寸（最大宽度 1920）
+                        let width = img.width;
+                        let height = img.height;
+                        const maxWidth = 1920;
+
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        // 填充白色背景（处理透明 PNG）
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, width, height);
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // 输出为 JPEG，质量 0.85，返回纯 base64 数据（移除头部）
+                        const fullDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                        resolve(fullDataUrl.split(',')[1]);
+                    };
+                    img.onerror = function() {
+                        // 检查是否是 HEIC 格式
+                        const isHeic = file.name.toLowerCase().endsWith('.heic') ||
+                                       file.name.toLowerCase().endsWith('.heif');
+                        if (isHeic) {
+                            reject(new Error('HEIC 格式不支持，请更改 iPhone 相机格式为「兼容性最佳」后重新拍照'));
+                        } else {
+                            reject(new Error('图片加载失败'));
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    reject(new Error('文件读取失败'));
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // DataURI 转 Blob（现在接收纯 base64 数据）
+        function dataURItoBlob(pureBase64) {
+            const byteString = atob(pureBase64);
+            const mimeString = 'image/jpeg';  // 固定为 JPEG
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mimeString });
+        }
+
+        // 显示状态
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+        }
+
+        // 重置表单
+        function resetForm() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('subject').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('previewContainer').classList.remove('active');
+            document.getElementById('status').className = 'status';
+            document.querySelector('.upload-text').textContent = '点击拍照或选择图片';
+            document.querySelector('.upload-hint').textContent = '支持 JPG、PNG 格式';
+        }
+
+        // 检查登录状态
+        window.onload = function() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                // 未登录，显示提示
+                document.querySelector('.subtitle').innerHTML =
+                    '<span style="color: #ffeb3b;">⚠️ 请先登录后再上传</span>';
+            }
+        };
+    </script>
+</body>
+</html>
