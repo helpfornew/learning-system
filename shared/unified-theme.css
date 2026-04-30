@@ -1,0 +1,269 @@
+/**
+ * 高考学习系统 - 深色主题样式表 (v3.0)
+ * 设计参考：strategy.html — 暗色背景 + 半透明玻璃卡片
+ */
+
+/* ========== CSS 变量 ========== */
+:root {
+    --bg: #1a1a2e;
+    --surface: rgba(255,255,255,0.05);
+    --surface-hover: rgba(255,255,255,0.08);
+    --surface-active: rgba(255,255,255,0.1);
+    --border: rgba(255,255,255,0.1);
+    --border-light: rgba(255,255,255,0.06);
+
+    --text: #ffffff;
+    --text-secondary: #aaa;
+    --text-muted: #666;
+
+    --accent-red: #ff6b6b;
+    --accent-yellow: #f9ca24;
+    --accent-purple: #6c5ce7;
+    --accent-blue: #74b9ff;
+    --accent-green: #00b894;
+    --accent-gold: #ffd700;
+    --accent-pink: #fd79a8;
+
+    --radius-lg: 20px;
+    --radius-md: 15px;
+    --radius-sm: 12px;
+    --radius-xs: 10px;
+    --radius-round: 25px;
+
+    --shadow: 0 10px 40px rgba(0,0,0,0.3);
+    --shadow-sm: 0 5px 20px rgba(0,0,0,0.2);
+
+    --font: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont,
+             'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ========== 基础重置 ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+.uni-body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+a { color: var(--accent-blue); text-decoration: none; transition: color 0.2s ease; }
+a:hover { color: var(--accent-gold); }
+
+/* ========== 容器 ========== */
+.uni-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ========== 卡片 ========== */
+.uni-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 25px;
+    transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+.uni-card:hover {
+    background: var(--surface-hover);
+    box-shadow: var(--shadow);
+}
+
+.uni-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border);
+}
+
+.uni-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.uni-card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+/* 卡片图标颜色 */
+.icon-red { background: var(--accent-red); }
+.icon-yellow { background: var(--accent-yellow); color: #333; }
+.icon-purple { background: var(--accent-purple); }
+.icon-blue { background: var(--accent-blue); }
+.icon-green { background: var(--accent-green); }
+.icon-gold { background: var(--accent-gold); color: #333; }
+
+/* ========== 头部面板 ========== */
+.uni-header {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    margin-bottom: 30px;
+    border: 1px solid var(--border);
+}
+.uni-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+.uni-header-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+/* 渐变文字标题 */
+.uni-grad-title {
+    background: linear-gradient(90deg, var(--accent-gold), var(--accent-red));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ========== 按钮 ========== */
+.uni-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: var(--radius-round);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    color: white;
+}
+.uni-btn:hover { opacity: 0.85; box-shadow: var(--shadow-sm); }
+
+.uni-btn-primary { background: var(--accent-red); }
+.uni-btn-secondary { background: var(--accent-purple); }
+.uni-btn-success { background: var(--accent-green); }
+.uni-btn-warning { background: var(--accent-yellow); color: #333; }
+.uni-btn-info { background: var(--accent-blue); }
+
+/* ========== 统计卡片网格 ========== */
+.uni-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.uni-stat-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    padding: 25px;
+    text-align: center;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+.uni-stat-card:hover {
+    background: var(--surface-hover);
+}
+
+.uni-stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent-red);
+}
+.uni-stat-label {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-top: 8px;
+}
+
+/* ========== 进度条 ========== */
+.uni-progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--surface-active);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+.uni-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-red), var(--accent-gold));
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+/* ========== 标签/徽章 ========== */
+.uni-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.uni-badge-red { background: var(--accent-red); color: white; }
+.uni-badge-yellow { background: var(--accent-yellow); color: #333; }
+.uni-badge-purple { background: var(--accent-purple); color: white; }
+.uni-badge-green { background: var(--accent-green); color: white; }
+.uni-badge-blue { background: var(--accent-blue); color: white; }
+
+/* ========== 表单 ========== */
+.uni-input, .uni-select {
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    font-size: 1rem;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.uni-input:focus, .uni-select:focus {
+    border-color: var(--accent-blue);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(116,185,255,0.2);
+}
+
+/* ========== 行动栏（固定底部） ========== */
+.uni-action-bar {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    background: rgba(0,0,0,0.5);
+    padding: 15px 25px;
+    border-radius: 50px;
+}
+
+/* ========== 次级区块 ========== */
+.uni-section {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 25px;
+    margin-bottom: 30px;
+}
+.uni-section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+    .uni-container { padding: 15px; }
+    .uni-header h1 { font-size: 1.8rem; }
+    .uni-stats-grid { grid-template-columns: 1fr 1fr; }
+    .uni-stat-value { font-size: 1.8rem; }
+    .uni-card { padding: 20px; }
+}

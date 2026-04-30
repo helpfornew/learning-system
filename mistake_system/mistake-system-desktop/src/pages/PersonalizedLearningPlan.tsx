@@ -110,7 +110,7 @@ const PersonalizedLearningPlan: React.FC = () => {
   const loadPersonalizedAnalysis = async () => {
     const config = getDeepseekConfig();
     if (!config.enabled || !config.apiKey) {
-      message.error('❌ DeepSeek AI 未配置，请先在设置中配置 API 密钥');
+      message.error('DeepSeek AI 未配置，请先在设置中配置 API 密钥');
       setPersonalizedAnalysis({
         summary: "AI分析需要配置DeepSeek API密钥",
         modules: [],
@@ -183,7 +183,7 @@ const PersonalizedLearningPlan: React.FC = () => {
   const handlePersonalizedAnalysis = async () => {
     const config = getDeepseekConfig();
     if (!config.enabled || !config.apiKey) {
-      message.error('❌ DeepSeek AI 未配置，请先在设置中配置 API 密钥');
+      message.error('DeepSeek AI 未配置，请先在设置中配置 API 密钥');
       return;
     }
 
@@ -295,7 +295,7 @@ const PersonalizedLearningPlan: React.FC = () => {
       {/* 个性化学习分析 */}
       <Card
         id="personalized-analysis-section"
-        title="🎯 个性化学习分析"
+        title="个性化学习分析"
         style={{ marginBottom: 24 }}
         extra={
           <Space>
@@ -342,7 +342,7 @@ const PersonalizedLearningPlan: React.FC = () => {
             <Row gutter={16} style={{ marginTop: 16 }}>
               {/* 最薄弱知识点 */}
               <Col span={12}>
-                <Card title="🔴 最薄弱知识点板块" style={{ height: '100%' }}>
+                <Card title="最薄弱知识点板块" style={{ height: '100%' }}>
                   {personalizedAnalysis.modules && personalizedAnalysis.modules.length > 0 ? (
                     <div>
                       {personalizedAnalysis.modules.slice(0, 5).map((module: any, idx: number) => (
@@ -363,7 +363,7 @@ const PersonalizedLearningPlan: React.FC = () => {
 
               {/* 学习建议 */}
               <Col span={12}>
-                <Card title="💡 个性化学习建议" style={{ height: '100%' }}>
+                <Card title="个性化学习建议" style={{ height: '100%' }}>
                   {personalizedAnalysis.suggestions ? (
                     <Paragraph style={{ lineHeight: 1.8 }}>
                       {personalizedAnalysis.suggestions}
@@ -380,7 +380,7 @@ const PersonalizedLearningPlan: React.FC = () => {
             <Row gutter={16} style={{ marginTop: 16 }}>
               {/* 学习计划 */}
               <Col span={24}>
-                <Card title="📅 个性化学习计划">
+                <Card title="个性化学习计划">
                   {personalizedAnalysis.plan ? (
                     <div style={{ lineHeight: 1.8 }}>
                       <Paragraph>{personalizedAnalysis.plan}</Paragraph>
@@ -407,7 +407,7 @@ const PersonalizedLearningPlan: React.FC = () => {
       </Card>
 
       {weeklyHistory.length > 0 && (
-        <Card title="📚 分析历史" style={{ marginBottom: 24 }}>
+        <Card title="分析历史" style={{ marginBottom: 24 }}>
           <Table
             dataSource={weeklyHistory.map((history, index) => ({
               ...history,

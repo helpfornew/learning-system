@@ -12,7 +12,7 @@ import os
 from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder='.', static_url_path='')
-app.config['JWT_SECRET_KEY'] = 'chem-learning-secret-key-2024'  # 生产环境应使用环境变量
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY') or os.environ.get('SESSION_SECRET') or 'chem-learning-secret-key-2024'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
 jwt = JWTManager(app)

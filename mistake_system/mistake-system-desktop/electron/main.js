@@ -243,7 +243,7 @@ function createWindow() {
 </head>
 <body>
   <div class="error-container">
-    <h1>🚨 资源文件缺失</h1>
+    <h1>ERROR: 资源文件缺失</h1>
     <p>找不到应用程序资源文件 (dist/index.html)</p>
     <p>请检查安装是否完整</p>
     <p><small>错误代码: RESOURCE_NOT_FOUND</small></p>

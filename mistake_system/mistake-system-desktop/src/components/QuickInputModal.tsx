@@ -142,7 +142,7 @@ const QuickInputModal: React.FC<QuickInputModalProps> = ({ visible, onClose }) =
           '4': '物理', '5': '化学', '6': '政治'
         };
         setSelectedSubject(subjectMap[key]);
-        message.info(`✓ 已选择 ${subjectMap[key]}`);
+        message.info(`已选择 ${subjectMap[key]}`);
         return;
       }
 
@@ -960,7 +960,7 @@ const QuickInputModal: React.FC<QuickInputModalProps> = ({ visible, onClose }) =
                               backgroundColor: isSelected ? 'rgba(82, 196, 26, 0.2)' : 'rgba(24, 144, 255, 0.2)',
                               cursor: 'pointer',
                               pointerEvents: 'auto',
-                              transition: 'all 0.2s ease',
+                              transition: 'border-color 0.2s ease, background-color 0.2s ease',
                               zIndex: isSelected ? 10 : 5
                             }}
                             title={`题目 ${segIndex + 1}`}
@@ -999,7 +999,6 @@ const QuickInputModal: React.FC<QuickInputModalProps> = ({ visible, onClose }) =
                                 fontSize: 14,
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                               }}>
-                                ✓
                               </div>
                             )}
                           </div>

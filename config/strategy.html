@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>高考冲刺战略书</title>
-    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/static/navbar.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: #1a1a1a;
             min-height: 100vh;
             color: #fff;
             padding: 20px;
@@ -24,7 +24,7 @@
         .header {
             text-align: center;
             padding: 40px 20px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            background: rgba(255,255,255,0.08);
             border-radius: 20px;
             margin-bottom: 30px;
             border: 1px solid rgba(255,255,255,0.1);
@@ -32,7 +32,7 @@
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 15px;
-            background: linear-gradient(90deg, #ffd700, #ff6b6b);
+            background: #444;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -46,12 +46,12 @@
             background: rgba(255,107,107,0.2);
             padding: 15px 30px;
             border-radius: 15px;
-            border: 2px solid #ff6b6b;
+            border: 2px solid #888;
         }
         .countdown-number {
             font-size: 3rem;
             font-weight: 800;
-            color: #ff6b6b;
+            color: #888888;
         }
         .countdown-label {
             font-size: 1rem;
@@ -70,10 +70,10 @@
             border-radius: 20px;
             padding: 25px;
             border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s;
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
         .strategy-card:hover {
-            transform: translateY(-5px);
+            opacity: 0.9;
             background: rgba(255,255,255,0.08);
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
@@ -100,11 +100,11 @@
         }
 
         /* 优先级颜色 */
-        .priority-5 { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); }
-        .priority-4 { background: linear-gradient(135deg, #f9ca24, #f0932b); }
-        .priority-3 { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
-        .priority-2 { background: linear-gradient(135deg, #74b9ff, #0984e3); }
-        .priority-1 { background: linear-gradient(135deg, #00b894, #00cec9); }
+        .priority-5 { background: #888888; }
+        .priority-4 { background: #f9ca24; }
+        .priority-3 { background: #6c5ce7; }
+        .priority-2 { background: #74b9ff; }
+        .priority-1 { background: #00b894; }
 
         /* 科目卡片 */
         .subject-list {
@@ -120,7 +120,7 @@
             padding: 15px;
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
-            transition: all 0.2s;
+            transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
         .subject-item:hover {
             background: rgba(255,255,255,0.1);
@@ -139,7 +139,7 @@
         .score-current {
             font-size: 1.2rem;
             font-weight: 700;
-            color: #ff6b6b;
+            color: #888888;
         }
         .score-arrow {
             color: #666;
@@ -181,7 +181,7 @@
             border-radius: 15px;
             padding: 15px 10px;
             text-align: center;
-            transition: all 0.2s;
+            transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
         .cycle-day:hover {
             transform: scale(1.05);
@@ -197,7 +197,7 @@
             margin-bottom: 8px;
             display: inline-block;
         }
-        .type-practice { background: #ff6b6b; }
+        .type-practice { background: #888888; }
         .type-analyze { background: #f9ca24; color: #333; }
         .type-break { background: #6c5ce7; }
         .type-review { background: #00b894; }
@@ -230,7 +230,7 @@
             border-radius: 10px;
             border-left: 4px solid;
         }
-        .time-slot.english { border-left-color: #ff6b6b; }
+        .time-slot.english { border-left-color: #888888; }
         .time-slot.chemistry { border-left-color: #f9ca24; }
         .time-slot.chinese { border-left-color: #6c5ce7; }
         .time-slot.politics { border-left-color: #00b894; }
@@ -298,7 +298,6 @@
             background: rgba(0,0,0,0.5);
             padding: 15px 25px;
             border-radius: 50px;
-            backdrop-filter: blur(10px);
         }
         .action-btn {
             padding: 12px 25px;
@@ -306,19 +305,19 @@
             border: none;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
             font-size: 1rem;
         }
         .action-btn:hover {
-            transform: translateY(-3px);
+            opacity: 0.9;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
         .btn-primary {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            background: #888888;
             color: white;
         }
         .btn-secondary {
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            background: #6c5ce7;
             color: white;
         }
 
@@ -338,7 +337,7 @@
     <div class="container">
         <!-- 头部 -->
         <div class="header">
-            <h1>🎯 高考冲刺战略书</h1>
+            <h1>高考冲刺战略书</h1>
             <p class="header-subtitle">60天逆袭计划 · 从380到480的实战攻略</p>
             <div class="countdown-box">
                 <div class="countdown-number" id="countdown">60</div>
@@ -349,7 +348,7 @@
         <!-- 科目策略 -->
         <div class="strategy-card">
             <div class="card-header">
-                <div class="card-icon priority-5">📊</div>
+                <div class="card-icon priority-5"></div>
                 <div class="card-title">六科提分策略</div>
             </div>
             <div class="subject-list">
@@ -361,7 +360,7 @@
                         <span class="score-arrow">→</span>
                         <span class="score-target">80</span>
                     </div>
-                    <div class="priority-badge priority-5">⭐⭐⭐⭐⭐</div>
+                    <div class="priority-badge priority-5"></div>
                 </div>
                 <div class="subject-item">
                     <div class="subject-name">化学</div>
@@ -371,7 +370,7 @@
                         <span class="score-arrow">→</span>
                         <span class="score-target">75</span>
                     </div>
-                    <div class="priority-badge priority-5">⭐⭐⭐⭐⭐</div>
+                    <div class="priority-badge priority-5"></div>
                 </div>
                 <div class="subject-item">
                     <div class="subject-name">语文</div>
@@ -381,7 +380,7 @@
                         <span class="score-arrow">→</span>
                         <span class="score-target">90</span>
                     </div>
-                    <div class="priority-badge priority-4">⭐⭐⭐⭐</div>
+                    <div class="priority-badge priority-4"></div>
                 </div>
                 <div class="subject-item">
                     <div class="subject-name">政治</div>
@@ -391,7 +390,7 @@
                         <span class="score-arrow">→</span>
                         <span class="score-target">70</span>
                     </div>
-                    <div class="priority-badge priority-3">⭐⭐⭐</div>
+                    <div class="priority-badge priority-3"></div>
                 </div>
                 <div class="subject-item">
                     <div class="subject-name">数学</div>
@@ -401,7 +400,7 @@
                         <span class="score-arrow">→</span>
                         <span class="score-target">100</span>
                     </div>
-                    <div class="priority-badge priority-2">⭐⭐</div>
+                    <div class="priority-badge priority-2"></div>
                 </div>
                 <div class="subject-item">
                     <div class="subject-name">物理</div>
@@ -411,14 +410,14 @@
                         <span class="score-arrow">→</span>
                         <span class="score-target">65</span>
                     </div>
-                    <div class="priority-badge priority-2">⭐⭐</div>
+                    <div class="priority-badge priority-2"></div>
                 </div>
             </div>
         </div>
 
         <!-- 每周周期 -->
         <div class="week-cycle">
-            <div class="cycle-title">📅 7天学习周期</div>
+            <div class="cycle-title">7天学习周期</div>
             <div class="cycle-grid">
                 <div class="cycle-day">
                     <div class="day-name">周一</div>
@@ -460,7 +459,7 @@
 
         <!-- 每日时间表 -->
         <div class="daily-schedule">
-            <div class="schedule-title">⏰ 每日时间安排（刷题日示例）</div>
+            <div class="schedule-title">每日时间安排（刷题日示例）</div>
             <div class="time-slot rest">
                 <div class="time-label">07:00</div>
                 <div class="time-task">晨练 + 早餐</div>
@@ -469,12 +468,12 @@
             <div class="time-slot english">
                 <div class="time-label">07:30</div>
                 <div class="time-task">英语单词背诵（50个新词+复习）</div>
-                <div class="time-tag" style="background: #ff6b6b;">英语</div>
+                <div class="time-tag" style="background: #888888;">英语</div>
             </div>
             <div class="time-slot english">
                 <div class="time-label">08:00</div>
                 <div class="time-task">英语阅读2篇 + 完形1篇（限时）</div>
-                <div class="time-tag" style="background: #ff6b6b;">刷题</div>
+                <div class="time-tag" style="background: #888888;">刷题</div>
             </div>
             <div class="time-slot chemistry">
                 <div class="time-label">10:00</div>
@@ -520,10 +519,10 @@
 
         <!-- 知识点优先级 -->
         <div class="knowledge-priority">
-            <div class="knowledge-title">🎯 各科突破重点</div>
+            <div class="knowledge-title">各科突破重点</div>
 
             <div class="knowledge-section">
-                <h4>🔴 英语 - 优先级最高</h4>
+                <h4>英语 - 优先级最高</h4>
                 <div class="knowledge-list">
                     <span class="knowledge-tag">高考高频800词</span>
                     <span class="knowledge-tag">阅读理解细节题</span>
@@ -535,7 +534,7 @@
             </div>
 
             <div class="knowledge-section">
-                <h4>🟠 化学 - 优先级最高</h4>
+                <h4>化学 - 优先级最高</h4>
                 <div class="knowledge-list">
                     <span class="knowledge-tag">化学方程式配平</span>
                     <span class="knowledge-tag">实验装置选择</span>
@@ -547,7 +546,7 @@
             </div>
 
             <div class="knowledge-section">
-                <h4>🟡 语文 - 重点突破</h4>
+                <h4>语文 - 重点突破</h4>
                 <div class="knowledge-list">
                     <span class="knowledge-tag">作文素材积累</span>
                     <span class="knowledge-tag">小说答题模板</span>
@@ -558,7 +557,7 @@
             </div>
 
             <div class="knowledge-section">
-                <h4>🟢 政治 - 背诵为主</h4>
+                <h4>政治 - 背诵为主</h4>
                 <div class="knowledge-list">
                     <span class="knowledge-tag">哲学原理</span>
                     <span class="knowledge-tag">经济学术语</span>
@@ -573,21 +572,21 @@
         <div class="strategy-grid">
             <div class="strategy-card">
                 <div class="card-header">
-                    <div class="card-icon priority-5">💡</div>
+                    <div class="card-icon priority-5"></div>
                     <div class="card-title">刷题日要点</div>
                 </div>
                 <ul style="list-style: none; line-height: 2;">
-                    <li>✓ 限时完成，模拟考试节奏</li>
-                    <li>✓ 不会的题目标记，不要死磕</li>
-                    <li>✓ 当天必须录入错题</li>
-                    <li>✓ 追求"有效错题"而非数量</li>
-                    <li>✗ 太简单或太难的题都跳过</li>
+                    <li>[x] 限时完成，模拟考试节奏</li>
+                    <li>[x] 不会的题目标记，不要死磕</li>
+                    <li>[x] 当天必须录入错题</li>
+                    <li>[x] 追求"有效错题"而非数量</li>
+                    <li>[ ] 太简单或太难的题都跳过</li>
                 </ul>
             </div>
 
             <div class="strategy-card">
                 <div class="card-header">
-                    <div class="card-icon priority-4">🤖</div>
+                    <div class="card-icon priority-4"></div>
                     <div class="card-title">分析日操作</div>
                 </div>
                 <ul style="list-style: none; line-height: 2;">
@@ -600,20 +599,20 @@
 
             <div class="strategy-card">
                 <div class="card-header">
-                    <div class="card-icon priority-3">🎯</div>
+                    <div class="card-icon priority-3"></div>
                     <div class="card-title">突破日原则</div>
                 </div>
                 <ul style="list-style: none; line-height: 2;">
-                    <li>✓ 1天攻克1-2个知识点</li>
-                    <li>✓ 看教材+网课+同类题5道</li>
-                    <li>✓ 宁可少而精，不要多而杂</li>
-                    <li>✓ 晚上重做错题检验</li>
+                    <li>[x] 1天攻克1-2个知识点</li>
+                    <li>[x] 看教材+网课+同类题5道</li>
+                    <li>[x] 宁可少而精，不要多而杂</li>
+                    <li>[x] 晚上重做错题检验</li>
                 </ul>
             </div>
 
             <div class="strategy-card">
                 <div class="card-header">
-                    <div class="card-icon priority-2">📈</div>
+                    <div class="card-icon priority-2"></div>
                     <div class="card-title">60天里程碑</div>
                 </div>
                 <ul style="list-style: none; line-height: 2;">
@@ -628,9 +627,9 @@
 
     <!-- 底部操作栏 -->
     <div class="action-bar">
-        <button class="action-btn btn-primary" onclick="openMistakeSystem()">🖥️ 打开错题系统</button>
-        <button class="action-btn btn-secondary" onclick="window.print()">🖨️ 打印战略书</button>
-        <button class="action-btn btn-secondary" onclick="window.close()">✕ 关闭</button>
+        <button class="action-btn btn-primary" onclick="openMistakeSystem()">打开错题系统</button>
+        <button class="action-btn btn-secondary" onclick="window.print()">打印战略书</button>
+        <button class="action-btn btn-secondary" onclick="window.close()">关闭</button>
     </div>
 
     <script>

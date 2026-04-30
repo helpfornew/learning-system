@@ -17,7 +17,7 @@ async function migrateDatabase() {
 
   // 检查数据库文件
   if (!fs.existsSync(DATA_FILE)) {
-    console.log('❌ 数据库文件不存在:', DATA_FILE);
+    console.log('ERROR: 数据库文件不存在:', DATA_FILE);
     console.log('提示：请先运行 server.js 创建数据库');
     return;
   }
@@ -28,11 +28,11 @@ async function migrateDatabase() {
     const db = new SQL.Database(data);
 
     // 检查表结构
-    console.log('📋 检查表结构...');
+    console.log('检查表结构...');
     const result = db.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='mistakes'");
 
     if (result.length === 0) {
-      console.log('❌ mistakes 表不存在');
+      console.log('ERROR: mistakes 表不存在');
       db.close();
       return;
     }
@@ -42,17 +42,17 @@ async function migrateDatabase() {
 
     // 检查是否已有 user_id 字段
     if (createSql.includes('user_id')) {
-      console.log('\n✅ 数据库已包含 user_id 字段，无需迁移');
+      console.log('\nOK: 数据库已包含 user_id 字段，无需迁移');
       db.close();
       return;
     }
 
-    console.log('\n🔧 开始迁移...');
+    console.log('\n开始迁移...');
 
     // 添加 user_id 字段
     console.log('1. 添加 user_id 字段...');
     db.run('ALTER TABLE mistakes ADD COLUMN user_id INTEGER DEFAULT 1');
-    console.log('   ✅ 字段添加成功');
+    console.log('   OK: 字段添加成功');
 
     // 保存数据库
     console.log('2. 保存数据库...');
@@ -64,7 +64,7 @@ async function migrateDatabase() {
     const dbData = db.export();
     const buffer = Buffer.from(dbData);
     fs.writeFileSync(DATA_FILE, buffer);
-    console.log('   ✅ 数据库已保存');
+    console.log('   OK: 数据库已保存');
 
     db.close();
 
@@ -75,12 +75,12 @@ async function migrateDatabase() {
     const verifyResult = verifyDb.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='mistakes'");
 
     if (verifyResult.length > 0 && verifyResult[0].values[0][0].includes('user_id')) {
-      console.log('   ✅ 迁移成功验证通过');
+      console.log('   OK: 迁移成功验证通过');
 
       // 统计数据
       const countResult = verifyDb.exec('SELECT COUNT(*) FROM mistakes');
       const recordCount = countResult[0].values[0][0];
-      console.log(`   📊 当前错题总数：${recordCount}`);
+      console.log(`   当前错题总数：${recordCount}`);
 
       // 显示前 3 条记录
       const sampleResult = verifyDb.exec('SELECT id, user_id, subject_id, content FROM mistakes LIMIT 3');
@@ -91,7 +91,7 @@ async function migrateDatabase() {
         });
       }
     } else {
-      console.log('   ❌ 验证失败，请检查数据库文件');
+      console.log('   ERROR: 验证失败，请检查数据库文件');
     }
 
     verifyDb.close();
@@ -102,7 +102,7 @@ async function migrateDatabase() {
     console.log('╚══════════════════════════════════════════╝\n');
 
   } catch (error) {
-    console.error('\n❌ 迁移失败:', error.message);
+    console.error('\nERROR: 迁移失败:', error.message);
     console.error(error.stack);
     process.exit(1);
   }

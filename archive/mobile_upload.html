@@ -210,13 +210,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>📱 拍照上传错题</h1>
+        <h1>拍照上传错题</h1>
         <p class="subtitle">专为手机优化的快速上传</p>
 
         <div class="card">
             <div class="tip">
-                <strong>💡 提示：</strong>点击下方的上传区域，选择「相机」直接拍照，或从相册选择照片
-                <br><small>⚠️ iPhone 用户：如果上传失败，请更改相机格式为「兼容性最佳」（设置 → 相机 → 格式）</small>
+                <strong>提示：</strong>点击下方的上传区域，选择「相机」直接拍照，或从相册选择照片
+                <br><small>iPhone 用户：如果上传失败，请更改相机格式为「兼容性最佳」（设置 → 相机 → 格式）</small>
             </div>
 
             <div class="form-group">
@@ -238,7 +238,7 @@
             <div class="form-group">
                 <label>拍照/选择图片 *</label>
                 <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                    <div style="font-size: 48px; color: #667eea; margin-bottom: 10px;">📷</div>
+                    <div style="font-size: 48px; color: #667eea; margin-bottom: 10px;"></div>
                     <div class="upload-text">点击拍照或选择图片</div>
                     <div class="upload-hint">支持 JPG、PNG 格式</div>
                 </div>
@@ -314,7 +314,7 @@
             };
             reader.onerror = function(e) {
                 if (isHeic) {
-                    showStatus('❌ HEIC 格式不支持，请截图后上传或更改相机格式为「兼容性最佳」', 'error');
+                    showStatus('HEIC 格式不支持，请截图后上传或更改相机格式为「兼容性最佳」', 'error');
                 }
             };
             reader.readAsDataURL(file);
@@ -352,7 +352,7 @@
                 try {
                     compressedImage = await compressImage(selectedFile);
                 } catch (compressError) {
-                    showStatus('❌ ' + compressError.message, 'error');
+                    showStatus(compressError.message, 'error');
                     uploadBtn.disabled = false;
                     uploadBtn.textContent = '上传错题';
                     return;
@@ -381,15 +381,15 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showStatus('✅ 上传成功！', 'success');
+                    showStatus('上传成功！', 'success');
                     setTimeout(() => {
                         resetForm();
                     }, 2000);
                 } else {
-                    showStatus('❌ 上传失败: ' + (result.message || '未知错误'), 'error');
+                    showStatus('上传失败: ' + (result.message || '未知错误'), 'error');
                 }
             } catch (error) {
-                showStatus('❌ 上传出错: ' + error.message, 'error');
+                showStatus('上传出错: ' + error.message, 'error');
             } finally {
                 uploadBtn.disabled = false;
                 uploadBtn.textContent = '上传错题';
@@ -484,7 +484,7 @@
             if (!token) {
                 // 未登录，显示提示
                 document.querySelector('.subtitle').innerHTML =
-                    '<span style="color: #ffeb3b;">⚠️ 请先登录后再上传</span>';
+                    '<span style="color: #ffeb3b;">请先登录后再上传</span>';
             }
         };
     </script>

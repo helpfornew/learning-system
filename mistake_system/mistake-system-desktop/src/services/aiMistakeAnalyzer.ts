@@ -158,10 +158,10 @@ export const analyzeSingleMistake = async (mistake: MistakeItem, apiKey: string)
 【${mistake.subject}标准知识点列表】（请从以下列表中选择最匹配的 1-3 个知识点）
 ${subjectKnowledgePoints.join(' | ')}
 
-⚠️ 注意：knowledgePoints 字段必须从上述列表中选择，不要自己创造知识点名称。`;
+WARNING：knowledgePoints 字段必须从上述列表中选择，不要自己创造知识点名称。`;
     } else {
       knowledgePointsSection = `
-⚠️ 注意：请根据${mistake.subject}学科特点，分析题目考查的知识点。`;
+WARNING：请根据${mistake.subject}学科特点，分析题目考查的知识点。`;
     }
 
     const prompt = `请分析以下错题：${knowledgePointsSection}

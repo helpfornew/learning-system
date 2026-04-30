@@ -216,7 +216,7 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
     setAnalyzing(true);
     setAnalysisProgress({ completed: 0, total: unanalyzedMistakes.length, percent: 0 });
     try {
-      message.loading('正在AI分析知识点板块，请稍候...', 0);
+      message.loading('正在分析知识点，请稍候...', 0);
 
       // 批量分析未分析的错题
       const mistakesToAnalyze = unanalyzedMistakes.map(m => {
@@ -279,14 +279,14 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
       }
 
       message.destroy();
-      message.success(`AI分析完成！${updatedCount}/${results.length}道错题已更新知识点`);
+      message.success(`分析完成！${updatedCount}/${results.length}道错题已更新知识点`);
       console.log('[MistakeBook] 开始重新加载错题数据...');
       await refresh(); // 重新加载数据
       console.log('[MistakeBook] 错题数据重新加载完成');
     } catch (error) {
       console.error('AI分析失败:', error);
       message.destroy();
-      message.error('AI分析失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      message.error('分析失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setAnalyzing(false);
       setAnalysisProgress({ completed: 0, total: 0, percent: 0 });
@@ -358,7 +358,7 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff7875' }}>
                 {stats.needsAnalysis}
               </div>
-              <div style={{ fontSize: '14px', color: '#666', marginTop: 8 }}>待AI分析</div>
+              <div style={{ fontSize: '14px', color: '#666', marginTop: 8 }}>待分析</div>
             </div>
           </Card>
         </Col>
@@ -397,10 +397,10 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
               loading={analyzing}
               disabled={!aiConfigLoaded || stats.needsAnalysis === 0}
             >
-              AI分析 {stats.needsAnalysis > 0 ? `(${stats.needsAnalysis})` : ''}
+              分析 {stats.needsAnalysis > 0 ? `(${stats.needsAnalysis})` : ''}
             </Button>
 
-            {/* AI 分析进度条 */}
+            {/* 分析进度条 */}
             {analyzing && analysisProgress.total > 0 && (
               <div style={{ width: 200, marginLeft: 8 }}>
                 <Progress
@@ -483,7 +483,7 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
 
                     {!mistake.analyzed && (
                       <Tag color="orange" style={{ float: 'right' }}>
-                        待AI分析
+                        待分析
                       </Tag>
                     )}
                   </div>
@@ -572,7 +572,7 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
                     </Tag>
                     {!currentMistake.analyzed && (
                       <Tag color="orange" style={{ marginLeft: 8 }}>
-                        待AI分析
+                        待分析
                       </Tag>
                     )}
                   </div>
@@ -616,7 +616,7 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
 
             {currentMistake.analysis && (
               <div style={{ marginTop: 24 }}>
-                <h3>AI 分析</h3>
+                <h3>分析结果</h3>
                 <p style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{currentMistake.analysis}</p>
               </div>
             )}

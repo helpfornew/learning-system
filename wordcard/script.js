@@ -5,9 +5,16 @@ class WordMemorySystem {
         this.todayWords = [];
         this.currentWordIndex = 0;
         this.userData = this.loadUserData();
+        // 防御：确保 userData 结构完整
+        if (!this.userData || typeof this.userData !== 'object') {
+            this.userData = { dailyGoal: 10, wordStats: {}, lastStudyDate: null };
+        }
+        if (!this.userData.wordStats || typeof this.userData.wordStats !== 'object') {
+            this.userData.wordStats = {};
+        }
         this.dailyGoal = this.userData.dailyGoal || 10;
         this.currentDate = new Date().toDateString();
-        
+
         this.init();
     }
     
@@ -45,22 +52,43 @@ class WordMemorySystem {
         ];
     }
     
-    // 加载用户数据
+    // 加载用户数据（带错误恢复）
     loadUserData() {
         const saved = localStorage.getItem('wordMemoryData');
-        if (saved) {
-            return JSON.parse(saved);
-        }
-        return {
+        const defaults = {
             dailyGoal: 10,
             wordStats: {},
             lastStudyDate: null
         };
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // 防御式填充缺失字段，防止旧格式或损坏数据导致重置
+                return {
+                    dailyGoal: parsed.dailyGoal ?? defaults.dailyGoal,
+                    wordStats: parsed.wordStats ?? defaults.wordStats,
+                    lastStudyDate: parsed.lastStudyDate ?? defaults.lastStudyDate
+                };
+            } catch (e) {
+                console.error('解析本地学习数据失败，将使用默认数据:', e);
+                return defaults;
+            }
+        }
+        return defaults;
     }
-    
-    // 保存用户数据
+
+    // 保存用户数据（带错误处理）
     saveUserData() {
-        localStorage.setItem('wordMemoryData', JSON.stringify(this.userData));
+        try {
+            localStorage.setItem('wordMemoryData', JSON.stringify(this.userData));
+        } catch (e) {
+            if (e.name === 'QuotaExceededError') {
+                console.error('本地存储空间已满，无法保存学习进度:', e);
+                alert('本地存储空间已满，学习进度未能保存。建议导出数据备份后清理浏览器缓存。');
+            } else {
+                console.error('保存学习数据失败:', e);
+            }
+        }
     }
     
     // 检查是否需要重置每日任务
@@ -467,7 +495,7 @@ class WordMemorySystem {
                             翻译: ${d.translation}
                         </div>
                         <div style="font-size: 12px; color: #888;">
-                            状态: ${d.status === 'known' ? '✅ 已掌握' : d.status === 'review' ? '🔄 需复习' : '🆕 新单词'}<br>
+                            状态: ${d.status === 'known' ? '已掌握' : d.status === 'review' ? '需复习' : '新单词'}<br>
                             掌握度: ${d.mastery}%<br>
                             复习次数: ${d.reviewCount}
                         </div>

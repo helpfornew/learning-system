@@ -169,7 +169,7 @@ const LoginPage: React.FC = () => {
                 />
                 {isVip && (
                   <p style={{marginTop: '8px', fontSize: '13px'}}>
-                    当前状态：VIP 用户，可使用 AI 分析等高级功能
+                    当前状态：VIP 用户
                   </p>
                 )}
               </>
@@ -353,51 +353,51 @@ const LoginPage: React.FC = () => {
       </Card>
 
       <div className="login-features">
-        <h3>🎓 高考错题系统 - 您的专属学习助手</h3>
+        <h3>高考错题系统 - 您的专属学习助手</h3>
 
         <div className="feature-grid">
           <div className="feature-item">
-            <div className="feature-icon">📚</div>
+            <div className="feature-icon"></div>
             <h4>智能错题管理</h4>
             <p>拍照上传错题，AI 自动分析知识点和薄弱点</p>
           </div>
 
           <div className="feature-item">
-            <div className="feature-icon">📊</div>
+            <div className="feature-icon"></div>
             <h4>数据分析看板</h4>
             <p>可视化图表展示学习进度，提分空间一目了然</p>
           </div>
 
           <div className="feature-item">
-            <div className="feature-icon">📅</div>
+            <div className="feature-icon"></div>
             <h4>个性化学习计划</h4>
             <p>根据错题自动生成复习计划，科学安排学习时间</p>
           </div>
 
           <div className="feature-item">
-            <div className="feature-icon">⏰</div>
+            <div className="feature-icon"></div>
             <h4>时间跟踪</h4>
             <p>记录各科学习时间，智能提醒休息和锻炼</p>
           </div>
 
           <div className="feature-item">
-            <div className="feature-icon">🔔</div>
+            <div className="feature-icon"></div>
             <h4>智能提醒</h4>
             <p>复习提醒、休息提醒、锻炼提醒，劳逸结合更高效</p>
           </div>
 
           <div className="feature-item">
-            <div className="feature-icon">☁️</div>
+            <div className="feature-icon"></div>
             <h4>数据云同步</h4>
             <p>多设备数据自动同步，随时随地查看学习进度</p>
           </div>
         </div>
 
         <div className="new-user-benefit">
-          <h4>🎁 新用户福利</h4>
+          <h4>新用户福利</h4>
           <p>首次注册即赠送 <strong>30 天 VIP 体验期</strong>，享受所有高级功能！</p>
           <p style={{ fontSize: '13px', color: '#666' }}>
-            💡 登录后还有详细的功能介绍和快捷键指南，帮助您快速上手
+            登录后还有详细的功能介绍和快捷键指南，帮助您快速上手
           </p>
         </div>
       </div>

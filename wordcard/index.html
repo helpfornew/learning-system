@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>单词记忆系统 - 主页</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/static/unified-theme.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .home-container {
@@ -16,11 +17,12 @@
         .hero-section {
             text-align: center;
             padding: 60px 20px;
-            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
-            color: #5c5c5c;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
             border-radius: 20px;
             margin-bottom: 50px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         .hero-section h1 {
@@ -48,33 +50,33 @@
         }
         
         .feature-card {
-            background: white;
+            background: rgba(255,255,255,0.05);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
         }
         
         .feature-icon {
             font-size: 3rem;
-            color: #4b6cb7;
+            color: #999999;
             margin-bottom: 20px;
         }
         
         .feature-card h3 {
             font-size: 1.8rem;
-            color: #2c3e50;
+            color: #fff;
             margin-bottom: 15px;
         }
         
         .feature-card p {
-            color: #666;
+            color: #aaa;
             line-height: 1.6;
             margin-bottom: 20px;
         }
@@ -93,57 +95,59 @@
             top: 20px;
             left: 20px;
             z-index: 1000;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255,255,255,0.05);
             padding: 12px 20px;
             border-radius: 30px;
             text-decoration: none;
-            color: #4b6cb7;
+            color: #999999;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .home-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-            background: white;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            background: rgba(255,255,255,0.1);
         }
 
         .action-btn {
             padding: 18px 35px;
             font-size: 1.2rem;
-            border-radius: 10px;
+            border-radius: 25px;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
             font-weight: 600;
         }
         
         .primary-btn {
-            background: linear-gradient(90deg, #27ae60 0%, #229954 100%);
-            color: white;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
         }
-        
+
         .secondary-btn {
-            background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+            background: #777777;
             color: white;
         }
         
         .action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0.85;
         }
         
         .stats-section {
-            background: #f8f9fa;
+            background: rgba(255,255,255,0.05);
             padding: 40px;
             border-radius: 15px;
             margin-top: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
         
         .stats-grid {
@@ -155,12 +159,12 @@
         
         .stat-item h4 {
             font-size: 2.5rem;
-            color: #4b6cb7;
+            color: #999999;
             margin-bottom: 10px;
         }
         
         .stat-item p {
-            color: #666;
+            color: #aaa;
             font-size: 1.1rem;
         }
         
@@ -188,7 +192,7 @@
         }
     </style>
     <!-- 统一导航栏样式 -->
-    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/static/navbar.css">
 </head>
 <body>
     <!-- 统一导航栏容器 -->
@@ -209,7 +213,7 @@
                     <i class="fas fa-graduation-cap"></i>
                     开始学习
                 </a>
-                <a href="quiz.html" class="action-btn" style="background: linear-gradient(90deg, #9b59b6 0%, #8e44ad 100%); color: white;">
+                <a href="quiz.html" class="action-btn" style="background: #666666; color: white;">
                     <i class="fas fa-question-circle"></i>
                     四选一
                 </a>
@@ -256,7 +260,7 @@
         </div>
         
         <div class="stats-section">
-            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #fff;">
                 <i class="fas fa-chart-bar"></i> 系统特点
             </h2>
             <div class="stats-grid">
@@ -280,7 +284,7 @@
         </div>
         
         <footer style="margin-top: 50px; text-align: center; color: #666; padding: 20px;">
-            <p>单词记忆系统 &copy; 2023 | 使用 cards.json 词汇数据</p>
+            <p>单词记忆系统 &copy; 2026 | 使用 cards.json 词汇数据</p>
             <p style="margin-top: 10px; font-size: 0.9rem;">
                 <i class="fas fa-info-circle"></i>
                 所有学习数据保存在浏览器本地存储中，请定期导出备份。
@@ -306,8 +310,8 @@
         document.addEventListener('DOMContentLoaded', loadStats);
     </script>
     <!-- 统一认证和导航栏 -->
-    <script src="/shared/auth.js"></script>
-    <script src="/shared/navbar.js"></script>
+    <script src="/static/auth.js"></script>
+    <script src="/static/navbar.js"></script>
     <script>
         // 初始化统一导航栏
         document.addEventListener('DOMContentLoaded', function() {

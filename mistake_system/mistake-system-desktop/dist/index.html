@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#667eea" />
+  <meta name="theme-color" content="#1a1a1a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>高考错题系统</title>
   <link rel="icon" type="image/svg+xml" href="/mistake/assets/icon-DGXBWYS1.svg">
+  <link rel="stylesheet" href="/static/navbar.css">
   <!-- MathJax 用于渲染 LaTeX 公式 -->
   <script>
     // ===== 设备检测：移动端优化 =====
@@ -44,6 +45,8 @@
       box-sizing: border-box;
     }
     
+    html { background: #1a1a1a; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
         'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -51,21 +54,22 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       overflow: hidden;
+      background: #1a1a1a;
     }
     
     #root {
       width: 100vw;
-      height: 100vh;
+      height: calc(100vh - 56px);
       overflow: hidden;
     }
-    
+
     .loading {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100%;
+      background: #1a1a1a;
       color: white;
     }
     
@@ -88,18 +92,28 @@
       font-weight: 500;
     }
   </style>
-  <script type="module" crossorigin src="/mistake/assets/index-D0y-4M9e.js"></script>
-  <link rel="modulepreload" crossorigin href="/mistake/assets/vendor-ui-Cw9QIUQE.js">
-  <link rel="modulepreload" crossorigin href="/mistake/assets/vendor-charts-2bXvTLjx.js">
-  <link rel="modulepreload" crossorigin href="/mistake/assets/vendor-utils-pxaTaiUD.js">
-  <link rel="stylesheet" crossorigin href="/mistake/assets/index-DYN9_ZKB.css">
+  <script type="module" crossorigin src="/mistake/assets/index-CxfHk4ey.js"></script>
+  <link rel="modulepreload" crossorigin href="/mistake/assets/vendor-ui-BGYfHlxu.js">
+  <link rel="modulepreload" crossorigin href="/mistake/assets/vendor-charts-C7dsx3Ts.js">
+  <link rel="modulepreload" crossorigin href="/mistake/assets/vendor-utils-B9lVldoh.js">
+  <link rel="stylesheet" crossorigin href="/mistake/assets/index-61knCW7q.css">
 </head>
 <body>
-  <div id="root">
+  <div id="unified-navbar" style="height:56px"></div>
+  <div id="root" style="height:calc(100vh - 56px)">
     <div class="loading">
       <div class="loading-spinner"></div>
       <div class="loading-text">加载高考错题系统...</div>
     </div>
-  </div>
+  </div>
+  <script src="/static/auth.js"></script>
+  <script src="/static/navbar.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof Navbar !== 'undefined') {
+        Navbar.init('mistake');
+      }
+    });
+  </script>
 </body>
 </html>

@@ -93,8 +93,8 @@ def close_pool():
             conn = _pool.pop()
             try:
                 conn.close()
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"关闭数据库连接时出错: {e}")
         _pool_initialized = False
         logger.info("数据库连接池已关闭")
 

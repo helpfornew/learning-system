@@ -6,14 +6,20 @@
 (function(global) {
     'use strict';
 
+    // 检测是否在Electron桌面环境
+    const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
+
+    // 基础路径配置
+    const BASE_PATH = isElectron ? '.' : '';
+
     // 导航配置
     const NAV_CONFIG = {
         // 导航项目
         items: [
-            { id: 'home', label: '首页', icon: '', url: '/', active: false },
-            { id: 'learning', label: '学习平台', icon: '', url: '/learning/', active: false },
-            { id: 'mistake', label: '错题系统', icon: '', url: '/mistake/', active: false },
-            { id: 'wordcard', label: '单词卡', icon: '', url: '/wordcard/', active: false },
+            { id: 'home', label: '首页', icon: '', url: isElectron ? './index.html' : '/', active: false },
+            { id: 'learning', label: '学习平台', icon: '', url: isElectron ? '../learning-platform/index.html' : '/learning/', active: false },
+            { id: 'mistake', label: '错题系统', icon: '', url: isElectron ? '../mistake-system-desktop/dist/index.html' : '/mistake/', active: false },
+            { id: 'wordcard', label: '单词卡', icon: '', url: isElectron ? '../wordcard/index.html' : '/wordcard/', active: false },
         ],
 
         // 系统名称映射
@@ -145,7 +151,7 @@
             const link = document.createElement('link');
             link.id = 'unified-navbar-styles';
             link.rel = 'stylesheet';
-            link.href = '/shared/navbar.css';
+            link.href = isElectron ? '../static/navbar.css' : '/static/navbar.css';
             document.head.appendChild(link);
         },
 

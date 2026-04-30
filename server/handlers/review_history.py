@@ -104,3 +104,57 @@ def handle_review_history_get(user_id, params=None):
     except Exception as e:
         logger.error(f"获取复习历史记录失败: {e}")
         return 500, {'success': False, 'message': f'获取复习历史失败: {str(e)}'}
+
+
+def handle_review_record_post(user_id, data):
+    """
+    记录一次复习（更新错题的 review_count 和 last_review_date）
+
+    参数:
+        user_id: 用户ID
+        data: 请求数据
+            - mistake_id: 错题ID（必填）
+            - result: 复习结果（success/failed，可选）
+
+    返回:
+        - success: 是否成功
+        - review_count: 更新后的复习次数
+        - message: 提示信息
+    """
+    if not user_id:
+        return 401, {'success': False, 'message': '未登录'}
+
+    mistake_id = data.get('mistake_id')
+    if not mistake_id:
+        return 400, {'success': False, 'message': 'mistake_id 不能为空'}
+
+    try:
+        conn = get_db()
+        c = conn.cursor()
+
+        # 验证错题存在且属于该用户
+        c.execute('SELECT id, review_count FROM mistakes WHERE id = ? AND user_id = ? AND is_deleted = 0',
+                  (mistake_id, user_id))
+        row = c.fetchone()
+        if not row:
+            conn.close()
+            return 404, {'success': False, 'message': '错题不存在'}
+
+        new_count = (row[1] or 0) + 1
+        now = datetime.now().strftime('%Y-%m-%d')
+
+        c.execute('UPDATE mistakes SET review_count = ?, last_review_date = ? WHERE id = ?',
+                  (new_count, now, mistake_id))
+        conn.commit()
+        conn.close()
+
+        return 200, {
+            'success': True,
+            'review_count': new_count,
+            'last_review_date': now,
+            'message': '复习记录已更新'
+        }
+
+    except Exception as e:
+        logger.error(f"记录复习失败: {e}")
+        return 500, {'success': False, 'message': f'记录复习失败: {str(e)}'}

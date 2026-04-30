@@ -1,248 +1,53 @@
-.app-container {
-  height: 100%;
+/* ========================================
+   高考学习系统 - 黑白主题样式
+   ======================================== */
+
+/* ---------- CSS 变量 ---------- */
+:root {
+  --accent: #000000;
+  --accent-bg: #f0f0f0;
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --border: #d0d0d0;
+  --text: #000000;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  --radius: 10px;
 }
 
-/* 统计卡片样式 */
-.stat-card {
-  border-radius: 12px;
-  padding: 24px;
-  transition: all 0.3s;
-  cursor: pointer;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
+/* 暗色模式 */
+.dark {
+  --bg: #111111;
+  --surface: #1e1e1e;
+  --border: #333333;
+  --text: #f0f0f0;
+  --text-secondary: #aaaaaa;
+  --text-muted: #666666;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+/* ---------- 基础排版 ---------- */
+body {
+  -webkit-font-smoothing: antialiased;
 }
 
-.stat-card .ant-statistic-title {
-  font-size: 14px;
-  color: #475569;
-}
-
-.stat-card .ant-statistic-content {
+.page-title {
   font-size: 24px;
-  font-weight: bold;
-  color: #0f172a;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
 }
 
-/* 暗色模式适配 */
-.dark .stat-card {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-.dark .stat-card .ant-statistic-title {
-  color: #cbd5e1;
-}
-
-.dark .stat-card .ant-statistic-content {
-  color: #f8fafc;
-}
-
-/* 错题卡片样式 */
-.mistake-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 16px;
-  transition: all 0.3s;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-}
-
-.mistake-card:hover {
-  border-color: #0ea5e9;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.dark .mistake-card {
-  background: #1e293b;
-  border-color: #334155;
-}
-
-.dark .mistake-card:hover {
-  border-color: #38bdf8;
-}
-
-.mistake-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.mistake-card-subject {
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-.mistake-card-content {
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
-
-.mistake-card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: rgba(0, 0, 0, 0.45);
-}
-
-/* 表格样式 */
-.mistake-table .ant-table-thead > tr > th {
-  background-color: #f8fafc;
-  font-weight: bold;
-  color: #0f172a;
-}
-
-.dark .mistake-table .ant-table-thead > tr > th {
-  background-color: #1e293b;
-  color: #f8fafc;
-}
-
-/* 进度条样式 */
-.mastery-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mastery-progress .ant-progress-text {
-  min-width: 40px;
-  text-align: right;
-}
-
-/* 快速录入模态框 */
-.quick-input-modal-wrapper .ant-modal-content {
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.quick-input-modal-wrapper .ant-modal-body {
-  height: calc(100vh - 300px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.quick-input-modal .ant-modal-content {
-  border-radius: 12px;
-}
-
-.quick-input-modal .ant-modal-header {
-  border-radius: 12px 12px 0 0;
-}
-
-/* 知识点标签 */
-.knowledge-tag {
-  margin: 2px;
-  font-size: 12px;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .stat-card {
-    margin-bottom: 16px;
-  }
-
-  .mistake-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .mistake-card-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  /* 移动端卡片间距 */
-  .dashboard {
-    padding: 12px !important;
-  }
-
-  /* 移动端统计卡片 */
-  .stat-card-wrapper {
-    margin-bottom: 12px;
-  }
-
-  /* 移动端搜索框全宽 */
-  .ant-input-search {
-    width: 100% !important;
-  }
-
-  /* 移动端表格滚动 */
-  .ant-table-wrapper {
-    overflow-x: auto;
-  }
-}
-
-/* 移动端优化类 */
-.mobile-only {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-only {
-    display: block;
-  }
-
-  .desktop-only {
-    display: none !important;
-  }
-}
-
-/* 加载动画 */
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-}
-
-/* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 48px 0;
-}
-
-.empty-state-icon {
-  font-size: 48px;
-  color: #cbd5e1;
-  margin-bottom: 16px;
-}
-
-.empty-state-text {
-  color: #475569;
+.page-subtitle {
   font-size: 14px;
-}
-
-.dark .empty-state-text {
-  color: #94a3b8;
-}
-
-/* 图表容器 */
-.chart-container {
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 24px;
+  color: var(--text-secondary);
   margin-bottom: 24px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
-.dark .chart-container {
-  background: #1e293b;
-  border-color: #334155;
+/* ---------- 移动端响应 ---------- */
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 20px;
+  }
+  .ant-input-search { width: 100% !important; }
+  .ant-table-wrapper { overflow-x: auto; }
 }

@@ -186,7 +186,7 @@ const MistakeDetailModal: React.FC<MistakeDetailModalProps> = ({
                 {analysis && (
                   <Col span={24}>
                     <Title level={5} style={{ marginBottom: 12 }}>
-                      <span>🤖 AI分析</span>
+                      <span>分析</span>\r
                     </Title>
                     <Paragraph style={{ lineHeight: 1.8, whiteSpace: 'pre-wrap', backgroundColor: '#f0f9ff', padding: 12, borderRadius: 6, border: '1px solid #91d5ff' }}>
                       {analysis}
@@ -199,13 +199,13 @@ const MistakeDetailModal: React.FC<MistakeDetailModalProps> = ({
             <Card size="small" title="复习建议" style={{ marginTop: 16 }}>
               <Paragraph>
                 {review_count === 0
-                  ? '这是您第一次查看这道题，建议仔细分析解题思路。'
+                  ? '第一次看这道题，先理解解题思路。'
                   : review_count < 3
-                    ? '您已复习几次，但仍需加强对此知识点的理解。'
-                    : '您已多次复习此题，掌握情况良好。'}
+                    ? '已复习过几次，可以再巩固一下这个知识点。'
+                    : '已多次复习，掌握情况不错。'
               </Paragraph>
               <Paragraph>
-                建议将此类题型加入日常练习中，确保熟练掌握。
+                同类题型建议多做几道，巩固熟练度。\r
               </Paragraph>
             </Card>
           </Col>

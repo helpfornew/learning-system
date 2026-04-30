@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>高考学习系统 · 统一主页</title>
-    <link rel="stylesheet" href="/shared/navbar.css">
+    <link rel="stylesheet" href="/static/unified-theme.css">
+    <link rel="stylesheet" href="/static/navbar.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%);
+            font-family: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
             min-height: 100vh;
-            padding: 20px;
+            padding: 0 20px 20px;
         }
 
         /* 登录页面样式 */
@@ -22,7 +24,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%);
+            background: #1a1a1a;
             z-index: 9999;
             justify-content: center;
             align-items: center;
@@ -31,17 +33,17 @@
             display: flex;
         }
         .login-card {
-            background: white;
+            background: rgba(255,255,255,0.05);
             border-radius: 20px;
             padding: 40px;
             width: 100%;
             max-width: 420px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .login-title {
             font-size: 1.8rem;
             font-weight: 700;
-            color: #333;
+            color: #fff;
             text-align: center;
             margin-bottom: 30px;
         }
@@ -60,7 +62,7 @@
             transition: all 0.3s;
         }
         .login-tab.active {
-            color: #0ea5e9;
+            color: #888888;
             border-bottom: 2px solid #0ea5e9;
         }
         .login-form input {
@@ -73,14 +75,14 @@
             transition: border-color 0.3s;
         }
         .login-form input:focus {
-            border-color: #0ea5e9;
+            border-color: #888888;
             outline: none;
             box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
         }
         .login-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            background: #ff6b6b;
             color: white;
             border: none;
             border-radius: 8px;
@@ -90,8 +92,8 @@
             transition: all 0.2s;
         }
         .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            opacity: 0.9;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
         }
         .login-btn:disabled {
             opacity: 0.6;
@@ -123,15 +125,16 @@
         }
         .user-info-card {
             display: none;
-            background: white;
+            background: rgba(255,255,255,0.05);
             border-radius: 20px;
             padding: 30px;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .user-avatar {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #0ea5e9, #10b981);
+            background: #6c5ce7;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -141,18 +144,18 @@
             color: white;
         }
         .user-name {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
+            color: #fff;
+            margin-bottom: 5px;
         }
         .user-email {
-            color: #666;
-            margin-bottom: 20px;
+            color: #aaa;
+            margin-bottom: 15px;
         }
         .user-vip {
             display: inline-block;
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            background: #ffd700;
             color: #333;
             padding: 6px 16px;
             border-radius: 20px;
@@ -175,17 +178,15 @@
 
         /* 头部 */
         .header {
-            background: white;
+            background: rgba(255,255,255,0.05);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .header h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, #0ea5e9, #10b981);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+            color: #fff;
             margin-bottom: 10px;
         }
         .header-info {
@@ -194,12 +195,11 @@
             flex-wrap: wrap;
             margin-top: 15px;
         }
-        .header-badge {
-            background: #e0f2fe;
-            padding: 8px 16px;
+.header-badge {
+            background: rgba(255,255,255,0.1);
+            color: #aaa;
             border-radius: 30px;
             font-size: 0.9rem;
-            color: #0284c7;
             font-weight: 500;
         }
 
@@ -247,10 +247,10 @@
 
         /* 卡片样式 */
         .card {
-            background: white;
+            background: rgba(255,255,255,0.05);
             border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .card-header {
             display: flex;
@@ -274,7 +274,7 @@
 
         /* 实时任务 */
         .current-task {
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            background: rgba(255,107,107,0.2);
             color: white;
             padding: 25px;
             border-radius: 15px;
@@ -307,14 +307,14 @@
             background: #f0f9ff;
             border-radius: 12px;
         }
-        .stat-value {
-            font-size: 2rem;
+.stat-value {
+            font-size: 2.5rem;
             font-weight: 800;
-            color: #0ea5e9;
+            color: #ff6b6b;
         }
         .stat-label {
-            font-size: 0.85rem;
-            color: #666;
+            font-size: 0.9rem;
+            color: #aaa;
             margin-top: 5px;
         }
 
@@ -330,20 +330,20 @@
             border: none;
             font-size: 0.95rem;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+.btn-primary {
+            background: #ff6b6b;
             color: white;
         }
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(14, 165, 233, 0.3);
         }
-        .btn-success {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
+.btn-primary:disabled {
+            background: rgba(255,107,107,0.3);
             color: white;
         }
         .btn-warning {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
+            background: #ff6b6b;
             color: white;
         }
         .btn-block {
@@ -464,15 +464,6 @@
         }
 
         /* 时钟 */
-        .clock {
-            font-size: 3rem;
-            font-weight: 800;
-            text-align: center;
-            color: #0ea5e9;
-            font-family: 'JetBrains Mono', monospace;
-            margin: 20px 0;
-        }
-
         /* 进度条 */
         .progress-bar {
             height: 10px;
@@ -483,7 +474,7 @@
         }
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #0ea5e9, #10b981);
+            background: linear-gradient(90deg, #ff6b6b, #ffd700);
             transition: width 0.3s;
         }
     </style>
@@ -529,7 +520,7 @@
 
     <!-- 用户信息卡片（未登录时显示在 header 处） -->
     <div id="userInfoCard" class="user-info-card" style="display: none;">
-        <div class="user-avatar">👤</div>
+        <div class="user-avatar"></div>
         <div class="user-name" id="displayUsername">用户名</div>
         <div class="user-email" id="displayEmail">email@example.com</div>
         <div class="user-vip" id="displayVip">VIP0</div>
@@ -540,32 +531,16 @@
         <!-- 头部 -->
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>🎓 高考学习系统</h1>
+                <h1>高考学习系统</h1>
                 <div id="headerUserStatus" style="display: none; align-items: center; gap: 12px;">
                     <span class="header-badge" id="headerUsername">用户名</span>
-                    <span class="header-badge" id="headerVip">VIP0</span>
-                    <button onclick="handleLogout()" style="padding: 6px 12px; background: #ff4d4f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">退出</button>
+                    <span class="header-badge" id="headerVip" style="background: rgba(255,255,255,0.1);">VIP0</span>
+                    <button onclick="handleLogout()" style="padding: 6px 12px; background: #555; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">退出</button>
                 </div>
             </div>
             <div class="header-info">
-            <span class="header-badge">🎯 目标：480 分</span>
-            <span class="header-badge">📊 当前：380 分</span>
-                <span class="header-badge">⏰ 倒计时：<span id="countdown">90</span>天</span>
-                <span class="header-badge" id="dayTypeBadge">单日·数学</span>
+                <span class="header-badge">倒计时：<span id="countdown">90</span> 天</span>
             </div>
-
-            <!-- 客户端下载 -->
-            <div class="download-section">
-                <a href="/downloads/mac/高考学习系统-1.0.0-mac.zip" class="download-btn mac" download>
-                    Mac 版
-                </a>
-                <a href="/downloads/win/高考学习系统-1.0.0-win.zip" class="download-btn win" download>
-                    Windows 版
-                </a>
-            </div>
-
-            <!-- 实时时钟 -->
-            <div class="clock" id="clock">00:00:00</div>
         </div>
 
         <!-- 主网格 -->
@@ -573,7 +548,7 @@
             <!-- 当前任务 -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">📚 当前学习任务</span>
+                    <span class="card-title">当前学习任务</span>
                     <span><span class="status-dot status-online"></span>实时</span>
                 </div>
                 <div class="card-body">
@@ -582,7 +557,7 @@
                         <div class="current-task-name">加载中...</div>
                         <div class="current-task-time">--:-- - --:--</div>
                     </div>
-                    <div class="current-task" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+                    <div class="current-task" style="background: rgba(0,184,148,0.2); border: 1px solid rgba(0,184,148,0.3);">
                         <div class="current-task-label">接下来</div>
                         <div class="current-task-name" id="nextTask">加载中...</div>
                         <div class="current-task-time" id="nextTime">--:--</div>
@@ -593,31 +568,16 @@
             <!-- 学习统计 + 快速操作 -->
             <div class="card" style="grid-column: span 2;">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="card-title">📊 学习统计</span>
+                    <span class="card-title">学习统计</span>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-primary" onclick="openMistakeSystem()" style="padding: 8px 16px; font-size: 0.9rem;">
-                            🖥️ 错题系统
+                        <button type="button" class="btn" onclick="openMistakeSystem()" style="padding: 8px 16px; font-size: 0.9rem; background: #0ea5e9; color: white; border: none; cursor: pointer;">
+                            错题系统
                         </button>
-                        <button type="button" class="btn" onclick="openToolsCenter()" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #d4c4a8, #b8a88a); color: white; border: none; cursor: pointer;">
-                            🛠️ 工具中心
+                        <button type="button" onclick="openWordcardSystem()" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: #6c5ce7; color: white; text-decoration: none; border: none; cursor: pointer;">
+                            单词卡片
                         </button>
-                        <button type="button" class="btn btn-warning" onclick="startFocusMode()" style="padding: 8px 16px; font-size: 0.9rem;">
-                            🧘 专注模式
-                        </button>
-                        <button type="button" class="btn" onclick="openScheduleView()" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #11998e, #38ef7d); color: white; border: none; cursor: pointer;">
-                            📅 本周日程
-                        </button>
-                        <button type="button" class="btn" onclick="openScheduleEdit()" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #d4c4a8, #b8a88a); color: white; border: none; cursor: pointer;">
-                            ✏️ 编辑今日时间表
-                        </button>
-                        <button type="button" class="btn" onclick="openLearningPlatform()" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; border: none; cursor: pointer;">
-                            📚 学习平台
-                        </button>
-                        <button type="button" onclick="openWordcardSystem()" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #d4c4a8, #b8a88a); color: white; text-decoration: none; border: none; cursor: pointer;">
-                            🃏 单词卡片
-                        </button>
-                        <button type="button" onclick="openStrategyBook()" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #ffd700, #ff6b6b); color: white; text-decoration: none; border: none; cursor: pointer; font-weight: 600;">
-                            🎯 战略书
+                        <button type="button" onclick="openLearningPlatform()" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: #10b981; color: white; border: none; cursor: pointer;">
+                            学习平台
                         </button>
                     </div>
                 </div>
@@ -648,21 +608,10 @@
                 </div>
             </div>
 
-            <!-- 监控画面 -->
-            <div class="card" id="monitorCard" style="grid-column: 1 / -1; display: none;">
-                <div class="card-header">
-                    <span class="card-title">📹 <span id="monitorName">监控摄像头</span></span>
-                    <span><span class="status-dot status-online"></span>直播</span>
-                </div>
-                <div class="card-body" style="padding: 0; background: #000; display: flex; align-items: center; justify-content: center;">
-                    <iframe id="monitorFrame" src="" style="width: 100%; height: 400px; border: none;" allowfullscreen></iframe>
-                </div>
-            </div>
-
             <!-- 今日课表 -->
             <div class="card" style="grid-column: 1 / -1;">
                 <div class="card-header">
-                    <span class="card-title">📋 今日课表</span>
+                    <span class="card-title">今日课表</span>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <span class="header-badge" id="dayTypeBadge">单日</span>
                         <span class="header-badge" id="weekTypeBadge">单周</span>
@@ -715,21 +664,33 @@
         // 检查登录状态（移除SSO机制，基于本地存储的用户信息）
         function checkLoginStatus() {
             const userInfo = localStorage.getItem('user_info');
+            const authToken = localStorage.getItem('auth_token');
+
+            console.log('[Auth] checkLoginStatus:', {
+                hasUserInfo: !!userInfo,
+                hasAuthToken: !!authToken,
+                returnUrl: returnUrl,
+                url: window.location.href
+            });
 
             if (userInfo) {
                 try {
                     currentUser = JSON.parse(userInfo);
-                    // 如果有返回地址，直接跳转回去
-                    if (returnUrl) {
-                        window.location.href = decodeURIComponent(returnUrl);
-                        return;
-                    }
-                    showMainPage();
                 } catch (e) {
-                    console.error('解析用户信息失败:', e);
+                    console.error('[Auth] 解析用户信息失败:', e);
                     showLoginPage();
+                    return;
                 }
+                console.log('[Auth] 用户已登录:', currentUser.username);
+                // 如果有返回地址，直接跳转回去
+                if (returnUrl) {
+                    console.log('[Auth] 检测到返回地址，跳转:', decodeURIComponent(returnUrl));
+                    window.location.href = decodeURIComponent(returnUrl);
+                    return;
+                }
+                showMainPage();
             } else {
+                console.log('[Auth] 未找到用户信息，显示登录页');
                 showLoginPage();
             }
         }
@@ -740,7 +701,7 @@
                 // 由于移除了SSO机制，现在直接检查账号服务器状态
                 const response = await fetch(`${ACCOUNT_API_BASE}/api/verify`);
                 const result = await response.json();
-                if (result.valid) {
+                if (result.success) {
                     currentUser = result.user;
                     showMainPage();
                 } else {
@@ -773,16 +734,21 @@
                 // 更新登录卡片中的用户信息
                 const displayCard = document.getElementById('userInfoCard');
                 if (displayCard) {
-                    document.getElementById('displayUsername').textContent = currentUser.username;
-                    document.getElementById('displayEmail').textContent = currentUser.email || '未设置邮箱';
-                    document.getElementById('displayVip').textContent = `VIP${currentUser.vip_level}`;
+                    const el = document.getElementById('displayUsername');
+                    if (el) el.textContent = currentUser.username;
+                    const el2 = document.getElementById('displayEmail');
+                    if (el2) el2.textContent = currentUser.email || '未设置邮箱';
+                    const el3 = document.getElementById('displayVip');
+                    if (el3) el3.textContent = `VIP${currentUser.vip_level}`;
                 }
                 // 更新 header 中的用户状态
                 const headerStatus = document.getElementById('headerUserStatus');
                 if (headerStatus) {
                     headerStatus.style.display = 'flex';
-                    document.getElementById('headerUsername').textContent = currentUser.username;
-                    document.getElementById('headerVip').textContent = `VIP${currentUser.vip_level}`;
+                    const el = document.getElementById('headerUsername');
+                    if (el) el.textContent = currentUser.username;
+                    const el2 = document.getElementById('headerVip');
+                    if (el2) el2.textContent = `VIP${currentUser.vip_level}`;
                 }
             }
         }
@@ -933,32 +899,17 @@
 
         // ============ 原有功能 ============
 
-        // 更新时钟和倒计时
-        function updateClock() {
+        // 更新倒计时
+        function updateCountdown() {
             const now = new Date();
-            // 更新时钟
-            document.getElementById('clock').textContent =
-                now.getHours().toString().padStart(2, '0') + ':' +
-                now.getMinutes().toString().padStart(2, '0') + ':' +
-                now.getSeconds().toString().padStart(2, '0');
-
-            // 更新高考倒计时（目标：2026 年 6 月 7 日）
             const gaokaoDate = new Date('2026-06-07T00:00:00');
-            const diffTime = gaokaoDate - now;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-            // 更新所有倒计时显示
-            const countdownEls = document.querySelectorAll('#countdown, #footerCountdown');
-            countdownEls.forEach(el => {
-                if (diffDays > 0) {
-                    el.textContent = diffDays;
-                } else {
-                    el.textContent = '0';
-                }
+            const diffDays = Math.ceil((gaokaoDate - now) / (1000 * 60 * 60 * 24));
+            document.querySelectorAll('#countdown, #footerCountdown').forEach(el => {
+                el.textContent = diffDays > 0 ? diffDays : 0;
             });
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(updateCountdown, 60000);
+        updateCountdown();
 
         // 从 API 加载数据
         async function loadData() {
@@ -975,8 +926,6 @@
                         document.getElementById('footerCountdown').textContent = config.config.系统信息?.倒计时天数 || 90;
                     }
 
-                    // 加载监控配置
-                    loadMonitorConfig(config.config);
                 } else {
                     document.getElementById('apiStatus').innerHTML = '<span class="status-dot status-offline"></span>未连接 (请启动 API 服务)';
                 }
@@ -1016,25 +965,7 @@
             }
         }
 
-        // 加载监控配置
-        function loadMonitorConfig(config) {
-            console.log('[Monitor] 收到的配置:', JSON.stringify(config, null, 2));
-            const monitorConfig = config?.功能模块?.监控摄像头;
-            console.log('[Monitor] 监控配置:', monitorConfig);
-            if (monitorConfig && monitorConfig.启用 && monitorConfig.地址) {
-                document.getElementById('monitorCard').style.display = 'block';
-                document.getElementById('monitorName').textContent = monitorConfig.名称 || '监控摄像头';
-                const iframe = document.getElementById('monitorFrame');
-                iframe.style.width = monitorConfig.宽度 || '100%';
-                iframe.style.height = monitorConfig.高度 || '400px';
-                iframe.src = monitorConfig.地址;
-                console.log('[Monitor] 监控已加载:', monitorConfig.地址);
-            } else {
-                console.log('[Monitor] 监控未启用或配置不完整');
-            }
-        }
-
-        // 获取日期信息 (来自原始仪表盘)
+        // 获取日期信息
         function getDateInfo() {
             const now = new Date();
             const dayIndex = now.getDay(); // 0=周日，1=周一...6=周六
@@ -1098,43 +1029,43 @@
 
             // 默认时间表 - AI 项目嵌入版
             const morningChemistryTitle = isSunday
-                ? `📊 周测·科目① ${info.testSub1}`
-                : '🔴 化学分块输入';
+                ? `周测·科目① ${info.testSub1}`
+                : '化学分块输入';
             const morningChemistryDesc = isSunday
                 ? `周测 70 分钟：${info.testSub1}`
                 : '1 概念 +3 例题 +4 练习';
 
             const afternoonMathPhysicsTitle = isSunday
-                ? `📊 周测·科目② ${info.testSub2}`
-                : '🟡 数理错题复盘';
+                ? `周测·科目② ${info.testSub2}`
+                : '数理错题复盘';
             const afternoonMathPhysicsDesc = isSunday
                 ? `周测 70 分钟：${info.testSub2}`
                 : '盲做→对比→费曼';
 
             // 完整时间表（AI 项目嵌入版）- 7 点起床优化版 (含做饭时间)
             return [
-                { start: 7.0, end: 7.333, title: '起床洗漱', desc: '清醒 + 喝水', subject: '⏰ 起床', tag: 'daily' },
-                { start: 7.333, end: 7.667, title: '🧘 晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
-                { start: 7.667, end: 8.0, title: '🔵 英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
-                { start: 8.0, end: 9.0, title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '🍽️ 早餐', tag: 'daily' },
-                { start: 9.0, end: 10.3, title: morningChemistryTitle, desc: morningChemistryDesc, subject: isSunday ? '周测' : '🔴 化学', tag: '学习' },
-                { start: 10.3, end: 10.5, title: '☕ 休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
-                { start: 10.5, end: 12.0, title: isSunday ? afternoonMathPhysicsTitle : '🟡 数学/物理刻意练习', desc: isSunday ? afternoonMathPhysicsDesc : '模型思维：画示意图 + 边界条件', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
-                { start: 12.0, end: 13.0, title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '🍲 午餐', tag: 'daily' },
-                { start: 13.0, end: 14.0, title: '午休', desc: '休息', subject: '😴 午休', tag: '休息' },
-                { start: 14.0, end: 15.0, title: '💻 AI 编程项目', desc: 'KDnuggets 文档 + 跑代码（只看英文）', subject: 'AI 项目', tag: '学习' },
-                { start: 15.0, end: 15.167, title: '📝 项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
-                { start: 15.167, end: 16.3, title: afternoonMathPhysicsTitle, desc: afternoonMathPhysicsDesc, subject: isSunday ? '周测' : '🟡 数理', tag: '学习' },
-                { start: 16.3, end: 17.0, title: '🧘 微运动 + 深呼吸', desc: '靠墙拉伸 + 机动时间', subject: '锻炼', tag: 'exercise' },
-                { start: 17.0, end: 18.3, title: isSunday ? afternoonMathPhysicsTitle : (info.weekType === '单周·政治' ? '🟢 政治·术语 + 选择题' : '🟣 语文·文言文/古诗/素材'), desc: isSunday ? afternoonMathPhysicsDesc : (info.weekType === '单周·政治' ? '背 5 术语 +10 选择题' : '文言文精读/古诗鉴赏/作文素材'), subject: isSunday ? '周测' : (info.weekType === '单周·政治' ? '政治' : '语文'), tag: '学习' },
-                { start: 18.3, end: 19.5, title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '🍲 晚餐', tag: 'daily' },
-                { start: 19.5, end: 20.0, title: '彻底放空', desc: '无手机', subject: '🧘 放空', tag: '休息' },
-                { start: 20.0, end: 21.0, title: '🟣 化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
-                { start: 21.0, end: 21.25, title: '休息', desc: '小憩', subject: '✨ 休息', tag: '休息' },
-                { start: 21.25, end: 22.0, title: '🔵 英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
-                { start: 22.0, end: 22.333, title: '🚿 洗漱', desc: '', subject: '洗漱', tag: 'daily' },
-                { start: 22.333, end: 22.5, title: '🧘 冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
-                { start: 22.5, end: 23.0, title: '睡觉', desc: '22:30 休息', subject: '💤 睡觉', tag: '休息' },
+                { start: 7.0, end: 7.333, title: '起床洗漱', desc: '清醒 + 喝水', subject: '起床', tag: 'daily' },
+                { start: 7.333, end: 7.667, title: '晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
+                { start: 7.667, end: 8.0, title: '英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
+                { start: 8.0, end: 9.0, title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '早餐', tag: 'daily' },
+                { start: 9.0, end: 10.3, title: morningChemistryTitle, desc: morningChemistryDesc, subject: isSunday ? '周测' : '化学', tag: '学习' },
+                { start: 10.3, end: 10.5, title: '休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
+                { start: 10.5, end: 12.0, title: isSunday ? afternoonMathPhysicsTitle : '数学/物理刻意练习', desc: isSunday ? afternoonMathPhysicsDesc : '模型思维：画示意图 + 边界条件', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
+                { start: 12.0, end: 13.0, title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '午餐', tag: 'daily' },
+                { start: 13.0, end: 14.0, title: '午休', desc: '休息', subject: '午休', tag: '休息' },
+                { start: 14.0, end: 15.0, title: 'AI 编程项目', desc: 'KDnuggets 文档 + 跑代码（只看英文）', subject: 'AI 项目', tag: '学习' },
+                { start: 15.0, end: 15.167, title: '项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
+                { start: 15.167, end: 16.3, title: afternoonMathPhysicsTitle, desc: afternoonMathPhysicsDesc, subject: isSunday ? '周测' : '数理', tag: '学习' },
+                { start: 16.3, end: 17.0, title: '微运动 + 深呼吸', desc: '靠墙拉伸 + 机动时间', subject: '锻炼', tag: 'exercise' },
+                { start: 17.0, end: 18.3, title: isSunday ? afternoonMathPhysicsTitle : (info.weekType === '单周·政治' ? '政治·术语 + 选择题' : '语文·文言文/古诗/素材'), desc: isSunday ? afternoonMathPhysicsDesc : (info.weekType === '单周·政治' ? '背 5 术语 +10 选择题' : '文言文精读/古诗鉴赏/作文素材'), subject: isSunday ? '周测' : (info.weekType === '单周·政治' ? '政治' : '语文'), tag: '学习' },
+                { start: 18.3, end: 19.5, title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '晚餐', tag: 'daily' },
+                { start: 19.5, end: 20.0, title: '彻底放空', desc: '无手机', subject: '放空', tag: '休息' },
+                { start: 20.0, end: 21.0, title: '化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
+                { start: 21.0, end: 21.25, title: '休息', desc: '小憩', subject: '休息', tag: '休息' },
+                { start: 21.25, end: 22.0, title: '英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
+                { start: 22.0, end: 22.333, title: '洗漱', desc: '', subject: '洗漱', tag: 'daily' },
+                { start: 22.333, end: 22.5, title: '冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
+                { start: 22.5, end: 23.0, title: '睡觉', desc: '22:30 休息', subject: '睡觉', tag: '休息' },
             ];
         }
 
@@ -1247,12 +1178,12 @@
             if (currentTask) {
                 currentTaskNameEl.textContent = currentTask.title;
                 currentTaskTimeEl.textContent = `${formatTime(currentTask.start)} - ${formatTime(currentTask.end)}`;
-                currentTaskEl.style.background = 'linear-gradient(135deg, #0ea5e9, #0284c7)';
+                currentTaskEl.style.background = 'rgba(255,107,107,0.2)';
             } else {
                 // 当前时间不在任何时间段内
                 currentTaskNameEl.textContent = '休息时间';
                 currentTaskTimeEl.textContent = '暂无任务';
-                currentTaskEl.style.background = 'linear-gradient(135deg, #999, #666)';
+                currentTaskEl.style.background = 'rgba(255,255,255,0.05)';
             }
 
             if (nextTask) {
@@ -1341,11 +1272,11 @@
             if (current) {
                 currentTaskEl.textContent = current.subject;
                 currentTimeEl.textContent = current.time;
-                currentTaskEl.parentElement.parentElement.style.background = 'linear-gradient(135deg, #d4c4a8, #b8a88a)';
+                currentTaskEl.parentElement.parentElement.style.background = 'rgba(255,107,107,0.2)';
             } else {
                 currentTaskEl.textContent = '休息时间';
                 currentTimeEl.textContent = '暂无任务';
-                currentTaskEl.parentElement.parentElement.style.background = 'linear-gradient(135deg, #999, #666)';
+                currentTaskEl.parentElement.parentElement.style.background = 'rgba(255,255,255,0.05)';
             }
 
             if (next) {
@@ -1380,16 +1311,6 @@
             }
         }
 
-        function startTimeTracker() {
-            // 跳转到工具中心页面（包含时间跟踪功能）
-            window.location.href = '/tools';
-        }
-
-        function startFocusMode() {
-            // 打开专注模式页面
-            alert('专注模式使用说明：\n\n请在终端运行：\nbash ~/learning_system/tools/focus_mode.sh\n\n或者直接运行 Electron 应用，在工具菜单中选择专注模式');
-        }
-
         // 打开单词卡片系统
         function openWordcardSystem() {
             // 直接访问单词卡片系统
@@ -1403,26 +1324,6 @@
 
             // 在当前标签页打开
             window.location.href = url;
-        }
-
-        // 打开战略书
-        function openStrategyBook() {
-            window.open('strategy.html', '_blank', 'width=1200,height=800,scrollbars=yes');
-        }
-
-        // 打开工具中心
-        function openToolsCenter() {
-            window.location.href = '/tools';
-        }
-
-        // 打开本周日程
-        function openScheduleView() {
-            window.location.href = 'schedule-view.html';
-        }
-
-        // 打开编辑今日时间表
-        function openScheduleEdit() {
-            window.location.href = 'schedule-edit-today.html';
         }
 
         // 打开学习平台
@@ -1439,6 +1340,13 @@
             setInterval(loadData, 30000);
         });
 
+        // 监听认证过期事件 — 当 API 返回 401 时自动切回登录页
+        window.addEventListener('auth:expired', function() {
+            if (!localStorage.getItem('user_info')) {
+                showLoginPage();
+            }
+        });
+
         // 快捷键监听：Shift+C 打开错题系统
         document.addEventListener('keydown', function(event) {
             if (event.shiftKey && (event.key === 'C' || event.key === 'c' || event.keyCode === 67)) {
@@ -1453,15 +1361,7 @@
             }
         });
     
-        // 编辑今日时间表
         let currentEditingSchedule = [];
-
-        async function editTodaySchedule() {
-            const schedule = await getTodayScheduleForEdit();
-            currentEditingSchedule = JSON.parse(JSON.stringify(schedule));
-            renderScheduleEditor();
-            document.getElementById('scheduleModal').style.display = 'flex';
-        }
 
         function closeScheduleModal() {
             document.getElementById('scheduleModal').style.display = 'none';
@@ -1582,43 +1482,43 @@
         function getDefaultScheduleForDayJS(dayOfWeek) {
             // 0=周日, 1=周一, ..., 6=周六
             const baseSchedule = [
-                { start: '07:00', end: '07:20', title: '起床洗漱', desc: '清醒 + 喝水', subject: '⏰ 起床', tag: 'daily' },
-                { start: '07:20', end: '07:40', title: '🧘 晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
-                { start: '07:40', end: '08:00', title: '🔵 英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
-                { start: '08:00', end: '09:00', title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '🍽️ 早餐', tag: 'daily' },
-                { start: '09:00', end: '10:30', title: '🔴 化学分块输入', desc: '1 概念 +3 例题 +4 练习', subject: '化学', tag: '学习' },
-                { start: '10:30', end: '10:50', title: '☕ 休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
-                { start: '10:50', end: '12:00', title: '🟡 数理刻意练习', desc: '模型思维：画示意图 + 边界条件', subject: '数学/物理', tag: '学习' },
-                { start: '12:00', end: '13:00', title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '🍲 午餐', tag: 'daily' },
-                { start: '13:00', end: '14:00', title: '午休', desc: '休息', subject: '😴 午休', tag: '休息' },
-                { start: '14:00', end: '15:00', title: '💻 AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
-                { start: '15:00', end: '15:10', title: '📝 项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
-                { start: '15:10', end: '16:30', title: '🟡 数理错题复盘', desc: '盲做→对比→费曼', subject: '数理', tag: '学习' },
-                { start: '16:30', end: '17:00', title: '🧘 微运动 + 深呼吸', desc: '靠墙拉伸 + 机动时间', subject: '锻炼', tag: 'exercise' },
-                { start: '17:00', end: '18:30', title: '🟢 政治/语文', desc: '背术语 + 选择题 / 文言文精读', subject: '政治/语文', tag: '学习' },
-                { start: '18:30', end: '19:30', title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '🍲 晚餐', tag: 'daily' },
-                { start: '19:30', end: '20:00', title: '彻底放空', desc: '无手机', subject: '🧘 放空', tag: '休息' },
-                { start: '20:00', end: '21:00', title: '🟣 化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
-                { start: '21:00', end: '21:15', title: '休息', desc: '小憩', subject: '✨ 休息', tag: '休息' },
-                { start: '21:15', end: '22:00', title: '🔵 英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
-                { start: '22:00', end: '22:20', title: '🚿 洗漱', desc: '', subject: '洗漱', tag: 'daily' },
-                { start: '22:20', end: '22:30', title: '🧘 冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
-                { start: '22:30', end: '23:00', title: '睡觉', desc: '22:30 休息', subject: '💤 睡觉', tag: '休息' },
+                { start: '07:00', end: '07:20', title: '起床洗漱', desc: '清醒 + 喝水', subject: '起床', tag: 'daily' },
+                { start: '07:20', end: '07:40', title: '晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
+                { start: '07:40', end: '08:00', title: '英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
+                { start: '08:00', end: '09:00', title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '早餐', tag: 'daily' },
+                { start: '09:00', end: '10:30', title: '化学分块输入', desc: '1 概念 +3 例题 +4 练习', subject: '化学', tag: '学习' },
+                { start: '10:30', end: '10:50', title: '休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
+                { start: '10:50', end: '12:00', title: '数理刻意练习', desc: '模型思维：画示意图 + 边界条件', subject: '数学/物理', tag: '学习' },
+                { start: '12:00', end: '13:00', title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '午餐', tag: 'daily' },
+                { start: '13:00', end: '14:00', title: '午休', desc: '休息', subject: '午休', tag: '休息' },
+                { start: '14:00', end: '15:00', title: 'AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
+                { start: '15:00', end: '15:10', title: '项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
+                { start: '15:10', end: '16:30', title: '数理错题复盘', desc: '盲做→对比→费曼', subject: '数理', tag: '学习' },
+                { start: '16:30', end: '17:00', title: '微运动 + 深呼吸', desc: '靠墙拉伸 + 机动时间', subject: '锻炼', tag: 'exercise' },
+                { start: '17:00', end: '18:30', title: '政治/语文', desc: '背术语 + 选择题 / 文言文精读', subject: '政治/语文', tag: '学习' },
+                { start: '18:30', end: '19:30', title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '晚餐', tag: 'daily' },
+                { start: '19:30', end: '20:00', title: '彻底放空', desc: '无手机', subject: '放空', tag: '休息' },
+                { start: '20:00', end: '21:00', title: '化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
+                { start: '21:00', end: '21:15', title: '休息', desc: '小憩', subject: '休息', tag: '休息' },
+                { start: '21:15', end: '22:00', title: '英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
+                { start: '22:00', end: '22:20', title: '洗漱', desc: '', subject: '洗漱', tag: 'daily' },
+                { start: '22:20', end: '22:30', title: '冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
+                { start: '22:30', end: '23:00', title: '睡觉', desc: '22:30 休息', subject: '睡觉', tag: '休息' },
             ];
 
             // 根据星期几调整
             if (dayOfWeek === 0) { // 周日
                 baseSchedule.forEach(item => {
                     if (item.title.includes('化学分块输入')) {
-                        item.title = '📊 周测·科目①';
+                        item.title = '周测·科目①';
                         item.desc = '周测 70 分钟';
                         item.subject = '周测';
                     } else if (item.title.includes('数理刻意练习')) {
-                        item.title = '📊 周测·科目②';
+                        item.title = '周测·科目②';
                         item.desc = '周测 70 分钟';
                         item.subject = '周测';
                     } else if (item.subject === '政治/语文') {
-                        item.title = '📊 周测复盘';
+                        item.title = '周测复盘';
                         item.desc = '总结错题';
                         item.subject = '复盘';
                     }
@@ -1626,13 +1526,13 @@
             } else if ([1, 3, 5].includes(dayOfWeek)) { // 周一、三、五 - 单日(数学)
                 baseSchedule.forEach(item => {
                     if (item.title.includes('数理刻意练习')) {
-                        item.title = '🟡 数学刻意练习';
+                        item.title = '数学刻意练习';
                         item.subject = '数学';
                     } else if (item.title.includes('数理错题复盘')) {
-                        item.title = '🟡 数学错题复盘';
+                        item.title = '数学错题复盘';
                         item.subject = '数学';
                     } else if (item.subject === '政治/语文') {
-                        item.title = '🟢 政治·术语 + 选择题';
+                        item.title = '政治·术语 + 选择题';
                         item.desc = '背 5 术语 +10 选择题';
                         item.subject = '政治';
                     }
@@ -1640,13 +1540,13 @@
             } else if ([2, 4, 6].includes(dayOfWeek)) { // 周二、四、六 - 双日(物理)
                 baseSchedule.forEach(item => {
                     if (item.title.includes('数理刻意练习')) {
-                        item.title = '🟡 物理刻意练习';
+                        item.title = '物理刻意练习';
                         item.subject = '物理';
                     } else if (item.title.includes('数理错题复盘')) {
-                        item.title = '🟡 物理错题复盘';
+                        item.title = '物理错题复盘';
                         item.subject = '物理';
                     } else if (item.subject === '政治/语文') {
-                        item.title = '🟣 语文·文言文/古诗/素材';
+                        item.title = '语文·文言文/古诗/素材';
                         item.desc = '文言文精读/古诗鉴赏/作文素材';
                         item.subject = '语文';
                     }
@@ -1679,7 +1579,7 @@
     <div id="scheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center;">
         <div style="background: white; border-radius: 20px; padding: 30px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin: 0; color: #333;">✏️ 编辑今日时间表</h2>
+                <h2 style="margin: 0; color: #333;">编辑今日时间表</h2>
                 <button onclick="closeScheduleModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
             </div>
             <p style="color: #666; margin-bottom: 20px;">点击下方时间段修改内容，或拖拽调整时间</p>
@@ -1688,12 +1588,13 @@
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button onclick="resetTodaySchedule()" class="btn" style="background: #f0f0f0; color: #333;">恢复默认</button>
-                <button onclick="addScheduleItem()" class="btn" style="background: linear-gradient(135deg, #11998e, #38ef7d); color: white;">+ 添加时间段</button>
+                <button onclick="addScheduleItem()" class="btn" style="background: #00b894; color: white;">+ 添加时间段</button>
                 <button onclick="saveTodaySchedule()" class="btn btn-primary">保存更改</button>
             </div>
         </div>
     </div>
-    <script src="/shared/navbar.js"></script>
+    <script src="/static/auth.js"></script>
+    <script src="/static/navbar.js"></script>
 </body>
 </html>
 

@@ -8,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
+            background: #f5f5dc;
             min-height: 100vh;
             padding: 20px;
         }
@@ -21,7 +21,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
+            background: #f5f5dc;
             z-index: 9999;
             justify-content: center;
             align-items: center;
@@ -56,7 +56,7 @@
             cursor: pointer;
             font-weight: 500;
             color: #666;
-            transition: all 0.3s;
+            transition: color 0.2s ease, border-color 0.2s ease;
         }
         .login-tab.active {
             color: #8b7355;
@@ -78,7 +78,7 @@
         .login-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            background: #d4c4a8;
             color: white;
             border: none;
             border-radius: 8px;
@@ -86,9 +86,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s;
-        }
-        .login-btn:hover {
-            transform: translateY(-2px);
         }
         .login-btn:disabled {
             opacity: 0.6;
@@ -128,7 +125,7 @@
         .user-avatar {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            background: #d4c4a8;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -149,7 +146,7 @@
         }
         .user-vip {
             display: inline-block;
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            background: #ffd700;
             color: #333;
             padding: 6px 16px;
             border-radius: 20px;
@@ -180,7 +177,7 @@
         }
         .header h1 {
             font-size: 2.5rem;
-            background: linear-gradient(135deg, #8b7355, #a08060);
+            background: #8b7355;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
@@ -236,7 +233,7 @@
 
         /* 实时任务 */
         .current-task {
-            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            background: #d4c4a8;
             color: white;
             padding: 25px;
             border-radius: 15px;
@@ -287,25 +284,24 @@
             border-radius: 10px;
             text-decoration: none;
             font-weight: 600;
-            transition: all 0.3s;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
             cursor: pointer;
             border: none;
             font-size: 0.95rem;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #d4c4a8, #b8a88a);
+            background: #d4c4a8;
             color: white;
         }
         .btn-primary:hover {
-            transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
         }
         .btn-success {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
+            background: #11998e;
             color: white;
         }
         .btn-warning {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
+            background: #f093fb;
             color: white;
         }
         .btn-block {
@@ -349,7 +345,7 @@
             border-radius: 12px;
             background: white;
             box-shadow: 0 2px 4px rgba(0,20,40,0.04);
-            transition: all 0.2s;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
             border: 1px solid #e8ecf4;
         }
         .flow-row.current {
@@ -580,7 +576,7 @@
                 min-width: 60px;
                 cursor: pointer;
                 border-radius: 8px;
-                transition: all 0.2s;
+                transition: background-color 0.2s ease, color 0.2s ease;
                 text-decoration: none;
                 color: #666;
             }
@@ -643,7 +639,7 @@
 
     <!-- 用户信息卡片（未登录时显示在 header 处） -->
     <div id="userInfoCard" class="user-info-card" style="display: none;">
-        <div class="user-avatar">👤</div>
+        <div class="user-avatar"></div>
         <div class="user-name" id="displayUsername">用户名</div>
         <div class="user-email" id="displayEmail">email@example.com</div>
         <div class="user-vip" id="displayVip">VIP0</div>
@@ -654,7 +650,7 @@
         <!-- 头部 -->
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>🎓 高考学习系统</h1>
+                <h1>高考学习系统</h1>
                 <div id="headerUserStatus" style="display: none; align-items: center; gap: 12px;">
                     <span class="header-badge" id="headerUsername">用户名</span>
                     <span class="header-badge" id="headerVip">VIP0</span>
@@ -662,9 +658,9 @@
                 </div>
             </div>
             <div class="header-info">
-                <span class="header-badge">🎯 目标：540 分</span>
-                <span class="header-badge">📊 当前：376 分</span>
-                <span class="header-badge">⏰ 倒计时：<span id="countdown">90</span>天</span>
+                <span class="header-badge">目标：540 分</span>
+                <span class="header-badge">当前：376 分</span>
+                <span class="header-badge">倒计时：<span id="countdown">90</span>天</span>
                 <span class="header-badge" id="dayTypeBadge">单日·数学</span>
             </div>
 
@@ -677,7 +673,7 @@
             <!-- 当前任务 -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">📚 当前学习任务</span>
+                    <span class="card-title">当前学习任务</span>
                     <span><span class="status-dot status-online"></span>实时</span>
                 </div>
                 <div class="card-body">
@@ -686,7 +682,7 @@
                         <div class="current-task-name">加载中...</div>
                         <div class="current-task-time">--:-- - --:--</div>
                     </div>
-                    <div class="current-task" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+                    <div class="current-task" style="background: #11998e;">
                         <div class="current-task-label">接下来</div>
                         <div class="current-task-name" id="nextTask">加载中...</div>
                         <div class="current-task-time" id="nextTime">--:--</div>
@@ -697,22 +693,22 @@
             <!-- 学习统计 + 快速操作 -->
             <div class="card" style="grid-column: span 2;">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="card-title">📊 学习统计</span>
+                    <span class="card-title">学习统计</span>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn btn-primary" onclick="openMistakeSystem()" style="padding: 8px 16px; font-size: 0.9rem;">
-                            🖥️ 错题系统
+                            错题系统
                         </button>
                         <button class="btn btn-success" onclick="startTimeTracker()" style="padding: 8px 16px; font-size: 0.9rem;">
-                            ⏱️ 时间跟踪
+                            时间跟踪
                         </button>
                         <button class="btn btn-warning" onclick="startFocusMode()" style="padding: 8px 16px; font-size: 0.9rem;">
-                            🧘 专注模式
+                            专注模式
                         </button>
-                        <a href="schedule-editor.html" target="_blank" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #ff9966, #ff5e62); color: white; text-decoration: none;">
-                            📝 编辑时间表
+                        <a href="schedule-editor.html" target="_blank" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: #ff9966; color: white; text-decoration: none;">
+                            编辑时间表
                         </a>
-                        <a href="#" onclick="alert('仪表盘功能尚未实现')" target="_blank" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: linear-gradient(135deg, #f093fb, #f5576c); color: white; text-decoration: none;">
-                            📺 仪表盘
+                        <a href="#" onclick="alert('仪表盘功能尚未实现')" target="_blank" class="btn" style="padding: 8px 16px; font-size: 0.9rem; background: #f093fb; color: white; text-decoration: none;">
+                            仪表盘
                         </a>
                     </div>
                 </div>
@@ -746,7 +742,7 @@
             <!-- 监控画面 -->
             <div class="card" id="monitorCard" style="grid-column: 1 / -1; display: none;">
                 <div class="card-header">
-                    <span class="card-title">📹 <span id="monitorName">监控摄像头</span></span>
+                    <span class="card-title"><span id="monitorName">监控摄像头</span></span>
                     <span><span class="status-dot status-online"></span>直播</span>
                 </div>
                 <div class="card-body" style="padding: 0; background: #000; display: flex; align-items: center; justify-content: center;">
@@ -757,7 +753,7 @@
             <!-- 今日课表 -->
             <div class="card" style="grid-column: 1 / -1;">
                 <div class="card-header">
-                    <span class="card-title">📋 今日课表</span>
+                    <span class="card-title">今日课表</span>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <span class="header-badge" id="dayTypeBadge">单日</span>
                         <span class="header-badge" id="weekTypeBadge">单周</span>
@@ -1139,8 +1135,8 @@
 
         // 获取下午时段科目
         function getAfternoonSubject(dayIndex, weekType) {
-            if (dayIndex === 0) return '📊 周测总结';
-            return weekType === '单周·政治' ? '🟢 政治·术语 + 选择题' : '🟣 语文·文言文/古诗/素材';
+            if (dayIndex === 0) return '周测总结';
+            return weekType === '单周·政治' ? '政治·术语 + 选择题' : '语文·文言文/古诗/素材';
         }
 
         function getAfternoonDesc(dayIndex, weekType) {
@@ -1166,30 +1162,30 @@
 
             // 默认时间表 - 7 点起床优化版 (含做饭时间)
             return [
-                { start: 7.0, end: 7.333, title: '起床洗漱', desc: '清醒 + 喝水', subject: '⏰ 起床', tag: 'daily' },
-                { start: 7.333, end: 7.667, title: '🧘 晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
-                { start: 7.667, end: 8.0, title: '🔵 英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
-                { start: 8.0, end: 9.0, title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '🍽️ 早餐', tag: 'daily' },
-                { start: 9.0, end: 10.3, title: isSunday ? `📊 周测·${info.testSub1}` : '🔴 化学分块输入', desc: isSunday ? `周测 70 分钟：${info.testSub1}` : '1 概念 +3 例题 +4 练习', subject: isSunday ? '周测' : '化学', tag: '学习' },
-                { start: 10.3, end: 10.5, title: '☕ 休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
-                { start: 10.5, end: 12.0, title: isSunday ? `📊 周测·${info.testSub2}` : `🟡 ${info.mathOrPhysics}刻意练习`, desc: isSunday ? `周测 70 分钟：${info.testSub2}` : '模型思维：画示意图 + 边界条件', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
-                { start: 12.0, end: 13.0, title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '🍲 午餐', tag: 'daily' },
-                { start: 13.0, end: 14.0, title: '午休', desc: '休息', subject: '😴 午休', tag: '休息' },
-                { start: 14.0, end: 15.0, title: '💻 AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
-                { start: 15.0, end: 15.167, title: '📝 项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
-                { start: 15.167, end: 16.3, title: isSunday ? '📊 周测复盘' : `🟡 ${info.mathOrPhysics}错题复盘`, desc: isSunday ? '周测总结' : '盲做→对比→费曼', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
-                { start: 16.3, end: 17.0, title: '🧘 微运动 + 深呼吸', desc: '靠墙拉伸', subject: '锻炼', tag: 'exercise' },
+                { start: 7.0, end: 7.333, title: '起床洗漱', desc: '清醒 + 喝水', subject: '起床', tag: 'daily' },
+                { start: 7.333, end: 7.667, title: '晨间拉伸', desc: '猫牛式/下犬式/肩颈', subject: '锻炼', tag: 'exercise' },
+                { start: 7.667, end: 8.0, title: '英语磨耳朵', desc: '纯听，唤醒语感', subject: '英语', tag: '学习' },
+                { start: 8.0, end: 9.0, title: '早餐 + 备菜', desc: '做饭/吃 + 准备中午食材', subject: '早餐', tag: 'daily' },
+                { start: 9.0, end: 10.3, title: isSunday ? `周测·${info.testSub1}` : '化学分块输入', desc: isSunday ? `周测 70 分钟：${info.testSub1}` : '1 概念 +3 例题 +4 练习', subject: isSunday ? '周测' : '化学', tag: '学习' },
+                { start: 10.3, end: 10.5, title: '休息', desc: '喝水 + 走动', subject: '休息', tag: '休息' },
+                { start: 10.5, end: 12.0, title: isSunday ? `周测·${info.testSub2}` : `${info.mathOrPhysics}刻意练习`, desc: isSunday ? `周测 70 分钟：${info.testSub2}` : '模型思维：画示意图 + 边界条件', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
+                { start: 12.0, end: 13.0, title: '做饭 + 午餐 + 洗碗', desc: '简单烹饪', subject: '午餐', tag: 'daily' },
+                { start: 13.0, end: 14.0, title: '午休', desc: '休息', subject: '午休', tag: '休息' },
+                { start: 14.0, end: 15.0, title: 'AI 编程项目', desc: 'KDnuggets 文档 + 跑代码', subject: 'AI 项目', tag: '学习' },
+                { start: 15.0, end: 15.167, title: '项目术语本', desc: '记下 3-5 个关键词', subject: '英语', tag: '学习' },
+                { start: 15.167, end: 16.3, title: isSunday ? '周测复盘' : `${info.mathOrPhysics}错题复盘`, desc: isSunday ? '周测总结' : '盲做→对比→费曼', subject: isSunday ? '周测' : info.mathOrPhysics, tag: '学习' },
+                { start: 16.3, end: 17.0, title: '微运动 + 深呼吸', desc: '靠墙拉伸', subject: '锻炼', tag: 'exercise' },
                 { start: 17.0, end: 18.3, title: getAfternoonSubject(info.dayIndex, info.weekType), desc: getAfternoonDesc(info.dayIndex, info.weekType), subject: getAfternoonSubjectName(info.dayIndex, info.weekType), tag: '学习' },
-                { start: 18.3, end: 19.5, title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '🍲 晚餐', tag: 'daily' },
-                { start: 19.5, end: 20.0, title: '彻底放空', desc: '无手机', subject: '🧘 放空', tag: '休息' },
-                { start: 20.0, end: 21.0, title: '🟣 化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
-                { start: 21.0, end: 21.25, title: '休息', desc: '小憩', subject: '✨ 休息', tag: '休息' },
-                { start: 21.25, end: 22.0, title: '🔵 英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
-                { start: 22.0, end: 22.5, title: '📋 复盘 + 明日计划', desc: '费曼总结', subject: '复盘', tag: '学习' },
-                { start: 22.5, end: 22.833, title: '💬 费曼总结', desc: '用英文说 1-2 句', subject: '英语', tag: '学习' },
-                { start: 22.833, end: 23.167, title: '洗漱', desc: '', subject: '🚿 洗漱', tag: 'daily' },
-                { start: 23.167, end: 23.5, title: '🧘 冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
-                { start: 23.5, end: 24.0, title: '睡觉', desc: '23:30 休息', subject: '💤 睡觉', tag: '休息' },
+                { start: 18.3, end: 19.5, title: '做饭 + 晚餐 + 洗碗', desc: '简单烹饪', subject: '晚餐', tag: 'daily' },
+                { start: 19.5, end: 20.0, title: '彻底放空', desc: '无手机', subject: '放空', tag: '休息' },
+                { start: 20.0, end: 21.0, title: '化学反刍', desc: '检索练习', subject: '化学', tag: '学习' },
+                { start: 21.0, end: 21.25, title: '休息', desc: '小憩', subject: '休息', tag: '休息' },
+                { start: 21.25, end: 22.0, title: '英语单词质检', desc: '只背项目遇到的词 + 高考核心词', subject: '英语', tag: '学习' },
+                { start: 22.0, end: 22.5, title: '复盘 + 明日计划', desc: '费曼总结', subject: '复盘', tag: '学习' },
+                { start: 22.5, end: 22.833, title: '费曼总结', desc: '用英文说 1-2 句', subject: '英语', tag: '学习' },
+                { start: 22.833, end: 23.167, title: '洗漱', desc: '', subject: '洗漱', tag: 'daily' },
+                { start: 23.167, end: 23.5, title: '冥想', desc: '正念/身体扫描', subject: '冥想', tag: 'exercise' },
+                { start: 23.5, end: 24.0, title: '睡觉', desc: '23:30 休息', subject: '睡觉', tag: '休息' },
             ];
         }
 
@@ -1277,12 +1273,12 @@
             if (currentTask) {
                 currentTaskNameEl.textContent = currentTask.title;
                 currentTaskTimeEl.textContent = `${formatTime(currentTask.start)} - ${formatTime(currentTask.end)}`;
-                currentTaskEl.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                currentTaskEl.style.background = '#667eea';
             } else {
                 // 当前时间不在任何时间段内
                 currentTaskNameEl.textContent = '休息时间';
                 currentTaskTimeEl.textContent = '暂无任务';
-                currentTaskEl.style.background = 'linear-gradient(135deg, #999, #666)';
+                currentTaskEl.style.background = '#999';
             }
 
             if (nextTask) {
@@ -1371,11 +1367,11 @@
             if (current) {
                 currentTaskEl.textContent = current.subject;
                 currentTimeEl.textContent = current.time;
-                currentTaskEl.parentElement.parentElement.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                currentTaskEl.parentElement.parentElement.style.background = '#667eea';
             } else {
                 currentTaskEl.textContent = '休息时间';
                 currentTimeEl.textContent = '暂无任务';
-                currentTaskEl.parentElement.parentElement.style.background = 'linear-gradient(135deg, #999, #666)';
+                currentTaskEl.parentElement.parentElement.style.background = '#999';
             }
 
             if (next) {
@@ -1442,19 +1438,19 @@
             const navHtml = `
                 <div class="mobile-bottom-nav">
                     <a href="javascript:void(0)" class="mobile-bottom-nav-item active" onclick="scrollToTop()">
-                        <span class="mobile-bottom-nav-icon">🏠</span>
+                        <span class="mobile-bottom-nav-icon"></span>
                         <span class="mobile-bottom-nav-label">首页</span>
                     </a>
                     <a href="javascript:void(0)" class="mobile-bottom-nav-item" onclick="scrollToSchedule()">
-                        <span class="mobile-bottom-nav-icon">📋</span>
+                        <span class="mobile-bottom-nav-icon"></span>
                         <span class="mobile-bottom-nav-label">课表</span>
                     </a>
                     <a href="javascript:openMistakeSystem()" class="mobile-bottom-nav-item">
-                        <span class="mobile-bottom-nav-icon">📚</span>
+                        <span class="mobile-bottom-nav-icon"></span>
                         <span class="mobile-bottom-nav-label">错题</span>
                     </a>
                     <a href="javascript:void(0)" class="mobile-bottom-nav-item" onclick="scrollToStats()">
-                        <span class="mobile-bottom-nav-icon">📊</span>
+                        <span class="mobile-bottom-nav-icon"></span>
                         <span class="mobile-bottom-nav-label">统计</span>
                     </a>
                 </div>

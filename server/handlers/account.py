@@ -8,16 +8,21 @@ from ..database import get_db
 from ..auth import hash_password, verify_user_credentials, create_session, generate_token, verify_token
 from ..config import logger
 
-def handle_account_get(path, user_id=None):
+def handle_account_get(path, user_id=None, token=None):
     """处理 GET /account/api/* 请求"""
     if path == '/account/api/verify':
-        # 修复：真实验证而非总是返回true
-        token = None  # 从handler中获取
         if token:
             result = verify_token(token)
-            if result:
-                return {'valid': True, 'user': {'id': result['user_id']}}
-        return {'valid': False, 'user': None}
+            if result and result.get('valid'):
+                user_id = result['user_id']
+                conn = get_db()
+                c = conn.cursor()
+                c.execute('SELECT id, username, email, vip_level, expires_at FROM users WHERE id = ?', (user_id,))
+                user = c.fetchone()
+                conn.close()
+                if user:
+                    return 200, {'success': True, 'user': {'id': user[0], 'username': user[1], 'email': user[2] or '', 'vip_level': user[3] or 0, 'expires_at': user[4] or ''}}
+        return 200, {'success': False, 'valid': False, 'user': None}
     elif path == '/account/api/user':
         # 获取当前用户信息
         if not user_id:

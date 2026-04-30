@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" style="background:#1a1a1a">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="color-scheme" content="dark">
     <title>化学菜鸟教程 | 在线化学文档手册</title>
+    <link rel="stylesheet" href="/static/unified-theme.css">
+    <link rel="stylesheet" href="/static/navbar.css">
     <style>
         * {
             margin: 0;
@@ -12,9 +15,9 @@
         }
 
         body {
-            font-family: 'Segoe UI', 'SF Pro Text', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
-            background: #f6f8fa;
-            color: #1e2a3a;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
             line-height: 1.5;
         }
 
@@ -25,17 +28,7 @@
         }
 
         .navbar {
-            background: #1e2a3a;
-            color: white;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            display: none;
         }
 
         .logo {
@@ -47,7 +40,7 @@
         }
 
         .logo span:first-child {
-            background: #4c9aff;
+            background: #6c5ce7;
             padding: 4px 10px;
             border-radius: 10px;
             font-size: 1.2rem;
@@ -66,7 +59,7 @@
         }
 
         .nav-links a {
-            color: #e2e8f0;
+            color: #aaa;
             text-decoration: none;
             transition: 0.2s;
             font-size: 0.95rem;
@@ -93,7 +86,7 @@
             color: white;
             cursor: pointer;
             outline: none;
-            transition: all 0.2s;
+            transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -117,7 +110,7 @@
         }
 
         .subject-select option {
-            background: #1e2a3a;
+            background: #16213e;
             color: white;
             padding: 8px;
         }
@@ -145,7 +138,7 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #4c9aff 0%, #3b82f6 100%);
+            background: #3b82f6;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -166,9 +159,11 @@
             top: 100%;
             right: 0;
             margin-top: 8px;
-            background: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             min-width: 180px;
             display: none;
             overflow: hidden;
@@ -180,7 +175,7 @@
 
         .user-dropdown-item {
             padding: 12px 16px;
-            color: #374151;
+            color: #ddd;
             cursor: pointer;
             transition: background 0.2s;
             display: flex;
@@ -190,16 +185,16 @@
         }
 
         .user-dropdown-item:hover {
-            background: #f3f4f6;
+            background: rgba(255,255,255,0.08);
         }
 
         .user-dropdown-item.danger {
-            color: #ef4444;
+            color: #ff6b6b;
         }
 
         .user-dropdown-divider {
             height: 1px;
-            background: #e5e7eb;
+            background: rgba(255,255,255,0.1);
             margin: 4px 0;
         }
 
@@ -209,18 +204,17 @@
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
-            background: #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.02);
+            background: transparent;
         }
 
         .sidebar {
             width: 280px;
-            background-color: #f9fafb;
-            border-right: 1px solid #e9ecef;
+            background-color: rgba(255,255,255,0.03);
+            border-right: 1px solid rgba(255,255,255,0.1);
             padding: 28px 0 32px 0;
             position: sticky;
-            top: 64px;
-            height: calc(100vh - 64px);
+            top: 56px;
+            height: calc(100vh - 56px);
             overflow-y: auto;
         }
 
@@ -233,7 +227,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 600;
-            color: #5b6e8c;
+            color: #666;
             padding: 0 20px 8px 20px;
         }
 
@@ -246,21 +240,21 @@
             margin: 2px 0;
             font-size: 0.95rem;
             cursor: pointer;
-            color: #2c3e4e;
-            transition: all 0.2s;
+            color: #ccc;
+            transition: background-color 0.2s, color 0.2s, border-left-color 0.2s;
             border-left: 3px solid transparent;
             font-weight: 500;
         }
 
         .sidebar-menu li:hover {
-            background-color: #eef2f6;
-            color: #1e466e;
+            background-color: rgba(255,255,255,0.08);
+            color: #74b9ff;
         }
 
         .sidebar-menu li.active {
-            background-color: #eef2ff;
-            border-left-color: #3b82f6;
-            color: #1e40af;
+            background-color: rgba(116,185,255,0.15);
+            border-left-color: #74b9ff;
+            color: #74b9ff;
             font-weight: 600;
         }
 
@@ -268,13 +262,13 @@
             flex: 1;
             padding: 32px 40px 80px 40px;
             overflow: auto;
-            background: white;
+            background: transparent;
             position: relative;
             height: calc(100vh - 64px);
         }
 
         .doc-header {
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 16px;
             margin-bottom: 28px;
         }
@@ -282,12 +276,12 @@
         .doc-header h1 {
             font-size: 2.2rem;
             font-weight: 600;
-            color: #0f172a;
+            color: #fff;
             margin-bottom: 8px;
         }
 
         .doc-header .desc {
-            color: #475569;
+            color: #aaa;
             font-size: 1rem;
         }
 
@@ -300,33 +294,33 @@
             font-weight: 600;
             margin: 24px 0 12px 0;
             padding-bottom: 6px;
-            border-bottom: 2px solid #eef2ff;
-            color: #0c4e6e;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            color: #74b9ff;
         }
 
         .doc-section h3 {
             font-size: 1.25rem;
             font-weight: 600;
             margin: 20px 0 12px 0;
-            color: #2c3e66;
+            color: #aaa;
         }
 
         .doc-section h4 {
             font-size: 1.1rem;
             font-weight: 600;
             margin: 16px 0 10px 0;
-            color: #3d4f5f;
+            color: #999;
         }
 
         .doc-section p {
             margin: 12px 0;
-            color: #2d3e50;
+            color: #ddd;
             line-height: 1.6;
         }
 
         .doc-section ul, .doc-section ol {
             margin: 12px 0 12px 28px;
-            color: #2d3e50;
+            color: #ddd;
             line-height: 1.6;
         }
 
@@ -335,7 +329,7 @@
         }
 
         .code-block {
-            background: #1e2a3a;
+            background: #16213e;
             color: #e2e8f0;
             padding: 16px 20px;
             border-radius: 12px;
@@ -343,7 +337,8 @@
             font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
             font-size: 0.85rem;
             margin: 20px 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.06);
         }
 
         .code-block pre {
@@ -353,80 +348,88 @@
         }
 
         .demo-note {
-            background: #eef6ff;
-            border-left: 4px solid #3b82f6;
+            background: rgba(116,185,255,0.1);
+            border-left: 4px solid #74b9ff;
             padding: 14px 20px;
             border-radius: 10px;
             margin: 20px 0;
             font-size: 0.9rem;
+            color: #ddd;
         }
 
         .warning-note {
-            background: #fff8e6;
-            border-left: 4px solid #f5a623;
+            background: rgba(249,202,36,0.1);
+            border-left: 4px solid #f9ca24;
             padding: 14px 20px;
             border-radius: 10px;
             margin: 20px 0;
             font-size: 0.9rem;
+            color: #ddd;
         }
 
         .success-note {
-            background: #e6f7ed;
-            border-left: 4px solid #28a745;
+            background: rgba(0,184,148,0.1);
+            border-left: 4px solid #00b894;
             padding: 14px 20px;
             border-radius: 10px;
             margin: 20px 0;
             font-size: 0.9rem;
+            color: #ddd;
         }
 
         .reaction-card {
-            background: #f8fafc;
+            background: rgba(255,255,255,0.05);
             border-radius: 14px;
             padding: 12px 20px;
             margin: 16px 0;
-            border: 1px solid #e2edf2;
+            border: 1px solid rgba(255,255,255,0.1);
             font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
             font-size: 1rem;
+            color: #ddd;
         }
 
         .formula-box {
-            background: #f0f7ff;
-            border: 1px solid #b8d4f0;
+            background: rgba(116,185,255,0.08);
+            border: 1px solid rgba(116,185,255,0.3);
             border-radius: 8px;
             padding: 12px 16px;
             margin: 12px 0;
             font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
             text-align: center;
             font-size: 1.1rem;
+            color: #ddd;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
-            background: white;
+            background: rgba(255,255,255,0.03);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
         th, td {
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.1);
             padding: 12px 14px;
             text-align: left;
+            color: #ddd;
         }
 
         th {
-            background-color: #f1f5f9;
+            background-color: rgba(255,255,255,0.08);
             font-weight: 600;
+            color: #fff;
         }
 
         tr:hover {
-            background-color: #f8fafc;
+            background-color: rgba(255,255,255,0.05);
         }
 
         .highlight {
-            background: linear-gradient(120deg, #fff3cd 0%, #fff3cd 100%);
+            background: rgba(249,202,36,0.25);
+            color: #fff;
             padding: 2px 4px;
             border-radius: 4px;
         }
@@ -434,8 +437,8 @@
         .tag {
             display: inline-block;
             padding: 2px 8px;
-            background: #e3f2fd;
-            color: #1565c0;
+            background: rgba(116,185,255,0.2);
+            color: #74b9ff;
             border-radius: 4px;
             font-size: 0.85rem;
             margin-right: 6px;
@@ -457,12 +460,12 @@
         }
 
         footer {
-            background: #f1f5f9;
+            background: rgba(255,255,255,0.03);
             text-align: center;
             padding: 20px;
             font-size: 0.8rem;
-            color: #4b5563;
-            border-top: 1px solid #e2e8f0;
+            color: #666;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         /* 掌握标记按钮 */
@@ -475,10 +478,10 @@
             border-radius: 50%;
             border: none;
             cursor: pointer;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #00b894;
             color: white;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -487,16 +490,16 @@
 
         .master-btn:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.5);
         }
 
         .master-btn.mastered {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            background: #ff6b6b;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
         }
 
         .master-btn.mastered:hover {
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
         }
 
         .master-btn svg {
@@ -507,13 +510,13 @@
         /* 已掌握的章节样式 */
         .sidebar-menu li.mastered {
             text-decoration: line-through;
-            opacity: 0.5;
-            color: #9ca3af;
+            opacity: 0.4;
+            color: #666;
         }
 
         .sidebar-menu li.mastered:hover {
-            background-color: #f3f4f6;
-            color: #6b7280;
+            background-color: rgba(255,255,255,0.05);
+            color: #888;
         }
 
         /* 同步状态指示器 */
@@ -522,15 +525,17 @@
             bottom: 100px;
             right: 30px;
             padding: 10px 16px;
-            background: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             font-size: 0.85rem;
             display: flex;
             align-items: center;
             gap: 8px;
             z-index: 999;
-            transition: all 0.3s;
+            transition: opacity 0.3s, transform 0.3s;
             opacity: 0;
             transform: translateY(10px);
         }
@@ -541,18 +546,18 @@
         }
 
         .sync-status.success {
-            color: #059669;
+            color: #00b894;
         }
 
         .sync-status.error {
-            color: #ef4444;
+            color: #ff6b6b;
         }
 
         .sync-spinner {
             width: 16px;
             height: 16px;
-            border: 2px solid #e5e7eb;
-            border-top-color: #3b82f6;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-top-color: #74b9ff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -610,7 +615,7 @@
             cursor: pointer;
             color: white;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -629,71 +634,71 @@
 
         /* 收纳按钮 */
         .toggle-btn {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            background: #4f46e5;
             font-size: 1.2rem;
         }
 
         .toggle-btn:hover {
-            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            background: #6366f1;
         }
 
         /* 画笔按钮 */
         .brush-btn {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: #d97706;
         }
 
         .brush-btn:hover {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            background: #f59e0b;
         }
 
         .brush-btn.active {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            background: #f59e0b;
         }
 
         /* 荧光笔按钮 */
         .highlighter-btn {
-            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+            background: #65a30d;
         }
 
         .highlighter-btn:hover {
-            background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+            background: #84cc16;
         }
 
         .highlighter-btn.active {
-            background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+            background: #84cc16;
         }
 
         /* 橡皮擦按钮 */
         .eraser-btn {
-            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            background: #475569;
         }
 
         .eraser-btn:hover {
-            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            background: #64748b;
         }
 
         .eraser-btn.active {
-            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            background: #64748b;
         }
 
         /* 清除按钮 */
         .clear-btn {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            background: #dc2626;
             font-size: 1.2rem;
         }
 
         .clear-btn:hover {
-            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            background: #ef4444;
         }
 
         /* 保存按钮 */
         .save-drawing-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #059669;
             font-size: 1.2rem;
         }
 
         .save-drawing-btn:hover {
-            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            background: #10b981;
         }
 
         /* 画笔颜色选择器 */
@@ -705,10 +710,12 @@
             flex-direction: column;
             gap: 8px;
             z-index: 1001;
-            background: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
             padding: 12px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             display: none;
         }
 
@@ -722,7 +729,7 @@
             border-radius: 50%;
             cursor: pointer;
             border: 3px solid transparent;
-            transition: all 0.2s;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
 
         .color-option:hover {
@@ -730,8 +737,8 @@
         }
 
         .color-option.active {
-            border-color: #1e2a3a;
-            box-shadow: 0 0 0 2px white, 0 0 0 4px #1e2a3a;
+            border-color: #74b9ff;
+            box-shadow: 0 0 0 2px #1a1a2e, 0 0 0 4px #74b9ff;
         }
 
         /* 荧光笔颜色选择器 */
@@ -743,10 +750,12 @@
             flex-direction: column;
             gap: 8px;
             z-index: 1001;
-            background: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
             padding: 12px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             display: none;
         }
 
@@ -760,7 +769,7 @@
             border-radius: 4px;
             cursor: pointer;
             border: 2px solid transparent;
-            transition: all 0.2s;
+            transition: transform 0.2s, opacity 0.2s, border-color 0.2s, box-shadow 0.2s;
             opacity: 0.6;
         }
 
@@ -770,8 +779,8 @@
         }
 
         .highlighter-option.active {
-            border-color: #1e2a3a;
-            box-shadow: 0 0 0 2px white, 0 0 0 4px #1e2a3a;
+            border-color: #74b9ff;
+            box-shadow: 0 0 0 2px #1a1a2e, 0 0 0 4px #74b9ff;
             opacity: 1;
         }
 
@@ -781,10 +790,12 @@
             bottom: 100px;
             right: 170px;
             width: 150px;
-            background: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
             padding: 12px 16px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 1001;
             display: none;
         }
@@ -795,7 +806,7 @@
 
         .brush-size-slider label {
             font-size: 0.85rem;
-            color: #374151;
+            color: #ddd;
             margin-bottom: 8px;
             display: block;
         }
@@ -804,7 +815,7 @@
             width: 100%;
             height: 6px;
             -webkit-appearance: none;
-            background: #e5e7eb;
+            background: rgba(255,255,255,0.15);
             border-radius: 3px;
             outline: none;
         }
@@ -813,7 +824,7 @@
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            background: #f59e0b;
+            background: #f9ca24;
             border-radius: 50%;
             cursor: pointer;
         }
@@ -824,10 +835,12 @@
             bottom: 100px;
             right: 170px;
             width: 150px;
-            background: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
             padding: 12px 16px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 1001;
             display: none;
         }
@@ -838,7 +851,7 @@
 
         .highlighter-size-slider label {
             font-size: 0.85rem;
-            color: #374151;
+            color: #ddd;
             margin-bottom: 8px;
             display: block;
         }
@@ -847,7 +860,7 @@
             width: 100%;
             height: 6px;
             -webkit-appearance: none;
-            background: #e5e7eb;
+            background: rgba(255,255,255,0.15);
             border-radius: 3px;
             outline: none;
         }
@@ -856,17 +869,16 @@
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            background: #84cc16;
+            background: #00b894;
             border-radius: 50%;
             cursor: pointer;
         }
     </style>
-    <!-- 统一导航栏样式 -->
-    <link rel="stylesheet" href="/shared/navbar.css">
 </head>
 <body>
+<div id="unified-navbar" style="height:56px"></div>
 <div class="app">
-    <div class="navbar">
+    <div class="navbar" style="display:none">
         <div class="logo">
             <span id="logoPrefix">Chem</span>
             <span id="siteTitle">化学菜鸟教程</span>
@@ -875,12 +887,12 @@
             <!-- 科目选择下拉框 -->
             <div class="subject-selector">
                 <select id="subjectSelect" class="subject-select">
-                    <option value="chemistry">⚗️ 化学</option>
-                    <option value="physics">⚡ 物理</option>
-                    <option value="chinese">📖 语文</option>
-                    <option value="math">🔢 数学</option>
-                    <option value="english">🔤 英语</option>
-                    <option value="politics">🏛️ 政治</option>
+                    <option value="chemistry">化学</option>
+                    <option value="physics">物理</option>
+                    <option value="chinese">语文</option>
+                    <option value="math">数学</option>
+                    <option value="english">英语</option>
+                    <option value="politics">政治</option>
                 </select>
             </div>
             <a href="#" id="navManual">化学手册</a>
@@ -934,7 +946,7 @@
     </div>
     <footer id="pageFooter">
         <span id="footerText">在线化学文档 | 高中化学核心知识 + 反应式实例 | 化学菜鸟教程</span><br>
-        <span style="opacity: 0.7; font-size: 0.75rem; margin-top: 5px; display: inline-block;">💡 提示：← → 切换章节 | Enter/Return 标记掌握 | 鼠标点击右下角按钮 | B画笔 H荧光笔 E橡皮擦</span>
+        <span style="opacity: 0.7; font-size: 0.75rem; margin-top: 5px; display: inline-block;">提示：← → 切换章节 | Enter/Return 标记掌握 | 鼠标点击右下角按钮 | B画笔 H荧光笔 E橡皮擦</span>
     </footer>
 
     <!-- 画笔颜色选择器 -->
@@ -973,24 +985,24 @@
     <div class="drawing-tools collapsed" id="drawingTools">
         <!-- 收纳按钮 - 始终显示 -->
         <button class="tool-btn toggle-btn" id="toggleToolsBtn" title="展开工具 (T)">
-            🧰
+
         </button>
         <!-- 工具项容器 - 可收起 -->
         <div class="tool-item" id="toolItems">
             <button class="tool-btn brush-btn" id="brushBtn" title="画笔工具 (B)">
-                ✏️
+
             </button>
             <button class="tool-btn highlighter-btn" id="highlighterBtn" title="荧光笔 (H)">
-                🖍️
+
             </button>
             <button class="tool-btn eraser-btn" id="eraserBtn" title="橡皮擦 (E)">
-                🧼
+
             </button>
             <button class="tool-btn clear-btn" id="clearBtn" title="清除全部 (C)">
-                🗑️
+
             </button>
             <button class="tool-btn save-drawing-btn" id="saveDrawingBtn" title="保存涂鸦 (Ctrl+S)">
-                💾
+
             </button>
         </div>
     </div>
@@ -1029,12 +1041,12 @@
 
     // 默认科目数据（当API不可用时使用）
     const defaultSubjects = [
-        { key: 'chemistry', name: '化学', logo: '⚗️' },
-        { key: 'physics', name: '物理', logo: '⚡' },
-        { key: 'chinese', name: '语文', logo: '📖' },
-        { key: 'math', name: '数学', logo: '🔢' },
-        { key: 'english', name: '英语', logo: '🔤' },
-        { key: 'politics', name: '政治', logo: '🏛️' }
+        { key: 'chemistry', name: '化学', logo: '' },
+        { key: 'physics', name: '物理', logo: '' },
+        { key: 'chinese', name: '语文', logo: '' },
+        { key: 'math', name: '数学', logo: '' },
+        { key: 'english', name: '英语', logo: '' },
+        { key: 'politics', name: '政治', logo: '' }
     ];
 
     // 从API加载科目列表
@@ -1089,7 +1101,7 @@
         }
         
         select.innerHTML = validData.map(s =>
-            `<option value="${s.key}">${s.logo || '📚'} ${s.name}</option>`
+            `<option value="${s.key}">${s.logo || ''} ${s.name}</option>`
         ).join('');
         select.value = currentSubjectId;
         console.log('科目选择下拉框已更新，选项数:', validData.length);
@@ -1809,11 +1821,11 @@
 
         if (toolsExpanded) {
             drawingTools.classList.remove('collapsed');
-            toggleBtn.innerHTML = '📌';
+            toggleBtn.innerHTML = '';
             toggleBtn.title = '收起工具 (T)';
         } else {
             drawingTools.classList.add('collapsed');
-            toggleBtn.innerHTML = '🧰';
+            toggleBtn.innerHTML = '';
             toggleBtn.title = '展开工具 (T)';
             // 收起时清除当前工具
             setTool(null);
@@ -2068,8 +2080,8 @@
     };
 </script>
 <!-- 统一认证和导航栏 -->
-<script src="/shared/auth.js"></script>
-<script src="/shared/navbar.js"></script>
+<script src="/static/auth.js"></script>
+<script src="/static/navbar.js"></script>
 <script>
     // 初始化统一导航栏
     document.addEventListener('DOMContentLoaded', function() {

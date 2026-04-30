@@ -4,7 +4,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d9 100%);
+  background: #f5f5dc;
   padding: 20px;
 }
 
@@ -29,7 +29,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #d4c4a8 0%, #b8a88a 100%);
+  background: #d4c4a8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -51,7 +51,7 @@
 
 .vip-badge {
   display: inline-block;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: #ffd700;
   color: #333;
   padding: 4px 16px;
   border-radius: 20px;
@@ -79,7 +79,7 @@
 
 .login-features {
   margin-top: 40px;
-  background: rgba(255, 255, 255, 0.95);
+  background: #ffffff;
   padding: 32px;
   border-radius: 12px;
   max-width: 800px;
@@ -104,16 +104,15 @@
 .feature-item {
   text-align: center;
   padding: 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-  border-radius: 12px;
-  transition: transform 0.3s, box-shadow 0.3s;
+  background: #f8f9fa;
   border: 1px solid #eee;
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .feature-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(139, 115, 85, 0.15);
   border-color: #d4c4a8;
+  box-shadow: 0 4px 12px rgba(139, 115, 85, 0.1);
 }
 
 .feature-item:hover h4 {
@@ -140,7 +139,7 @@
 }
 
 .new-user-benefit {
-  background: linear-gradient(135deg, #fff7e6 0%, #fff 100%);
+  background: #fff7e6;
   padding: 20px;
   border-radius: 12px;
   border: 2px solid #ffd700;

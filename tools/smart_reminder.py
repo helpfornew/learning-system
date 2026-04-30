@@ -82,8 +82,8 @@ class SmartReminder:
                     title,
                     message
                 ], check=False)
-            except:
-                pass  # 如果notify-send不可用，静默失败
+            except FileNotFoundError:
+                pass  # notify-send 工具未安装
         
         if "terminal" in methods or methods == "terminal":
             print(f"\n🔔 {title}")
