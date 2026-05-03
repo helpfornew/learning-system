@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Row, Col, Statistic, Progress, Table, Space, Button, message, Modal, Tag, Image } from 'antd';
 import {
   BookOutlined,
@@ -77,6 +77,12 @@ const Dashboard: React.FC = () => {
   const [reviewIndex, setReviewIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
+
+  // 主动回忆模式状态
+  const [recallPhase, setRecallPhase] = useState<'recall' | 'reveal'>('recall');
+  const [userRecallAnswer, setUserRecallAnswer] = useState('');
+  const [recallSeconds, setRecallSeconds] = useState(0);
+  const recallTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 响应式检测
   useEffect(() => {
@@ -208,6 +214,28 @@ const Dashboard: React.FC = () => {
     setReviewIndex(0);
     setShowAnswer(false);
     setReviewModalVisible(true);
+    startRecallPhase();
+  };
+
+  // 开始回忆阶段 - 启动计时器
+  const startRecallPhase = () => {
+    setRecallPhase('recall');
+    setUserRecallAnswer('');
+    setRecallSeconds(0);
+    if (recallTimerRef.current) clearInterval(recallTimerRef.current);
+    recallTimerRef.current = setInterval(() => {
+      setRecallSeconds(prev => prev + 1);
+    }, 1000);
+  };
+
+  // 进入揭示阶段 - 停止计时器
+  const enterRevealPhase = () => {
+    if (recallTimerRef.current) {
+      clearInterval(recallTimerRef.current);
+      recallTimerRef.current = null;
+    }
+    setRecallPhase('reveal');
+    setShowAnswer(true);
   };
 
   // 提交复习结果并跳到下一题
@@ -224,7 +252,12 @@ const Dashboard: React.FC = () => {
     if (reviewIndex < reviewSession.length - 1) {
       setReviewIndex(prev => prev + 1);
       setShowAnswer(false);
+      startRecallPhase();
     } else {
+      if (recallTimerRef.current) {
+        clearInterval(recallTimerRef.current);
+        recallTimerRef.current = null;
+      }
       setReviewModalVisible(false);
       message.success(`每日复习完成！共复习 ${reviewSession.length} 题`);
       loadData();
@@ -236,8 +269,16 @@ const Dashboard: React.FC = () => {
     if (!reviewModalVisible) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 忽略输入框内的按键
-      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
+      // 忽略输入框内的按键（回忆阶段允许在textarea输入）
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') {
+        // 在textarea中按Ctrl+Enter可以进入揭示阶段
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && recallPhase === 'recall') {
+          e.preventDefault();
+          enterRevealPhase();
+        }
+        return;
+      }
 
       switch (e.key) {
         case 'ArrowLeft':
@@ -245,6 +286,7 @@ const Dashboard: React.FC = () => {
           if (reviewIndex > 0) {
             setReviewIndex(prev => prev - 1);
             setShowAnswer(false);
+            startRecallPhase();
           }
           break;
         case 'ArrowRight':
@@ -252,11 +294,16 @@ const Dashboard: React.FC = () => {
           if (reviewIndex < reviewSession.length - 1) {
             setReviewIndex(prev => prev + 1);
             setShowAnswer(false);
+            startRecallPhase();
           }
           break;
         case 'Enter':
           e.preventDefault();
-          submitReviewAndNext('success');
+          if (recallPhase === 'recall') {
+            enterRevealPhase();
+          } else {
+            submitReviewAndNext('success');
+          }
           break;
         case 'Backspace':
           e.preventDefault();
@@ -516,7 +563,10 @@ const Dashboard: React.FC = () => {
           </div>
         }
         open={reviewModalVisible}
-        onCancel={() => setReviewModalVisible(false)}
+        onCancel={() => {
+          if (recallTimerRef.current) { clearInterval(recallTimerRef.current); recallTimerRef.current = null; }
+          setReviewModalVisible(false);
+        }}
         footer={null}
         width={680}
         destroyOnClose
@@ -528,10 +578,15 @@ const Dashboard: React.FC = () => {
 
             {/* 题目区域 */}
             <div style={{ marginBottom: 16 }}>
-              <h4 style={{ marginBottom: 8 }}>
-                <EditOutlined style={{ marginRight: 6 }} />
-                题目
-              </h4>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <h4 style={{ margin: 0 }}>
+                  <EditOutlined style={{ marginRight: 6 }} />
+                  题目
+                </h4>
+                <Tag color={recallPhase === 'recall' ? 'orange' : 'green'}>
+                  {recallPhase === 'recall' ? '回忆中...' : '揭示答案'}
+                </Tag>
+              </div>
               {reviewImage && (
                 <div style={{ marginBottom: 12, textAlign: 'center' }}>
                   <Image src={reviewImage} style={{ maxHeight: 200, borderRadius: 6 }} />
@@ -542,40 +597,80 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* 答案区域（默认隐藏，眼睛图标切换） */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <h4 style={{ margin: 0 }}>正确答案</h4>
-                <Button
-                  type="text"
-                  size="small"
-                  icon={showAnswer ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-                  onClick={() => setShowAnswer(!showAnswer)}
-                  style={{ color: showAnswer ? '#52c41a' : 'rgba(255,255,255,0.45)' }}
-                >
-                  {showAnswer ? '隐藏' : '显示答案'}
-                </Button>
-              </div>
-              <div style={{
-                padding: 14,
-                background: showAnswer ? 'rgba(82,196,26,0.08)' : 'rgba(255,255,255,0.02)',
-                borderRadius: 6,
-                minHeight: 44,
-                maxHeight: 150,
-                overflow: 'auto',
-                lineHeight: 1.8,
-                border: `1px solid ${showAnswer ? 'rgba(82,196,26,0.25)' : 'rgba(255,255,255,0.06)'}`,
-                transition: 'all 0.3s'
-              }}>
-                {showAnswer ? (
-                  <span style={{ fontSize: '15px' }}>{currentReview.correct_answer || '无答案'}</span>
-                ) : (
-                  <span style={{ letterSpacing: 6, color: 'rgba(255,255,255,0.2)', userSelect: 'none', fontSize: '16px' }}>
-                    ● ● ● ● ● ● ● ● ● ● ● ●
+            {/* === 回忆阶段 === */}
+            {recallPhase === 'recall' && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <h4 style={{ margin: 0 }}>
+                    <BulbOutlined style={{ marginRight: 6, color: '#faad14' }} />
+                    回忆答案
+                  </h4>
+                  <span style={{ fontSize: '14px', color: recallSeconds > 30 ? '#ff4d4f' : '#faad14', fontWeight: 'bold' }}>
+                    {Math.floor(recallSeconds / 60).toString().padStart(2, '0')}:{(recallSeconds % 60).toString().padStart(2, '0')}
                   </span>
-                )}
+                </div>
+                <Input.TextArea
+                  value={userRecallAnswer}
+                  onChange={e => setUserRecallAnswer(e.target.value)}
+                  placeholder="在脑海中回忆答案，或在此写下你的思路...（可选，Ctrl+Enter 直接揭示答案）"
+                  autoSize={{ minRows: 3, maxRows: 5 }}
+                  style={{ marginBottom: 12 }}
+                />
+                <div style={{ textAlign: 'center' }}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<EyeOutlined />}
+                    onClick={enterRevealPhase}
+                    style={{ minWidth: 180 }}
+                  >
+                    我有答案了（Enter）
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* === 揭示阶段 === */}
+            {recallPhase === 'reveal' && (
+              <>
+                {/* 用户回忆的答案 */}
+                {userRecallAnswer.trim() && (
+                  <div style={{ marginBottom: 16 }}>
+                    <h4 style={{ marginBottom: 8 }}>
+                      <BulbOutlined style={{ marginRight: 6, color: '#faad14' }} />
+                      我的回忆
+                    </h4>
+                    <div style={{
+                      padding: 12, background: 'rgba(250,173,20,0.06)', borderRadius: 6,
+                      lineHeight: 1.6, border: '1px solid rgba(250,173,20,0.2)',
+                      whiteSpace: 'pre-wrap', color: 'rgba(255,255,255,0.85)'
+                    }}>
+                      {userRecallAnswer}
+                    </div>
+                  </div>
+                )}
+
+                {/* 正确答案 */}
+                <div style={{ marginBottom: 16 }}>
+                  <h4 style={{ marginBottom: 8 }}>
+                    <CheckCircleOutlined style={{ marginRight: 6, color: '#52c41a' }} />
+                    正确答案
+                  </h4>
+                  <div style={{
+                    padding: 14, background: 'rgba(82,196,26,0.08)', borderRadius: 6,
+                    minHeight: 44, maxHeight: 150, overflow: 'auto', lineHeight: 1.8,
+                    border: '1px solid rgba(82,196,26,0.25)'
+                  }}>
+                    <span style={{ fontSize: '15px' }}>{currentReview.correct_answer || '无答案'}</span>
+                  </div>
+                </div>
+
+                {/* 用时统计 */}
+                <div style={{ marginBottom: 16, textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
+                  回忆用时 {Math.floor(recallSeconds / 60)}分{recallSeconds % 60}秒
+                </div>
+              </>
+            )}
 
             {/* 知识点（可点击跳转） */}
             {(currentReview.knowledge_points || currentReview.topic) && (
@@ -601,57 +696,64 @@ const Dashboard: React.FC = () => {
               </div>
             )}
 
-            {/* 操作按钮 */}
-            <div style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 16 }}>
-              <p style={{ marginBottom: 12, fontSize: '15px', fontWeight: 'bold' }}>这道题掌握得怎么样？</p>
-              <Space size="middle" wrap>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<CheckOutlined />}
-                  style={{ background: '#52c41a', borderColor: '#52c41a', minWidth: 100 }}
-                  onClick={() => submitReviewAndNext('success')}
-                >
-                  已掌握
-                </Button>
-                <Button
-                  size="large"
-                  icon={<QuestionOutlined />}
-                  style={{ minWidth: 100 }}
-                  onClick={() => submitReviewAndNext('difficult')}
-                >
-                  较困难
-                </Button>
-                <Button
-                  size="large"
-                  danger
-                  icon={<ExclamationCircleOutlined />}
-                  style={{ minWidth: 100 }}
-                  onClick={() => submitReviewAndNext('forgotten')}
-                >
-                  忘记了
-                </Button>
-                <Button
-                  size="large"
-                  icon={<LinkOutlined />}
-                  style={{ minWidth: 100, color: '#4c9aff', borderColor: '#4c9aff' }}
-                  onClick={jumpToKnowledgePoint}
-                >
-                  知识点
-                </Button>
-              </Space>
-              <div style={{ marginTop: 12 }}>
-                <Space>
-                  <Button size="small" icon={<LeftOutlined />} disabled={reviewIndex === 0}
-                    onClick={() => { setReviewIndex(prev => prev - 1); setShowAnswer(false); }}>
-                    上一题
+            {/* 操作按钮 - 仅在揭示阶段显示 */}
+            {recallPhase === 'reveal' && (
+              <div style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 16 }}>
+                <p style={{ marginBottom: 12, fontSize: '15px', fontWeight: 'bold' }}>对照答案，你觉得掌握得怎么样？</p>
+                <Space size="middle" wrap>
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<CheckOutlined />}
+                    style={{ background: '#52c41a', borderColor: '#52c41a', minWidth: 100 }}
+                    onClick={() => submitReviewAndNext('success')}
+                  >
+                    已掌握
                   </Button>
-                  <Button size="small" icon={<RightOutlined />} disabled={reviewIndex >= reviewSession.length - 1}
-                    onClick={() => { setReviewIndex(prev => prev + 1); setShowAnswer(false); }}>
-                    下一题
+                  <Button
+                    size="large"
+                    icon={<QuestionOutlined />}
+                    style={{ minWidth: 100 }}
+                    onClick={() => submitReviewAndNext('difficult')}
+                  >
+                    较困难
+                  </Button>
+                  <Button
+                    size="large"
+                    danger
+                    icon={<ExclamationCircleOutlined />}
+                    style={{ minWidth: 100 }}
+                    onClick={() => submitReviewAndNext('forgotten')}
+                  >
+                    忘记了
+                  </Button>
+                  <Button
+                    size="large"
+                    icon={<LinkOutlined />}
+                    style={{ minWidth: 100, color: '#4c9aff', borderColor: '#4c9aff' }}
+                    onClick={jumpToKnowledgePoint}
+                  >
+                    知识点
                   </Button>
                 </Space>
+                <div style={{ marginTop: 12, fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+                  快捷键: Enter 已掌握 | Backspace 较困难 | Delete 忘记了
+                </div>
               </div>
+            )}
+
+            {/* 导航按钮 */}
+            <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <Space>
+                <Button size="small" icon={<LeftOutlined />} disabled={reviewIndex === 0}
+                  onClick={() => { setReviewIndex(prev => prev - 1); setShowAnswer(false); startRecallPhase(); }}>
+                  上一题
+                </Button>
+                <Button size="small" icon={<RightOutlined />} disabled={reviewIndex >= reviewSession.length - 1}
+                  onClick={() => { setReviewIndex(prev => prev + 1); setShowAnswer(false); startRecallPhase(); }}>
+                  下一题
+                </Button>
+              </Space>
             </div>
           </div>
         )}
