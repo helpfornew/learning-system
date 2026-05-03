@@ -173,6 +173,32 @@ export async function getDueForReviewCount(): Promise<number> {
 }
 
 /**
+ * 获取到期待复习的错题列表
+ * 按 next_review_date 排序，最早到期的优先
+ */
+export async function getDueReviews(limit: number = 10): Promise<any[]> {
+  try {
+    console.log('[ReviewService] 获取到期复习...');
+    const response = await fetch(`${API_URL}/review-due?limit=${limit}`, {
+      headers: getHeaders()
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        console.log('[ReviewService] 到期复习:', result.data.total_due, '题');
+        return result.data.mistakes || [];
+      }
+    } else if (response.status === 401) {
+      handleAuthError();
+    }
+  } catch (error) {
+    console.error('[ReviewService] 获取到期复习失败:', error);
+  }
+  return [];
+}
+
+/**
  * 处理认证错误
  */
 function handleAuthError() {
@@ -188,5 +214,6 @@ export default {
   recordReview,
   getRecentReviews,
   getReviewStats,
-  getDueForReviewCount
+  getDueForReviewCount,
+  getDueReviews
 };

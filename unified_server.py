@@ -59,6 +59,7 @@ class UnifiedHandler(BaseHTTPRequestHandler):
         ('/api/ai-config', 'call_handler_ai_config', True, 'exact'),
         ('/api/stats', 'call_handler_stats', True, 'exact'),
         ('/api/review-history', 'call_handler_review_history', True, 'prefix'),
+        ('/api/review-due', 'call_handler_review_due', True, 'exact'),
         ('/learning/api/', 'call_handler_learning_api', True, 'prefix'),
         # 账户 API
         ('/account/api/user', 'call_handler_account_user', True, 'exact'),
@@ -359,6 +360,15 @@ class UnifiedHandler(BaseHTTPRequestHandler):
         params = parse_qs(parsed.query)
         param_dict = {k: v[0] if v else None for k, v in params.items()}
         status, data = review_history.handle_review_history_get(user_id, param_dict)
+        self.send_json(data, status)
+
+    def call_handler_review_due(self, user_id, parsed_path, **kwargs):
+        path = kwargs.get('path', '')
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(path)
+        params = parse_qs(parsed.query)
+        param_dict = {k: v[0] if v else None for k, v in params.items()}
+        status, data = review_history.handle_due_reviews_get(user_id, param_dict)
         self.send_json(data, status)
 
     def call_handler_account_user(self, user_id, parsed_path, **kwargs):

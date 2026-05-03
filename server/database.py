@@ -146,7 +146,28 @@ def init_all_tables():
         review_count INTEGER DEFAULT 0,
         last_review_date TEXT,
         next_review_date TEXT,
+        easiness_factor REAL DEFAULT 2.5,
+        interval_days INTEGER DEFAULT 1,
         FOREIGN KEY(user_id) REFERENCES users(id)
+    )''')
+
+    # 兼容已有数据库：添加新字段
+    for col, default in [('easiness_factor', 'REAL DEFAULT 2.5'), ('interval_days', 'INTEGER DEFAULT 1')]:
+        try:
+            c.execute(f'ALTER TABLE mistakes ADD COLUMN {col} {default}')
+        except Exception:
+            pass  # 字段已存在
+
+    # review_records 表 - 真实复习记录
+    c.execute('''CREATE TABLE IF NOT EXISTS review_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        mistake_id INTEGER NOT NULL,
+        result TEXT NOT NULL,
+        quality INTEGER DEFAULT 3,
+        reviewed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(mistake_id) REFERENCES mistakes(id)
     )''')
 
     # study_time 表
@@ -363,6 +384,14 @@ def _create_indexes(c):
 
         # user_schedules 表索引
         ('idx_user_schedules_user_day', 'user_schedules(user_id, day_of_week)'),
+
+        # review_records 表索引
+        ('idx_review_records_user', 'review_records(user_id)'),
+        ('idx_review_records_mistake', 'review_records(mistake_id)'),
+        ('idx_review_records_date', 'review_records(user_id, reviewed_at)'),
+
+        # mistakes 复习调度索引
+        ('idx_mistakes_due_review', 'mistakes(user_id, next_review_date, review_count)'),
 
         # lp_reading_progress 表索引
         ('idx_lp_progress_user_chapter', 'lp_reading_progress(user_id, chapter_key)'),

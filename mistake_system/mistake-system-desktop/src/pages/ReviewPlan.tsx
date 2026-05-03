@@ -16,7 +16,9 @@ import {
   Select,
   DatePicker,
   Space,
-  Alert
+  Alert,
+  message,
+  Empty
 } from 'antd';
 import {
   PlayCircleOutlined,
@@ -27,6 +29,7 @@ import {
   EditOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
+import { getDueReviews, getReviewHistory } from '../services/reviewService';
 import { refreshMistakes } from '../services/dataService';
 import dayjs from 'dayjs';
 
@@ -38,7 +41,9 @@ const ReviewPlan: React.FC = () => {
   const [todayReviews, setTodayReviews] = useState<any[]>([]);
   const [upcomingReviews, setUpcomingReviews] = useState<any[]>([]);
   const [reviewHistory, setReviewHistory] = useState<any[]>([]);
+  const [dueMistakes, setDueMistakes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewStats, setReviewStats] = useState<any>(null);
 
   useEffect(() => {
     loadReviewData();
@@ -47,54 +52,102 @@ const ReviewPlan: React.FC = () => {
   const loadReviewData = async () => {
     try {
       setLoading(true);
-      console.log('[ReviewPlan] 从 API 刷新错题数据');
-      const mistakes = await refreshMistakes();
-      console.log('[ReviewPlan] 获取到错题数:', mistakes.length);
 
-      // 按科目分组，统计待复习错题
+      // 并行获取数据
+      const [dueData, historyData, allMistakes] = await Promise.all([
+        getDueReviews(50),
+        getReviewHistory(20, 0, 30),
+        refreshMistakes()
+      ]);
+
+      setDueMistakes(dueData);
+
+      // 按科目分组到期错题
       const reviewMap = new Map<string, any>();
-      mistakes.forEach((m: any) => {
-        const subject = m.subject_name || m.subject || '未分类';
-        const isNeedReview = (m.review_count || 0) < 3;
+      dueData.forEach((m: any) => {
+        const subjectId = m.subject_id;
+        const subjectNames = ['', '数学', '物理', '化学', '英语', '语文', '政治'];
+        const subject = subjectNames[subjectId] || '未分类';
+        const topic = m.knowledge_points || '待添加知识点';
 
-        if (isNeedReview) {
-          if (!reviewMap.has(subject)) {
-            reviewMap.set(subject, {
-              id: Math.random(),
-              subject,
-              topic: m.knowledge_points || m.topic || '待添加知识点',
-              count: 0,
-              completed: 0,
-              priority: (m.difficulty || 3) === 3 ? '高' : (m.difficulty || 3) === 2 ? '中' : '低'
-            });
-          }
-          reviewMap.get(subject)!.count += 1;
+        if (!reviewMap.has(subject)) {
+          reviewMap.set(subject, {
+            id: Math.random(),
+            subject,
+            topic,
+            count: 0,
+            completed: 0,
+            priority: (m.difficulty || 2) >= 3 ? '高' : (m.difficulty || 2) >= 2 ? '中' : '低'
+          });
         }
+        reviewMap.get(subject)!.count += 1;
       });
 
       setTodayReviews(Array.from(reviewMap.values()));
 
-      // 生成即将��习的任务
-      const upcoming = Array.from(reviewMap.values())
-        .slice(0, 4)
-        .map((item, index) => ({
+      // 生成即将复习的任务（按 next_review_date 分组）
+      const dateMap = new Map<string, any>();
+      allMistakes.forEach((m: any) => {
+        if ((m.review_count || 0) >= 3) return; // 已掌握跳过
+        const date = m.next_review_date || dayjs().format('YYYY-MM-DD');
+        if (!dateMap.has(date)) {
+          dateMap.set(date, { date, count: 0, subjects: new Set() });
+        }
+        const entry = dateMap.get(date)!;
+        entry.count++;
+        const subjectNames = ['', '数学', '物理', '化学', '英语', '语文', '政治'];
+        entry.subjects.add(subjectNames[m.subject_id] || '未分类');
+      });
+
+      const upcoming = Array.from(dateMap.values())
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 6)
+        .map(item => ({
           ...item,
-          date: dayjs().add(index + 1, 'day').format('YYYY-MM-DD')
+          subject: Array.from(item.subjects).join('、'),
+          subjects: undefined
         }));
 
       setUpcomingReviews(upcoming);
 
-      // 生成复习历史
-      const history = [
-        { date: dayjs().format('YYYY-MM-DD'), accuracy: 85, duration: '45分钟', completed: 5 },
-        { date: dayjs().subtract(1, 'day').format('YYYY-MM-DD'), accuracy: 80, duration: '50分钟', completed: 6 },
-        { date: dayjs().subtract(2, 'day').format('YYYY-MM-DD'), accuracy: 75, duration: '40分钟', completed: 4 },
-        { date: dayjs().subtract(3, 'day').format('YYYY-MM-DD'), accuracy: 70, duration: '35分钟', completed: 3 }
-      ];
+      // 真实复习历史
+      if (historyData?.reviews) {
+        const history = historyData.reviews.map((r: any) => ({
+          date: r.review_time?.split(' ')[0] || r.review_time,
+          accuracy: r.result === 'mastered' ? 100 : r.result === 'reviewing' ? 60 : 20,
+          completed: 1,
+          result: r.result,
+          title: r.title
+        }));
 
-      setReviewHistory(history);
+        // 按日期聚合
+        const dateAgg = new Map<string, { date: string; total: number; mastered: number }>();
+        history.forEach((h: any) => {
+          if (!dateAgg.has(h.date)) {
+            dateAgg.set(h.date, { date: h.date, total: 0, mastered: 0 });
+          }
+          const agg = dateAgg.get(h.date)!;
+          agg.total++;
+          if (h.result === 'mastered') agg.mastered++;
+        });
 
-      console.log('[ReviewPlan] 加载完成，待复习科目数:', reviewMap.size);
+        const aggregated = Array.from(dateAgg.values())
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .map(agg => ({
+            date: agg.date,
+            accuracy: agg.total > 0 ? Math.round(agg.mastered / agg.total * 100) : 0,
+            completed: agg.total,
+            duration: `约${agg.total * 3}分钟`
+          }));
+
+        setReviewHistory(aggregated);
+      }
+
+      // 统计
+      if (historyData?.stats) {
+        setReviewStats(historyData.stats);
+      }
+
     } catch (error) {
       console.error('[ReviewPlan] 加载复习数据失败:', error);
     } finally {
@@ -107,16 +160,16 @@ const ReviewPlan: React.FC = () => {
   const progressPercent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
 
   const handleStartReview = () => {
-    Modal.confirm({
-      title: '开始今日复习',
-      content: '确定要开始今日复习吗？系统将按照优先级顺序展示错题。',
-      okText: '开始复习',
-      cancelText: '取消',
-      onOk() {
-        console.log('开始复习');
-        // 这里开始复习流程
-      },
-    });
+    if (dueMistakes.length === 0) {
+      message.info('暂无到期的复习题目');
+      return;
+    }
+    // 触发导航到仪表盘并开始复习
+    window.dispatchEvent(new CustomEvent('navigate', { detail: 'dashboard' }));
+    // 延迟触发开始复习事件
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('start-daily-review'));
+    }, 500);
   };
 
   const handleAddPlan = () => {
@@ -125,22 +178,21 @@ const ReviewPlan: React.FC = () => {
 
   const handleDateSelect = (value: dayjs.Dayjs) => {
     setSelectedDate(value);
-    console.log('选择日期:', value.format('YYYY-MM-DD'));
   };
 
   const cellRender = (current: dayjs.Dayjs) => {
     const dateStr = current.format('YYYY-MM-DD');
     const hasReview = upcomingReviews.some(item => item.date === dateStr);
-    
+
     if (hasReview) {
       return (
         <div style={{ position: 'relative' }}>
-          <div style={{ 
-            position: 'absolute', 
-            top: 2, 
+          <div style={{
+            position: 'absolute',
+            top: 2,
             right: 2,
-            width: 6, 
-            height: 6, 
+            width: 6,
+            height: 6,
             backgroundColor: '#1890ff',
             borderRadius: '50%'
           }} />
@@ -154,7 +206,7 @@ const ReviewPlan: React.FC = () => {
     <div className="review-plan">
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: '24px', marginBottom: '8px' }}>复习计划</h1>
-        <p style={{ color: '#666' }}>科学安排复习时间，巩固学习成果</p>
+        <p style={{ color: '#666' }}>基于 SM-2 间隔重复算法，科学安排复习时间</p>
       </div>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
@@ -166,10 +218,10 @@ const ReviewPlan: React.FC = () => {
                 type="primary"
                 icon={<PlayCircleOutlined />}
                 onClick={handleStartReview}
-                disabled={completedToday === totalToday}
+                disabled={dueMistakes.length === 0}
                 loading={loading}
               >
-                开始复习
+                开始复习 {dueMistakes.length > 0 ? `(${dueMistakes.length}题)` : ''}
               </Button>
             }
           >
@@ -184,57 +236,61 @@ const ReviewPlan: React.FC = () => {
               />
             </div>
 
-            <List
-              dataSource={todayReviews}
-              loading={loading}
-              renderItem={(item) => (
-                <List.Item
-                  actions={[
-                    <Button 
-                      type="link" 
-                      size="small"
-                      icon={<PlayCircleOutlined />}
-                      disabled={item.completed === item.count}
-                    >
-                      复习
-                    </Button>
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <Badge
-                        count={item.count}
-                        style={{ backgroundColor: item.completed === item.count ? '#52c41a' : '#1890ff' }}
-                      />
-                    }
-                    title={
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <span style={{ marginRight: 8 }}>{item.subject} - {item.topic}</span>
-                        <Tag color={
-                          item.priority === '高' ? 'red' : 
-                          item.priority === '中' ? 'orange' : 'green'
-                        }>
-                          {item.priority}优先级
-                        </Tag>
-                      </div>
-                    }
-                    description={
-                      <div>
-                        <Progress 
-                          percent={Math.round((item.completed / item.count) * 100)} 
-                          size="small" 
-                          style={{ width: 200 }}
-                          strokeColor={item.completed === item.count ? '#52c41a' : '#1890ff'}
+            {todayReviews.length > 0 ? (
+              <List
+                dataSource={todayReviews}
+                loading={loading}
+                renderItem={(item) => (
+                  <List.Item
+                    actions={[
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<PlayCircleOutlined />}
+                        disabled={item.completed === item.count}
+                      >
+                        复习
+                      </Button>
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={
+                        <Badge
+                          count={item.count}
+                          style={{ backgroundColor: item.completed === item.count ? '#52c41a' : '#1890ff' }}
                         />
-                        <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>
-                          {item.completed}/{item.count} 完成
-                        </span>
-                      </div>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
+                      }
+                      title={
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{ marginRight: 8 }}>{item.subject} - {item.topic}</span>
+                          <Tag color={
+                            item.priority === '高' ? 'red' :
+                            item.priority === '中' ? 'orange' : 'green'
+                          }>
+                            {item.priority}优先级
+                          </Tag>
+                        </div>
+                      }
+                      description={
+                        <div>
+                          <Progress
+                            percent={item.count > 0 ? Math.round((item.completed / item.count) * 100) : 0}
+                            size="small"
+                            style={{ width: 200 }}
+                            strokeColor={item.completed === item.count ? '#52c41a' : '#1890ff'}
+                          />
+                          <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>
+                            {item.completed}/{item.count} 完成
+                          </span>
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty description="暂无到期的复习任务" />
+            )}
           </Card>
         </Col>
         <Col xs={24} lg={8}>
@@ -245,8 +301,8 @@ const ReviewPlan: React.FC = () => {
               onSelect={handleDateSelect}
               headerRender={({ value, onChange }) => (
                 <div style={{ padding: 8, textAlign: 'center' }}>
-                  <Button 
-                    type="text" 
+                  <Button
+                    type="text"
                     onClick={() => onChange(value.subtract(1, 'month'))}
                   >
                     上月
@@ -254,8 +310,8 @@ const ReviewPlan: React.FC = () => {
                   <span style={{ margin: '0 16px' }}>
                     {value.format('YYYY年 MM月')}
                   </span>
-                  <Button 
-                    type="text" 
+                  <Button
+                    type="text"
                     onClick={() => onChange(value.add(1, 'month'))}
                   >
                     下月
@@ -264,9 +320,9 @@ const ReviewPlan: React.FC = () => {
               )}
             />
             <div style={{ marginTop: 16 }}>
-              <Button 
-                type="dashed" 
-                block 
+              <Button
+                type="dashed"
+                block
                 icon={<PlusOutlined />}
                 onClick={handleAddPlan}
               >
@@ -279,87 +335,95 @@ const ReviewPlan: React.FC = () => {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="即将复习">
-            <Timeline
-              items={upcomingReviews.map((item, index) => ({
-                key: index,
-                dot: <CalendarOutlined style={{ fontSize: '16px' }} />,
-                color: 'blue',
-                children: (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontWeight: 'bold' }}>{item.date}</div>
-                      <div>{item.subject} - {item.topic}</div>
+          <Card title="复习日程">
+            {upcomingReviews.length > 0 ? (
+              <Timeline
+                items={upcomingReviews.map((item, index) => ({
+                  key: index,
+                  dot: <CalendarOutlined style={{ fontSize: '16px' }} />,
+                  color: item.date === dayjs().format('YYYY-MM-DD') ? 'red' : 'blue',
+                  children: (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>
+                          {item.date}
+                          {item.date === dayjs().format('YYYY-MM-DD') && (
+                            <Tag color="red" style={{ marginLeft: 8 }}>今天</Tag>
+                          )}
+                        </div>
+                        <div>{item.subject}</div>
+                      </div>
+                      <div>
+                        <Tag color="blue">{item.count}题</Tag>
+                      </div>
                     </div>
-                    <div>
-                      <Tag color="blue">{item.count}题</Tag>
-                      <Button type="link" size="small" icon={<EditOutlined />} />
-                    </div>
-                  </div>
-                ),
-              }))}
-            />
+                  ),
+                }))}
+              />
+            ) : (
+              <Empty description="暂无复习日程" />
+            )}
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card 
-            title="复习历史" 
-            extra={<Button type="link">查看全部</Button>}
+          <Card
+            title="复习历史"
+            extra={reviewStats && <Tag>累计 {reviewStats.total_reviews} 次</Tag>}
           >
-            <List
-              dataSource={reviewHistory}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <div style={{ 
-                        width: 40, 
-                        height: 40, 
-                        borderRadius: '50%',
-                        backgroundColor: item.accuracy >= 85 ? '#f6ffed' : item.accuracy >= 75 ? '#fff7e6' : '#fff1f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: `1px solid ${item.accuracy >= 85 ? '#b7eb8f' : item.accuracy >= 75 ? '#ffd591' : '#ffa39e'}`
-                      }}>
-                        <span style={{ 
-                          color: item.accuracy >= 85 ? '#52c41a' : item.accuracy >= 75 ? '#fa8c16' : '#ff4d4f',
-                          fontWeight: 'bold'
+            {reviewHistory.length > 0 ? (
+              <List
+                dataSource={reviewHistory.slice(0, 7)}
+                renderItem={(item) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <div style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          backgroundColor: item.accuracy >= 85 ? '#f6ffed' : item.accuracy >= 75 ? '#fff7e6' : '#fff1f0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: `1px solid ${item.accuracy >= 85 ? '#b7eb8f' : item.accuracy >= 75 ? '#ffd591' : '#ffa39e'}`
                         }}>
-                          {item.accuracy}%
-                        </span>
-                      </div>
-                    }
-                    title={`${item.date} 复习记录`}
-                    description={
-                      <Space>
-                        <span>
-                          <ClockCircleOutlined style={{ marginRight: 4 }} />
-                          {item.duration}
-                        </span>
-                        <span>
-                          <CheckCircleOutlined style={{ marginRight: 4 }} />
-                          完成 {item.completed} 题
-                        </span>
-                      </Space>
-                    }
-                  />
-                  <div>
-                    <Button type="link" size="small" icon={<ExclamationCircleOutlined />}>
-                      详情
-                    </Button>
-                  </div>
-                </List.Item>
-              )}
-            />
+                          <span style={{
+                            color: item.accuracy >= 85 ? '#52c41a' : item.accuracy >= 75 ? '#fa8c16' : '#ff4d4f',
+                            fontWeight: 'bold',
+                            fontSize: '12px'
+                          }}>
+                            {item.accuracy}%
+                          </span>
+                        </div>
+                      }
+                      title={`${item.date} 复习记录`}
+                      description={
+                        <Space>
+                          <span>
+                            <ClockCircleOutlined style={{ marginRight: 4 }} />
+                            {item.duration}
+                          </span>
+                          <span>
+                            <CheckCircleOutlined style={{ marginRight: 4 }} />
+                            完成 {item.completed} 题
+                          </span>
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty description="暂无复习记录" />
+            )}
           </Card>
         </Col>
       </Row>
 
       <Alert
         style={{ marginTop: 24 }}
-        message="复习建议"
-        description="根据艾宾浩斯遗忘曲线，建议在以下时间点进行复习：学习后20分钟、1小时、9小时、1天、2天、6天、31天。系统已根据此规律自动安排复习计划。"
+        message="复习策略"
+        description={'系统采用 SM-2 间隔重复算法：首次复习间隔 1 天，第二次间隔 6 天，之后按记忆保持因子递增。答对间隔变长，答错重置为 1 天。标记"忘记了"会最短间隔。'}
         type="info"
         showIcon
       />
@@ -373,7 +437,7 @@ const ReviewPlan: React.FC = () => {
           <Button key="back" onClick={() => setIsModalVisible(false)}>
             取消
           </Button>,
-          <Button key="submit" type="primary">
+          <Button key="submit" type="primary" onClick={() => { message.info('功能开发中'); setIsModalVisible(false); }}>
             保存计划
           </Button>,
         ]}
@@ -413,18 +477,12 @@ const ReviewPlan: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="错题数量">
-            <Input type="number" placeholder="请输入错题数量" />
-          </Form.Item>
           <Form.Item label="优先级">
             <Select placeholder="请选择优先级">
               <Option value="high">高</Option>
               <Option value="medium">中</Option>
               <Option value="low">低</Option>
             </Select>
-          </Form.Item>
-          <Form.Item label="备注">
-            <Input.TextArea placeholder="请输入备注信息" rows={3} />
           </Form.Item>
         </Form>
       </Modal>

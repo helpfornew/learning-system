@@ -17,11 +17,12 @@ import {
   PlusOutlined,
   BarChartOutlined,
   BulbOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import { refreshMistakes } from '../services/dataService';
 import { getUserStats } from '../services/statsService';
-import { getDueForReviewCount, recordReview } from '../services/reviewService';
+import { getDueForReviewCount, getDueReviews, recordReview } from '../services/reviewService';
 import { API_BASE } from '../config/api';
 import type { Mistake } from '../types';
 import './../styles/App.css';
@@ -183,41 +184,41 @@ const Dashboard: React.FC = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') loadData();
     };
+    const handleStartReview = () => startDailyReview();
 
     window.addEventListener('mistakes-updated' as any, handleDataUpdate as any);
+    window.addEventListener('start-daily-review' as any, handleStartReview as any);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('mistakes-updated' as any, handleDataUpdate as any);
+      window.removeEventListener('start-daily-review' as any, handleStartReview as any);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [loadData]);
 
-  // 开始每日复习
+  // 开始每日复习 - 从到期错题中获取
   const startDailyReview = async () => {
-    const mistakes = await refreshMistakes();
-    // 筛选未掌握的错题 (review_count < 3)
-    const candidates = mistakes.filter((m: any) => (m.review_count || 0) < 3);
-    if (candidates.length === 0) {
-      message.info('所有错题都已掌握！');
+    const dueMistakes = await getDueReviews(10);
+    if (dueMistakes.length === 0) {
+      message.info('暂无到期的复习题目，所有错题都在计划中！');
       return;
     }
-    const shuffled = candidates.sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, 10);
-    setReviewSession(selected);
+    setReviewSession(dueMistakes);
     setReviewIndex(0);
     setShowAnswer(false);
     setReviewModalVisible(true);
   };
 
   // 提交复习结果并跳到下一题
-  const submitReviewAndNext = async (result: 'success' | 'difficult') => {
+  const submitReviewAndNext = async (result: 'success' | 'difficult' | 'forgotten') => {
     const current = reviewSession[reviewIndex];
     if (!current?.id) return;
 
     const success = await recordReview(current.id, result);
     if (success) {
-      message.success(result === 'success' ? '已掌握！' : '已记录为较困难');
+      const msg = result === 'success' ? '已掌握！' : result === 'difficult' ? '已记录为较困难' : '已记录为忘记，将缩短复习间隔';
+      message.success(msg);
     }
 
     if (reviewIndex < reviewSession.length - 1) {
@@ -257,9 +258,13 @@ const Dashboard: React.FC = () => {
           e.preventDefault();
           submitReviewAndNext('success');
           break;
-        case 'Delete':
+        case 'Backspace':
           e.preventDefault();
           submitReviewAndNext('difficult');
+          break;
+        case 'Delete':
+          e.preventDefault();
+          submitReviewAndNext('forgotten');
           break;
       }
     };
@@ -604,7 +609,7 @@ const Dashboard: React.FC = () => {
                   type="primary"
                   size="large"
                   icon={<CheckOutlined />}
-                  style={{ background: '#52c41a', borderColor: '#52c41a', minWidth: 110 }}
+                  style={{ background: '#52c41a', borderColor: '#52c41a', minWidth: 100 }}
                   onClick={() => submitReviewAndNext('success')}
                 >
                   已掌握
@@ -612,15 +617,24 @@ const Dashboard: React.FC = () => {
                 <Button
                   size="large"
                   icon={<QuestionOutlined />}
-                  style={{ minWidth: 110 }}
+                  style={{ minWidth: 100 }}
                   onClick={() => submitReviewAndNext('difficult')}
                 >
                   较困难
                 </Button>
                 <Button
                   size="large"
+                  danger
+                  icon={<ExclamationCircleOutlined />}
+                  style={{ minWidth: 100 }}
+                  onClick={() => submitReviewAndNext('forgotten')}
+                >
+                  忘记了
+                </Button>
+                <Button
+                  size="large"
                   icon={<LinkOutlined />}
-                  style={{ minWidth: 110, color: '#4c9aff', borderColor: '#4c9aff' }}
+                  style={{ minWidth: 100, color: '#4c9aff', borderColor: '#4c9aff' }}
                   onClick={jumpToKnowledgePoint}
                 >
                   知识点

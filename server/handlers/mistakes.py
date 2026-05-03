@@ -2,7 +2,7 @@
 import os
 import json
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 from ..database import get_db
 from ..config import DATA_DIR
 
@@ -49,8 +49,10 @@ def handle_mistakes_post(user_id, data):
         return str(val)
 
     images_path = data.get('images_path', '')
-    cursor.execute('''INSERT INTO mistakes (user_id, subject_id, content, wrong_answer, correct_answer, error_reason, analysis, knowledge_points, tags, difficulty, images_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-        (user_id, int(data.get('subject_id', 1)), safe_str(data.get('content', '')), safe_str(data.get('wrong_answer', '')), safe_str(data.get('correct_answer', '')), safe_str(data.get('error_reason', '')), safe_str(data.get('analysis', '')), safe_str(data.get('knowledge_points', '')), safe_str(data.get('tags', '')), int(data.get('difficulty', 2)), ''))
+    now = datetime.now()
+    tomorrow = (now + timedelta(days=1)).strftime('%Y-%m-%d')
+    cursor.execute('''INSERT INTO mistakes (user_id, subject_id, content, wrong_answer, correct_answer, error_reason, analysis, knowledge_points, tags, difficulty, images_path, created_at, next_review_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        (user_id, int(data.get('subject_id', 1)), safe_str(data.get('content', '')), safe_str(data.get('wrong_answer', '')), safe_str(data.get('correct_answer', '')), safe_str(data.get('error_reason', '')), safe_str(data.get('analysis', '')), safe_str(data.get('knowledge_points', '')), safe_str(data.get('tags', '')), int(data.get('difficulty', 2)), '', now.strftime('%Y-%m-%d %H:%M:%S'), tomorrow))
 
     mistake_id = cursor.lastrowid
 
