@@ -140,8 +140,15 @@ def handle_review_record_post(user_id, data):
             conn.close()
             return 404, {'success': False, 'message': '错题不存在'}
 
-        new_count = (row[1] or 0) + 1
         now = datetime.now().strftime('%Y-%m-%d')
+        result = data.get('result', 'success')
+
+        if result == 'success':
+            # 点击"已掌握"：直接设为已掌握（review_count >= 3）
+            new_count = max(row[1] or 0, 3)
+        else:
+            # 点击"较困难"：复习次数 +1
+            new_count = (row[1] or 0) + 1
 
         c.execute('UPDATE mistakes SET review_count = ?, last_review_date = ? WHERE id = ?',
                   (new_count, now, mistake_id))

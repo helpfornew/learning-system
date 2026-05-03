@@ -519,6 +519,53 @@
             color: #888;
         }
 
+        /* 知识点索引面板 */
+        .kp-index {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            width: 200px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            background: rgba(20,30,50,0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            z-index: 100;
+            font-size: 0.8rem;
+        }
+        .kp-index-title {
+            color: #4c9aff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .kp-index-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .kp-index-list li {
+            padding: 4px 0;
+        }
+        .kp-index-list a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            display: block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kp-index-list a:hover {
+            color: #4c9aff;
+            background: rgba(76,154,255,0.1);
+        }
+
         /* 同步状态指示器 */
         .sync-status {
             position: fixed;
@@ -877,6 +924,23 @@
 </head>
 <body>
 <div id="unified-navbar" style="height:56px"></div>
+<!-- 学科选择栏 -->
+<div id="subjectBar" style="display:flex;align-items:center;gap:16px;padding:8px 24px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);">
+    <span style="color:#888;font-size:0.85rem;">当前学科：</span>
+    <select id="subjectSelect" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 32px 6px 12px;font-size:0.9rem;color:white;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27white%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;min-width:120px;transition:border-color 0.2s;">
+        <option value="chinese">语文</option>
+        <option value="math">数学</option>
+        <option value="english">英语</option>
+        <option value="physics">物理</option>
+        <option value="chemistry">化学</option>
+        <option value="politics">政治</option>
+    </select>
+    <style>
+        #subjectSelect option { background: #16213e; color: white; padding: 8px; }
+        #subjectSelect:focus { border-color: #4c9aff; box-shadow: 0 0 0 2px rgba(76,154,255,0.2); }
+        #subjectSelect:hover { border-color: rgba(255,255,255,0.35); }
+    </style>
+</div>
 <div class="app">
     <div class="navbar" style="display:none">
         <div class="logo">
@@ -938,6 +1002,7 @@
         <div class="sidebar" id="sidebar">
             <!-- 动态生成的菜单内容 -->
         </div>
+        <div id="kpIndex" class="kp-index" style="display:none;"></div>
 
         <div class="content-area" id="dynamicContent">
             <!-- 画布层 -->
@@ -985,24 +1050,24 @@
     <div class="drawing-tools collapsed" id="drawingTools">
         <!-- 收纳按钮 - 始终显示 -->
         <button class="tool-btn toggle-btn" id="toggleToolsBtn" title="展开工具 (T)">
-
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
         </button>
         <!-- 工具项容器 - 可收起 -->
         <div class="tool-item" id="toolItems">
             <button class="tool-btn brush-btn" id="brushBtn" title="画笔工具 (B)">
-
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
             </button>
             <button class="tool-btn highlighter-btn" id="highlighterBtn" title="荧光笔 (H)">
-
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h9l3-3"></path><path d="M22 12l-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"></path></svg>
             </button>
             <button class="tool-btn eraser-btn" id="eraserBtn" title="橡皮擦 (E)">
-
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0l5 5c.8.8.8 2 0 2.8L11 20"></path><path d="M6 11l7 7"></path></svg>
             </button>
             <button class="tool-btn clear-btn" id="clearBtn" title="清除全部 (C)">
-
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
             <button class="tool-btn save-drawing-btn" id="saveDrawingBtn" title="保存涂鸦 (Ctrl+S)">
-
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
             </button>
         </div>
     </div>
@@ -1039,14 +1104,14 @@
     let currentSubjectDetail = null;
     let currentChapterContent = null;
 
-    // 默认科目数据（当API不可用时使用）
+    // 默认科目数据（当API不可用时使用，仅包含数据库中实际存在的科目）
     const defaultSubjects = [
-        { key: 'chemistry', name: '化学', logo: '' },
-        { key: 'physics', name: '物理', logo: '' },
-        { key: 'chinese', name: '语文', logo: '' },
-        { key: 'math', name: '数学', logo: '' },
-        { key: 'english', name: '英语', logo: '' },
-        { key: 'politics', name: '政治', logo: '' }
+        { key: 'chinese', name: '语文', logo: 'Chin' },
+        { key: 'math', name: '数学', logo: 'Math' },
+        { key: 'english', name: '英语', logo: 'En' },
+        { key: 'physics', name: '物理', logo: 'Phys' },
+        { key: 'chemistry', name: '化学', logo: 'Chem' },
+        { key: 'politics', name: '政治', logo: 'Poli' }
     ];
 
     // 从API加载科目列表
@@ -1101,7 +1166,7 @@
         }
         
         select.innerHTML = validData.map(s =>
-            `<option value="${s.key}">${s.logo || ''} ${s.name}</option>`
+            `<option value="${s.key}">${s.name}</option>`
         ).join('');
         select.value = currentSubjectId;
         console.log('科目选择下拉框已更新，选项数:', validData.length);
@@ -1366,6 +1431,54 @@
 
         // 上报阅读进度
         reportProgress(chapterKey);
+
+        // 生成知识点索引
+        generateKPIndex();
+
+        // 定位到锚点
+        scrollToHash();
+    }
+
+    // 滚动到 URL hash 指定的锚点
+    function scrollToHash() {
+        const hash = window.location.hash;
+        if (!hash || !hash.startsWith('#kp-')) return;
+        const targetId = decodeURIComponent(hash.substring(1));
+        setTimeout(() => {
+            const target = document.getElementById(targetId);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                target.style.background = 'rgba(255,200,0,0.15)';
+                target.style.borderRadius = '4px';
+                target.style.transition = 'background 0.3s';
+                setTimeout(() => { target.style.background = ''; }, 3000);
+            }
+        }, 100);
+    }
+
+    // 生成当前章节的知识点索引面板
+    function generateKPIndex() {
+        const container = document.getElementById('dynamicContent');
+        if (!container) return;
+        const kpItems = container.querySelectorAll('[id^="kp-"]');
+        const indexEl = document.getElementById('kpIndex');
+        if (!indexEl) return;
+
+        if (kpItems.length === 0) {
+            indexEl.innerHTML = '';
+            indexEl.style.display = 'none';
+            return;
+        }
+
+        let html = '<div class="kp-index-title">知识点索引</div><ul class="kp-index-list">';
+        kpItems.forEach(item => {
+            const id = item.id;
+            const text = item.textContent.trim();
+            html += `<li><a href="#${encodeURIComponent(id)}" onclick="event.preventDefault();document.getElementById('${id}').scrollIntoView({behavior:'smooth',block:'center'})">${text}</a></li>`;
+        });
+        html += '</ul>';
+        indexEl.innerHTML = html;
+        indexEl.style.display = 'block';
     }
 
     // 更新按钮状态
@@ -1821,11 +1934,11 @@
 
         if (toolsExpanded) {
             drawingTools.classList.remove('collapsed');
-            toggleBtn.innerHTML = '';
+            toggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
             toggleBtn.title = '收起工具 (T)';
         } else {
             drawingTools.classList.add('collapsed');
-            toggleBtn.innerHTML = '';
+            toggleBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>';
             toggleBtn.title = '展开工具 (T)';
             // 收起时清除当前工具
             setTool(null);
@@ -2095,6 +2208,9 @@
         if (typeof Navbar !== 'undefined') {
             Navbar.init('learning');
         }
+
+        // 监听 hash 变化，支持同页面内跳转知识点
+        window.addEventListener('hashchange', scrollToHash);
     });
 </script>
 </body>

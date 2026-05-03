@@ -86,7 +86,7 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
         ...item,
         subject: getSubjectName(item.subject_id),
         difficulty_label: getDifficultyLabel(item.difficulty),
-        status: getReviewStatus(item.review_count, item.mastery_level),
+        status: getReviewStatus(item.review_count),
         analyzed: isAnalyzed,
       };
     });
@@ -554,7 +554,28 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
                 <p style={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{currentMistake.correct_answer || '无答案'}</p>
 
                 <h3 style={{ marginTop: 24 }}>知识点</h3>
-                <p>{currentMistake.topic || currentMistake.knowledge_points || '待分析'}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {(currentMistake.topic || currentMistake.knowledge_points || '待分析')
+                    .split(',')
+                    .map((kp: string) => kp.trim())
+                    .filter((kp: string) => kp && kp !== '待分析')
+                    .map((kp: string, idx: number) => (
+                      <Tag
+                        key={idx}
+                        color="blue"
+                        style={{ cursor: 'pointer', marginBottom: 4 }}
+                        onClick={() => {
+                          const url = `/learning/#kp-${encodeURIComponent(kp)}`;
+                          window.open(url, '_blank');
+                        }}
+                      >
+                        {kp}
+                      </Tag>
+                    ))}
+                  {(!currentMistake.topic && !currentMistake.knowledge_points) && (
+                    <Tag>待分析</Tag>
+                  )}
+                </div>
 
                 <h3 style={{ marginTop: 24 }}>难度</h3>
                 <Tag color={getDifficultyColor(currentMistake.difficulty_label || '中等')}>
@@ -652,8 +673,8 @@ const MistakeBook: React.FC<MistakeBookProps> = ({ onNavigate }) => {
 };
 
 // 辅助函数：获取复习状态
-function getReviewStatus(reviewCount: number = 0, masteryLevel: number = 0): ReviewStatus {
-  if (masteryLevel > 70) return '已掌握';
+function getReviewStatus(reviewCount: number = 0): ReviewStatus {
+  if (reviewCount >= 3) return '已掌握';
   if (reviewCount > 0) return '复习中';
   return '待复习';
 }

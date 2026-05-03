@@ -127,6 +127,17 @@ const App: React.FC = () => {
     return () => window.removeEventListener('open-quick-upload', handleOpenQuickUpload)
   }, [])
 
+  // 监听页面导航事件（来自 Dashboard 快速操作按钮）
+  useEffect(() => {
+    const handleNavigate = (e: Event) => {
+      const page = (e as CustomEvent).detail;
+      if (page) setSelectedMenu(page);
+    }
+
+    window.addEventListener('navigate', handleNavigate)
+    return () => window.removeEventListener('navigate', handleNavigate)
+  }, [])
+
   // 监听来自主进程的事件
   useEffect(() => {
     if (!isLoggedIn || !window.electronAPI) return

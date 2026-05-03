@@ -1,32 +1,33 @@
 /**
- * 高考学习系统 - 黑白主题样式表
+ * 高考学习系统 - 现代深色主题样式表
  */
 
 /* ========== CSS 变量 ========== */
 :root {
-    --bg: #1a1a1a;
-    --surface: rgba(255,255,255,0.05);
-    --surface-hover: rgba(255,255,255,0.08);
-    --surface-active: rgba(255,255,255,0.1);
+    --bg: #0f172a;
+    --bg-secondary: #1e293b;
+    --surface: rgba(255,255,255,0.07);
+    --surface-hover: rgba(255,255,255,0.1);
+    --surface-active: rgba(255,255,255,0.12);
     --border: rgba(255,255,255,0.1);
     --border-light: rgba(255,255,255,0.06);
 
-    --text: #ffffff;
-    --text-secondary: #aaa;
-    --text-muted: #666;
+    --text: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
 
-    --accent: #ffffff;
-    --accent-dim: #888888;
-    --accent-dark: #555555;
+    --accent: #0ea5e9;
+    --accent-hover: #0284c7;
+    --accent-dim: #6366f1;
 
-    --radius-lg: 20px;
-    --radius-md: 15px;
-    --radius-sm: 12px;
-    --radius-xs: 10px;
-    --radius-round: 25px;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 10px;
+    --radius-xs: 8px;
+    --radius-round: 8px;
 
-    --shadow: 0 10px 40px rgba(0,0,0,0.3);
-    --shadow-sm: 0 5px 20px rgba(0,0,0,0.2);
+    --shadow: 0 8px 32px rgba(0,0,0,0.3);
+    --shadow-sm: 0 4px 16px rgba(0,0,0,0.2);
 
     --font: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont,
              'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
@@ -57,12 +58,15 @@ a:hover { color: var(--text-secondary); }
 /* ========== 卡片 ========== */
 .uni-card {
     background: var(--surface);
+    backdrop-filter: blur(10px);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
-    padding: 25px;
+    padding: 24px;
+    transition: all 0.3s ease;
 }
 .uni-card:hover {
     background: var(--surface-hover);
+    transform: translateY(-2px);
     box-shadow: var(--shadow);
 }
 
@@ -71,13 +75,13 @@ a:hover { color: var(--text-secondary); }
     align-items: center;
     gap: 12px;
     margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid var(--border);
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
 }
 
 .uni-card-icon {
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
@@ -85,31 +89,34 @@ a:hover { color: var(--text-secondary); }
     font-size: 1.2rem;
     flex-shrink: 0;
     background: var(--surface-active);
-    color: var(--text);
+    color: var(--accent);
 }
 
 .uni-card-title {
-    font-size: 1.3rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
 }
 
 /* ========== 头部面板 ========== */
 .uni-header {
     text-align: center;
-    padding: 40px 20px;
-    background: var(--surface);
+    padding: 48px 24px;
+    background: linear-gradient(135deg, rgba(14,165,233,0.2) 0%, rgba(99,102,241,0.2) 100%);
+    backdrop-filter: blur(10px);
     border-radius: var(--radius-lg);
-    margin-bottom: 30px;
+    margin-bottom: 32px;
     border: 1px solid var(--border);
 }
 .uni-header h1 {
     font-size: 2.5rem;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
+    font-weight: 700;
 }
 .uni-header-subtitle {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--text-secondary);
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 /* ========== 按钮 ========== */
@@ -118,88 +125,100 @@ a:hover { color: var(--text-secondary); }
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 25px;
+    padding: 10px 20px;
     border: none;
     border-radius: var(--radius-round);
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
     cursor: pointer;
     text-decoration: none;
     color: white;
     background: var(--accent-dim);
+    transition: all 0.2s ease;
 }
-.uni-btn:hover { opacity: 0.85; box-shadow: var(--shadow-sm); }
+.uni-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
 
-.uni-btn-primary { background: var(--accent); color: #1a1a1a; }
+.uni-btn-primary { background: var(--accent); color: white; }
+.uni-btn-primary:hover { background: var(--accent-hover); }
 .uni-btn-secondary { background: var(--accent-dim); }
 
 /* ========== 统计卡片网格 ========== */
 .uni-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .uni-stat-card {
     background: var(--surface);
+    backdrop-filter: blur(10px);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
-    padding: 25px;
+    padding: 24px;
     text-align: center;
+    transition: all 0.3s ease;
 }
 .uni-stat-card:hover {
     background: var(--surface-hover);
+    transform: translateY(-2px);
 }
 
 .uni-stat-value {
     font-size: 2.5rem;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--accent);
 }
 .uni-stat-label {
     color: var(--text-secondary);
-    font-size: 1rem;
+    font-size: 0.9rem;
     margin-top: 8px;
 }
 
 /* ========== 进度条 ========== */
 .uni-progress-bar {
     width: 100%;
-    height: 12px;
+    height: 8px;
     background: var(--surface-active);
-    border-radius: 9999px;
+    border-radius: 4px;
     overflow: hidden;
 }
 .uni-progress-fill {
     height: 100%;
-    background: var(--accent);
+    background: linear-gradient(90deg, var(--accent), var(--accent-dim));
     width: 0%;
+    transition: width 0.3s ease;
 }
 
 /* ========== 标签/徽章 ========== */
 .uni-badge {
     display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
     background: var(--surface-active);
-    color: var(--text);
+    color: var(--text-secondary);
 }
 
 /* ========== 表单 ========== */
 .uni-input, .uni-select {
-    padding: 10px 15px;
+    padding: 10px 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius-xs);
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--text);
     background: var(--surface);
+    transition: all 0.2s ease;
 }
 .uni-input:focus, .uni-select:focus {
     border-color: var(--accent);
     outline: none;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.2);
 }
 
 /* ========== 响应式 ========== */

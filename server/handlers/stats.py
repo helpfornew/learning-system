@@ -50,12 +50,12 @@ def handle_stats_get(user_id):
         # 3. 连续学习天数
         streak_days = _calculate_streak_days(c, user_id)
 
-        # 4. 今日待复习数量（错题）
+        # 4. 今日待复习数量（排除已掌握的）
         c.execute('''
             SELECT COUNT(*) FROM mistakes
             WHERE user_id = ? AND is_deleted = 0
-            AND (next_review_date IS NULL OR next_review_date <= ?)
-        ''', (user_id, today))
+            AND review_count < 3
+        ''', (user_id,))
         review_due_count = c.fetchone()[0] or 0
 
         conn.close()

@@ -16,10 +16,10 @@
     const NAV_CONFIG = {
         // 导航项目
         items: [
-            { id: 'home', label: '首页', icon: '', url: isElectron ? './index.html' : '/', active: false },
-            { id: 'learning', label: '学习平台', icon: '', url: isElectron ? '../learning-platform/index.html' : '/learning/', active: false },
-            { id: 'mistake', label: '错题系统', icon: '', url: isElectron ? '../mistake-system-desktop/dist/index.html' : '/mistake/', active: false },
-            { id: 'wordcard', label: '单词卡', icon: '', url: isElectron ? '../wordcard/index.html' : '/wordcard/', active: false },
+            { id: 'home', label: '首页', icon: 'home', url: isElectron ? './index.html' : '/', active: false },
+            { id: 'learning', label: '学习平台', icon: 'learning', url: isElectron ? '../learning-platform/index.html' : '/learning/', active: false },
+            { id: 'mistake', label: '错题系统', icon: 'mistake', url: isElectron ? '../mistake-system-desktop/dist/index.html' : '/mistake/', active: false },
+            { id: 'wordcard', label: '单词卡', icon: 'wordcard', url: isElectron ? '../wordcard/index.html' : '/wordcard/', active: false },
         ],
 
         // 系统名称映射
@@ -73,12 +73,13 @@
             const user = typeof Auth !== 'undefined' ? Auth.getUser() : null;
             const isLoggedIn = !!user;
 
+            const iconPath = isElectron ? '../static/icons' : '/static/icons';
             const navItemsHtml = NAV_CONFIG.items.map(item => {
                 const isActive = item.id === this.currentSystem;
                 return `
                     <li class="nav-item">
                         <a href="${item.url}" class="nav-link ${isActive ? 'active' : ''}" data-nav="${item.id}">
-                            <span class="icon">${item.icon}</span>
+                            <img src="${iconPath}/${item.icon}.svg" alt="${item.label}" class="nav-icon">
                             <span>${item.label}</span>
                         </a>
                     </li>

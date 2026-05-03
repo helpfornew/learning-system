@@ -10,10 +10,10 @@
     const NAV_CONFIG = {
         // 导航项目
         items: [
-            { id: 'home', label: '首页', icon: '', url: '/', active: false },
-            { id: 'learning', label: '学习平台', icon: '', url: '/learning/', active: false },
-            { id: 'mistake', label: '错题系统', icon: '', url: '/mistake/', active: false },
-            { id: 'wordcard', label: '单词卡', icon: '', url: '/wordcard/', active: false },
+            { id: 'home', label: '首页', icon: 'home', url: '/', active: false },
+            { id: 'learning', label: '学习平台', icon: 'learning', url: '/learning/', active: false },
+            { id: 'mistake', label: '错题系统', icon: 'mistake', url: '/mistake/', active: false },
+            { id: 'wordcard', label: '单词卡', icon: 'wordcard', url: '/wordcard/', active: false },
         ],
 
         // 系统名称映射
@@ -72,13 +72,14 @@
                 return `
                     <li class="nav-item">
                         <a href="${item.url}" class="nav-link ${isActive ? 'active' : ''}" data-nav="${item.id}">
-                            <span class="icon">${item.icon}</span>
+                            <img src="/static/icons/${item.icon}.svg" alt="${item.label}" class="nav-icon">
                             <span>${item.label}</span>
                         </a>
                     </li>
                 `;
             }).join('');
 
+            const isAdmin = user && (user.is_admin || user.vip_level >= 9);
             const userHtml = isLoggedIn ? `
                 <div class="user-dropdown" id="user-dropdown">
                     <div class="user-info" id="user-menu-trigger">
@@ -90,6 +91,7 @@
                         <a href="/profile" class="dropdown-item">
                             <span></span> 个人中心
                         </a>
+                        ${isAdmin && this.currentSystem === 'learning' ? '<a href="/learning/admin.html" class="dropdown-item"><span></span> 内容管理</a>' : ''}
                         <a href="/settings" class="dropdown-item">
                             <span></span> 设置
                         </a>

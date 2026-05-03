@@ -20,11 +20,17 @@ import {
   UserOutlined,
   DatabaseOutlined,
   CloudServerOutlined,
-  BookOutlined
+  BookOutlined,
+  RobotOutlined
 } from '@ant-design/icons';
 import configService from '../services/configService';
 import { getUserStats } from '../services/statsService';
 import { getDueForReviewCount } from '../services/reviewService';
+import {
+  loadQianwenConfig, saveQianwenConfig,
+  loadDeepseekConfig, saveDeepseekConfig,
+} from '../services/aiConfig';
+import type { QianwenConfig, DeepseekConfig } from '../services/aiConfig';
 import type { UserStats } from '../services/statsService';
 
 const { Option } = Select;
@@ -49,6 +55,11 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, onDarkModeChange }) => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [dueForReview, setDueForReview] = useState(0);
+  const [qwenConfig, setQwenConfig] = useState<QianwenConfig | null>(null);
+  const [deepseekConfig, setDeepseekConfig] = useState<DeepseekConfig | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [qwenForm] = Form.useForm();
+  const [deepseekForm] = Form.useForm();
 
   const isElectron = () => {
     return window.electronAPI !== undefined;
@@ -71,6 +82,11 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, onDarkModeChange }) => {
     loadUserStats();
   }, []);
 
+  // 加载 AI 配置
+  useEffect(() => {
+    loadAIConfigs();
+  }, []);
+
   const loadUserStats = async () => {
     setStatsLoading(true);
     try {
@@ -86,6 +102,76 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, onDarkModeChange }) => {
       console.error('加载统计数据失败:', error);
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  const loadAIConfigs = async () => {
+    setAiLoading(true);
+    try {
+      const [qwen, deepseek] = await Promise.all([
+        loadQianwenConfig(),
+        loadDeepseekConfig()
+      ]);
+      setQwenConfig(qwen);
+      setDeepseekConfig(deepseek);
+      qwenForm.setFieldsValue({
+        apiKey: qwen.apiKey,
+        apiEndpoint: qwen.apiEndpoint,
+        model: qwen.model,
+        maxTokens: qwen.maxTokens,
+        temperature: qwen.temperature,
+        enabled: qwen.enabled
+      });
+      deepseekForm.setFieldsValue({
+        apiKey: deepseek.apiKey,
+        apiEndpoint: deepseek.apiEndpoint,
+        model: deepseek.model,
+        maxTokens: deepseek.maxTokens,
+        temperature: deepseek.temperature,
+        enabled: deepseek.enabled
+      });
+    } catch (error) {
+      console.error('加载 AI 配置失败:', error);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleSaveQwen = async () => {
+    setLoading(true);
+    try {
+      const values = await qwenForm.validateFields();
+      const config: QianwenConfig = { ...values, provider: 'qwen' };
+      const ok = await saveQianwenConfig(config);
+      if (ok) {
+        message.success('通义千问配置已保存');
+        setQwenConfig(config);
+      } else {
+        message.warning('保存到服务器失败，已缓存到本地');
+      }
+    } catch (e: any) {
+      message.error(e.message || '保存失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveDeepseek = async () => {
+    setLoading(true);
+    try {
+      const values = await deepseekForm.validateFields();
+      const config: DeepseekConfig = { ...values, provider: 'deepseek' };
+      const ok = await saveDeepseekConfig(config);
+      if (ok) {
+        message.success('DeepSeek 配置已保存');
+        setDeepseekConfig(config);
+      } else {
+        message.warning('保存到服务器失败，已缓存到本地');
+      }
+    } catch (e: any) {
+      message.error(e.message || '保存失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -300,6 +386,108 @@ const Settings: React.FC<SettingsProps> = ({ darkMode, onDarkModeChange }) => {
               </Space>
             </Form.Item>
           </Form>
+        </div>
+      ),
+    },
+    {
+      key: 'ai',
+      label: 'AI 配置',
+      icon: <RobotOutlined />,
+      children: aiLoading ? (
+        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+          <Spin size="large" />
+        </div>
+      ) : (
+        <div style={{ maxWidth: 800 }}>
+          {/* 通义千问 */}
+          <Card title="通义千问 (Qwen)" size="small" style={{ marginBottom: 16 }}>
+            <Form form={qwenForm} layout="vertical" initialValues={qwenConfig || {}}>
+              <Row gutter={16}>
+                <Col span={16}>
+                  <Form.Item label="API Key" name="apiKey">
+                    <Input.Password placeholder="sk-..." />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="启用" name="enabled" valuePropName="checked">
+                    <Switch />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item label="API 端点" name="apiEndpoint">
+                <Input placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" />
+              </Form.Item>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item label="模型" name="model">
+                    <Input placeholder="qwen-max" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="最大 Tokens" name="maxTokens">
+                    <InputNumber min={100} max={8000} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="温度" name="temperature">
+                    <InputNumber min={0} max={2} step={0.1} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item>
+                <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSaveQwen}>
+                  保存
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+
+          {/* DeepSeek */}
+          <Card title="DeepSeek" size="small">
+            <Form form={deepseekForm} layout="vertical" initialValues={deepseekConfig || {}}>
+              <Row gutter={16}>
+                <Col span={16}>
+                  <Form.Item label="API Key" name="apiKey">
+                    <Input.Password placeholder="sk-..." />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="启用" name="enabled" valuePropName="checked">
+                    <Switch />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item label="API 端点" name="apiEndpoint">
+                <Input placeholder="https://api.deepseek.com/chat/completions" />
+              </Form.Item>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item label="模型" name="model">
+                    <Input placeholder="deepseek-chat" />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="最大 Tokens" name="maxTokens">
+                    <InputNumber min={100} max={8000} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
+                  <Form.Item label="温度" name="temperature">
+                    <InputNumber min={0} max={2} step={0.1} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item>
+                <Button type="primary" icon={<SaveOutlined />} loading={loading} onClick={handleSaveDeepseek}>
+                  保存
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+
+          <div style={{ marginTop: 12, color: '#888', fontSize: 12 }}>
+            API Key 按用户保存，每个用户独立配置。配置会同步保存到服务器和本地缓存。
+          </div>
         </div>
       ),
     },

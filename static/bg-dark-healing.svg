@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <!-- 主背景渐变 -->
+    <radialGradient id="bg" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16162a"/>
+      <stop offset="100%" stop-color="#0f0f1a"/>
+    </radialGradient>
+    <!-- 柔和光晕 -->
+    <radialGradient id="glow1" cx="30%" cy="25%" r="35%">
+      <stop offset="0%" stop-color="#2d2d5e" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="75%" cy="70%" r="30%">
+      <stop offset="0%" stop-color="#1e3a4a" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <radialGradient id="glow3" cx="60%" cy="20%" r="25%">
+      <stop offset="0%" stop-color="#2a1f3d" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <!-- 光点散景效果 -->
+    <filter id="blur1"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="blur2"><feGaussianBlur stdDeviation="60"/></filter>
+    <filter id="blur3"><feGaussianBlur stdDeviation="25"/></filter>
+    <!-- 微妙噪点纹理 -->
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.03"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="overlay"/>
+    </filter>
+  </defs>
+
+  <!-- 基础背景 -->
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+
+  <!-- 柔和光晕层 -->
+  <rect width="1920" height="1080" fill="url(#glow1)"/>
+  <rect width="1920" height="1080" fill="url(#glow2)"/>
+  <rect width="1920" height="1080" fill="url(#glow3)"/>
+
+  <!-- 散景光点 - 大 -->
+  <circle cx="280" cy="180" r="120" fill="#4a3f6b" opacity="0.08" filter="url(#blur2)"/>
+  <circle cx="1600" cy="300" r="100" fill="#3a5f6f" opacity="0.07" filter="url(#blur2)"/>
+  <circle cx="960" cy="800" r="140" fill="#2d4a5a" opacity="0.06" filter="url(#blur2)"/>
+
+  <!-- 散景光点 - 中 -->
+  <circle cx="500" cy="400" r="60" fill="#6a5a8a" opacity="0.1" filter="url(#blur1)"/>
+  <circle cx="1400" cy="200" r="50" fill="#5a7a8a" opacity="0.09" filter="url(#blur1)"/>
+  <circle cx="1100" cy="600" r="70" fill="#4a5a7a" opacity="0.08" filter="url(#blur1)"/>
+  <circle cx="300" cy="700" r="55" fill="#5a4a7a" opacity="0.07" filter="url(#blur1)"/>
+  <circle cx="1700" cy="800" r="45" fill="#4a6a7a" opacity="0.08" filter="url(#blur1)"/>
+
+  <!-- 散景光点 - 小 (星点) -->
+  <circle cx="200" cy="300" r="20" fill="#8a7aaa" opacity="0.12" filter="url(#blur3)"/>
+  <circle cx="800" cy="150" r="15" fill="#7a9aaa" opacity="0.11" filter="url(#blur3)"/>
+  <circle cx="1300" cy="500" r="18" fill="#8a8aaa" opacity="0.1" filter="url(#blur3)"/>
+  <circle cx="600" cy="900" r="22" fill="#7a8a9a" opacity="0.09" filter="url(#blur3)"/>
+  <circle cx="1800" cy="150" r="12" fill="#9a8aaa" opacity="0.12" filter="url(#blur3)"/>
+  <circle cx="1000" cy="350" r="16" fill="#8a9aaa" opacity="0.1" filter="url(#blur3)"/>
+  <circle cx="400" cy="550" r="14" fill="#7a7a9a" opacity="0.11" filter="url(#blur3)"/>
+  <circle cx="1500" cy="900" r="19" fill="#6a8a9a" opacity="0.09" filter="url(#blur3)"/>
+
+  <!-- 微妙水平线条 (增加层次感) -->
+  <line x1="0" y1="360" x2="1920" y2="360" stroke="#ffffff" stroke-opacity="0.008" stroke-width="1"/>
+  <line x1="0" y1="720" x2="1920" y2="720" stroke="#ffffff" stroke-opacity="0.006" stroke-width="1"/>
+
+  <!-- 噪点纹理叠加 -->
+  <rect width="1920" height="1080" filter="url(#noise)" opacity="0.4"/>
+</svg>

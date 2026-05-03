@@ -310,12 +310,12 @@ def init_all_tables():
     c.execute('SELECT COUNT(*) FROM lp_subjects')
     if c.fetchone()[0] == 0:
         default_subjects = [
-            ('chemistry', '化学', '⚗️', '#4c9aff', '高中化学核心知识', 1),
-            ('physics', '物理', '⚡', '#f59e0b', '高中物理核心知识', 2),
-            ('chinese', '语文', '📖', '#10b981', '高中语文核心知识', 3),
-            ('math', '数学', '🔢', '#ef4444', '高中数学核心知识', 4),
-            ('english', '英语', '🔤', '#8b5cf6', '高中英语核心知识', 5),
-            ('politics', '政治', '🏛️', '#ec4899', '高中政治核心知识', 6)
+            ('chemistry', '化学', 'chemistry', '#4c9aff', '高中化学核心知识', 1),
+            ('physics', '物理', 'physics', '#f59e0b', '高中物理核心知识', 2),
+            ('chinese', '语文', 'chinese', '#10b981', '高中语文核心知识', 3),
+            ('math', '数学', 'math', '#ef4444', '高中数学核心知识', 4),
+            ('english', '英语', 'english', '#8b5cf6', '高中英语核心知识', 5),
+            ('politics', '政治', 'politics', '#ec4899', '高中政治核心知识', 6)
         ]
         c.executemany('''
             INSERT INTO lp_subjects (key, name, logo, color, description, sort_order)

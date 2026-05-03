@@ -55,7 +55,7 @@ const ReviewPlan: React.FC = () => {
       const reviewMap = new Map<string, any>();
       mistakes.forEach((m: any) => {
         const subject = m.subject_name || m.subject || '未分类';
-        const isNeedReview = (m.mastery_level || 0) <= 70 || (m.review_count || 0) === 0;
+        const isNeedReview = (m.review_count || 0) < 3;
 
         if (isNeedReview) {
           if (!reviewMap.has(subject)) {

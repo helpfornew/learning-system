@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Menu, Button } from 'antd'
 import {
   DashboardOutlined,
@@ -8,7 +8,8 @@ import {
   SettingOutlined,
   PlusOutlined,
   BulbOutlined,
-  HomeOutlined
+  HomeOutlined,
+  ToolOutlined
 } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 
@@ -20,6 +21,15 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ selectedMenu, onMenuSelect, darkMode, onQuickInput }) => {
+  const isAdmin = useMemo(() => {
+    try {
+      const info = localStorage.getItem('user_info');
+      if (!info) return false;
+      const user = JSON.parse(info);
+      return user?.is_admin || (user?.vip_level ?? 0) >= 9;
+    } catch { return false; }
+  }, []);
+
   const menuItems: MenuProps['items'] = [
     {
       key: 'home',
@@ -54,6 +64,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedMenu, onMenuSelect, darkMode,
       label: '复习计划'
     },
     { type: 'divider' },
+    ...(isAdmin ? [{
+      key: 'admin',
+      icon: <ToolOutlined />,
+      label: '后台管理'
+    }] : []),
     {
       key: 'settings',
       icon: <SettingOutlined />,
@@ -65,6 +80,10 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedMenu, onMenuSelect, darkMode,
     if (e.key === 'home') {
       const serverUrl = window.electronAPI?.getServerConfig?.()?.url || window.location.origin;
       window.location.href = serverUrl;
+      return;
+    }
+    if (e.key === 'admin') {
+      window.open('/learning/admin.html', '_blank');
       return;
     }
     onMenuSelect(e.key)
