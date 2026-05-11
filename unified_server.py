@@ -103,6 +103,7 @@ class UnifiedHandler(BaseHTTPRequestHandler):
         ('/api/vocabulary', 'call_handler_vocabulary_post', True, 'exact'),
         ('/api/vocabulary-review', 'call_handler_vocabulary_review', True, 'exact'),
         ('/api/vocabulary-batch', 'call_handler_vocabulary_batch', True, 'exact'),
+        ('/api/vocabulary-chat', 'call_handler_vocabulary_chat', True, 'exact'),
         # 工具 API
         ('/api/tools/', 'call_handler_tools_post', True, 'prefix'),
     ]
@@ -613,6 +614,11 @@ class UnifiedHandler(BaseHTTPRequestHandler):
     def call_handler_ai_analysis(self, user_id, parsed_path, **kwargs):
         data = kwargs.get('data', {})
         status, resp = ai_proxy.handle_ai_analysis_proxy(user_id, data)
+        self.send_json(resp, status)
+
+    def call_handler_vocabulary_chat(self, user_id, parsed_path, **kwargs):
+        data = kwargs.get('data', {})
+        status, resp = ai_proxy.handle_vocabulary_chat(user_id, data)
         self.send_json(resp, status)
 
     def call_handler_config_post(self, user_id, parsed_path, **kwargs):
